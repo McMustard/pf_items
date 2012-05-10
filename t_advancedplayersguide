@@ -1,0 +1,202 @@
+Type	Subtype	Item	Minor Low	Minor High	Medium Low	Medium High	Major Low	Major High
+Armor and Shields		Champion	1	40	1	35	1	19
+Armor and Shields		Dastard	41	80	36	66	20	37
+Armor and Shields		Jousting	81	99	67	70	38	39
+Armor and Shields		Righteous	0	0	71	83	40	61
+Armor and Shields		Unrighteous	0	0	84	96	62	80
+Armor and Shields		Determination	0	0	97	99	81	90
+Armor and Shields		ROLL TWICE	100	100	100	100	91	100
+Specific Armor	Armor	Mistmail	0	0	1	20	1	2
+Specific Armor	Armor	Soothsayer's raiment	0	0	21	35	3	5
+Specific Armor	Armor	Boneless leather	0	0	36	50	6	6
+Specific Armor	Armor	Murderer's blackcloth	0	0	51	65	7	7
+Specific Armor	Armor	Folding plate	0	0	66	90	8	12
+Specific Armor	Armor	Armor of insults	0	0	91	100	13	27
+Specific Armor	Armor	Buccaneer's breastplate	0	0	0	0	28	42
+Specific Armor	Armor	Forsaken banded mail	0	0	0	0	43	49
+Specific Armor	Armor	Giant-hide armor (ogre)	0	0	0	0	50	61
+Specific Armor	Armor	Giant-hide armor (hill giant)	0	0	0	0	62	71
+Specific Armor	Armor	Giant-hide armor (stone giant)	0	0	0	0	72	81
+Specific Armor	Armor	Giant-hide armor (fire giant)	0	0	0	0	82	86
+Specific Armor	Armor	Giant-hide armor (frost giant)	0	0	0	0	87	91
+Specific Armor	Armor	Giant-hide armor (troll)	0	0	0	0	92	96
+Specific Armor	Armor	Giant-hide armor (cloud giant)	0	0	0	0	97	97
+Specific Armor	Armor	Giant-hide armor (storm giant)	0	0	0	0	98	98
+Specific Armor	Armor	Daystar half-plate	0	0	0	0	99	100
+Specific Shield	Shield	Battlement shield	0	0	0	0	11	50
+Specific Shield	Shield	Fortress shield	0	0	0	0	51	100
+Melee Weapon Special Ability		Allying 	1	12	1	4	1	3
+Melee Weapon Special Ability		Conductive 	13	24	5	12	4	8
+Melee Weapon Special Ability		Corrosive 	25	36	13	22	9	20
+Melee Weapon Special Ability		Cunning 	37	48	23	32	21	29
+Melee Weapon Special Ability		Furious 	49	58	33	40	30	38
+Melee Weapon Special Ability		Grayflame 	59	70	41	49	39	47
+Melee Weapon Special Ability		Huntsman 	71	77	50	58	48	56
+Melee Weapon Special Ability		Jurist 	78	84	59	67	57	65
+Melee Weapon Special Ability		Menacing 	85	99	68	74	66	74
+Melee Weapon Special Ability		Corrosive burst 	0	0	75	82	75	81
+Melee Weapon Special Ability		Dueling 	0	0	83	89	82	85
+Melee Weapon Special Ability		Transformative 	0	0	90	95	86	90
+Melee Weapon Special Ability		ROLL TWICE	100	100	96	100	91	100
+Ranged Weapon Special Ability		Allying 	1	15	1	14	1	13
+Ranged Weapon Special Ability		Conductive 	16	30	15	28	14	26
+Ranged Weapon Special Ability		Corrosive2 	31	48	29	48	27	42
+Ranged Weapon Special Ability		Cunning 	49	60	49	58	43	56
+Ranged Weapon Special Ability		Huntsman 	61	72	59	69	57	65
+Ranged Weapon Special Ability		Jurist 	73	94	70	91	66	87
+Ranged Weapon Special Ability		Corrosive burst 	95	99	92	95	88	90
+Ranged Weapon Special Ability		ROLL TWICE	100	100	96	100	91	100
+Specific Weapon	Weapon	Dustburst bullet 	1	35	0	0	0	0
+Specific Weapon	Weapon	Tangle bolt 	36	70	0	0	0	0
+Specific Weapon	Weapon	Searing arrow 	71	80	1	7	0	0
+Specific Weapon	Weapon	Sizzling arrow 	81	90	8	14	0	0
+Specific Weapon	Weapon	Lance of jousting 	91	100	15	26	0	0
+Specific Weapon	Weapon	Boulderhead mace 	0	0	27	41	0	0
+Specific Weapon	Weapon	Beaststrike club 	0	0	42	53	0	0
+Specific Weapon	Weapon	Trident of stability 	0	0	54	60	1	4
+Specific Weapon	Weapon	Blade of binding 	0	0	61	70	5	20
+Specific Weapon	Weapon	Shieldsplitter lance 	0	0	71	79	21	37
+Specific Weapon	Weapon	Ricochet hammer 	0	0	80	87	38	62
+Specific Weapon	Weapon	Sparkwake starknife 	0	0	88	95	63	82
+Specific Weapon	Weapon	Undercutting axe 	0	0	96	100	83	88
+Specific Weapon	Weapon	Spirit blade 	0	0	0	0	89	94
+Specific Weapon	Weapon	Guarding blade 	0	0	0	0	95	100
+Rings		Dungeon Ring, Prisoner's	1	10	0	0	0	0
+Rings		Ring of Arcane Signets	11	40	0	0	0	0
+Rings		Ring of Maniacal Devices	41	80	1	25	0	0
+Rings		Ring of Delayed Doom (1 stone)	81	95	26	46	0	0
+Rings		Ring of Forcefangs	96	100	47	52	0	0
+Rings		Ring of Revelation, lesser	0	0	53	59	0	0
+Rings		Ring of Delayed Doom (2 stones)	0	0	60	70	1	2
+Rings		Ring of Delayed Doom (3 stones)	0	0	71	80	3	11
+Rings		Ring of Retribution	0	0	81	85	12	29
+Rings		Dungeon Ring, Jailer's	0	0	86	90	30	35
+Rings		Ring of Revelation, greater	0	0	91	96	36	38
+Rings		Ring of Delayed doom (4 stones)	0	0	97	98	39	68
+Rings		Ring of Revelation, superior	0	0	99	99	69	69
+Rings		Ring of Delayed doom (5 stones)	0	0	100	100	70	85
+Rings		Ring of Delayed doom (6 stones)	0	0	0	0	86	93
+Rings		Ring of Delayed doom (7 stones)	0	0	0	0	94	97
+Rings		Ring of Delayed doom (8 stones)	0	0	0	0	98	99
+Rings		Ring of Delayed doom (9 stones)	0	0	0	0	100	100
+Rods		Rod of Metamagic, merciful, lesser	0	0	1	3	0	0
+Rods		Rod of Metamagic, bouncing, lesser	0	0	4	6	0	0
+Rods		Rod of Metamagic, disruptive, lesser	0	0	7	11	0	0
+Rods		Rod of Metamagic, ectoplasmic, lesser	0	0	12	21	0	0
+Rods		Rod of Metamagic, elemental, lesser	0	0	22	27	0	0
+Rods		Rod of Metamagic, focused, lesser	0	0	28	33	0	0
+Rods		Rod of Metamagic, intensified, lesser	0	0	24	36	0	0
+Rods		Rod of Metamagic, lingering, lesser	0	0	37	39	0	0
+Rods		Rod of Metamagic, reach, lesser	0	0	40	43	0	0
+Rods		Rod of Metamagic, selective, lesser	0	0	44	53	0	0
+Rods		Rod of Metamagic, merciful	0	0	54	55	0	0
+Rods		Rod of Metamagic, persistent, lesser	0	0	56	58	0	0
+Rods		Rod of Metamagic, sickening, lesser	0	0	59	62	0	0
+Rods		Rod of Metamagic, thundering, lesser	0	0	63	66	0	0
+Rods		Rod of Metamagic, bouncing	0	0	67	70	1	3
+Rods		Rod of Metamagic, disruptive	0	0	71	74	4	9
+Rods		Rod of Metamagic, ectoplasmic	0	0	75	80	10	20
+Rods		Rod of Metamagic, elemental	0	0	81	83	21	28
+Rods		Rod of Metamagic, focused	0	0	84	86	29	36
+Rods		Rod of Metamagic, intensified	0	0	87	88	37	39
+Rods		Rod of Metamagic, lingering	0	0	89	90	40	43
+Rods		Rod of Metamagic, reach	0	0	91	93	44	46
+Rods		Rod of Metamagic, selective	0	0	94	97	47	54
+Rods		Rod of Metamagic, merciful, greater	0	0	98	98	55	56
+Rods		Rod of Metamagic, dazing, lesser	0	0	99	100	57	58
+Rods		Rod of Metamagic, bouncing, greater	0	0	0	0	59	60
+Rods		Rod of Metamagic, disruptive, greater	0	0	0	0	61	63
+Rods		Rod of Metamagic, ectoplasmic, greater	0	0	0	0	64	69
+Rods		Rod of Metamagic, elemental, greater	0	0	0	0	70	73
+Rods		Rod of Metamagic, focused, greater	0	0	0	0	74	77
+Rods		Rod of Metamagic, intensified, greater	0	0	0	0	78	79
+Rods		Rod of Metamagic, lingering, greater	0	0	0	0	80	80
+Rods		Rod of Metamagic, reach, greater	0	0	0	0	81	82
+Rods		Rod of Metamagic, selective, greater	0	0	0	0	83	86
+Rods		Rod of Metamagic, persistent	0	0	0	0	87	89
+Rods		Rod of Metamagic, sickening	0	0	0	0	90	91
+Rods		Rod of Metamagic, thundering	0	0	0	0	92	93
+Rods		Rod of Metamagic, dazing 	0	0	0	0	94	95
+Rods		Rod of Metamagic, persistent, greater	0	0	0	0	96	97
+Rods		Rod of Metamagic, sickening, greater	0	0	0	0	98	98
+Rods		Rod of Metamagic, thundering, greater	0	0	0	0	99	99
+Rods		Rod of Metamagic, dazing, greater	0	0	0	0	100	100
+Staves		Staff of Toxins	0	0	1	2	1	1
+Staves		Staff of Journeys	0	0	3	5	2	2
+Staves		Staff of Rigor	0	0	6	10	3	4
+Staves		Staff of Shrieking	0	0	11	18	5	8
+Staves		Staff of Souls	0	0	19	25	9	11
+Staves		Staff of Stealth	0	0	26	35	12	16
+Staves		Staff of Revelations	0	0	36	42	17	20
+Staves		Staff of Bolstering	0	0	43	54	21	26
+Staves		Staff of Traps	0	0	55	59	27	28
+Staves		Staff of Cackling wrath	0	0	60	69	29	35
+Staves		Staff of Obstacles	0	0	70	76	36	44
+Staves		Staff of Performance	0	0	77	82	45	54
+Staves		Staff of Hoarding	0	0	83	86	55	60
+Staves		Staff of Slumber	0	0	87	92	61	72
+Staves		Staff of Vision	0	0	93	95	73	83
+Staves		Staff of Weather	0	0	96	98	84	91
+Staves		Staff of Many rays	0	0	99	100	92	100
+Wondrous Items		Ioun torch	1	5	0	0	0	0
+Wondrous Items		War paint of the terrible visage	6	9	0	0	0	0
+Wondrous Items		Assisting glove	10	12	0	0	0	0
+Wondrous Items		Bandages of rapid recovery	13	15	0	0	0	0
+Wondrous Items		Catching cape	16	18	0	0	0	0
+Wondrous Items		Soul soap	19	20	0	0	0	0
+Wondrous Items		Bottle of messages	21	23	0	0	0	0
+Wondrous Items		Key of lock jamming	24	27	0	0	0	0
+Wondrous Items		Campfire bead	28	29	0	0	0	0
+Wondrous Items		Defoliant polish	30	35	0	0	0	0
+Wondrous Items		Dust of emulation	36	39	0	0	0	0
+Wondrous Items		Muleback cords	40	42	0	0	0	0
+Wondrous Items		All tools vest	43	45	0	0	0	0
+Wondrous Items		Cowardly crouching cloak	46	46	0	0	0	0
+Wondrous Items		Scabbard of vigor	50	56	0	0	0	0
+Wondrous Items		Clamor box	57	58	0	0	0	0
+Wondrous Items		Glowing glove	59	61	0	0	0	0
+Wondrous Items		Manacles of cooperation	62	63	0	0	0	0
+Wondrous Items		Knight's pennon (honor)	64	70	0	0	0	0
+Wondrous Items		Flying ointment	71	75	0	0	0	0
+Wondrous Items		Boots of friendly terrain	76	78	0	0	0	0
+Wondrous Items		Apple of eternal sleep	79	80	0	0	0	0
+Wondrous Items		Cauldron of brewing	81	83	0	0	0	0
+Wondrous Items		Philter of love	84	85	0	0	0	0
+Wondrous Items		Sash of the war champion	86	88	0	0	0	0
+Wondrous Items		Knight's pennon (battle)	89	90	0	0	0	0
+Wondrous Items		Knight's pennon (parley)	91	92	0	0	0	0
+Wondrous Items		Helm of fearsome mien	93	94	0	0	0	0
+Wondrous Items		Horn of the huntmaster	95	96	0	0	0	0
+Wondrous Items		Scabbard of staunching	97	98	0	0	0	0
+Wondrous Items		Sheath of bladestealth	99	100	0	0	0	0
+Wondrous Items		Grappler's mask	0	0	1	6	0	0
+Wondrous Items		Torc of lionheart fury	0	0	7	16	0	0
+Wondrous Items		Amulet of spell cunning	0	0	17	19	0	0
+Wondrous Items		Construct channel brick	0	0	20	23	0	0
+Wondrous Items		Doomharp	0	0	24	25	0	0
+Wondrous Items		Ki mat	0	0	26	27	0	0
+Wondrous Items		Lord's banner (swiftness)	0	0	28	37	0	0
+Wondrous Items		Crystal of healing hands	0	0	38	40	0	0
+Wondrous Items		Book of the loremaster	0	0	41	44	0	0
+Wondrous Items		Bracelet of mercy	0	0	45	48	0	0
+Wondrous Items		Cauldron of plenty	0	0	49	56	0	0
+Wondrous Items		Gloves of dueling	0	0	57	61	0	0
+Wondrous Items		Necklace of ki serenity	0	0	62	64	0	0
+Wondrous Items		Robes of arcane heritage	0	0	65	69	0	0
+Wondrous Items		Silver smite bracelet	0	0	70	74	0	0
+Wondrous Items		Vest of the cockroach	0	0	75	82	0	0
+Wondrous Items		Amulet of magecraft	0	0	83	86	0	0
+Wondrous Items		Horn of antagonism	0	0	87	90	0	0
+Wondrous Items		Moon circlet	0	0	91	93	0	0
+Wondrous Items		Necromancer's athame	0	0	94	96	0	0
+Wondrous Items		Sniper goggles	0	0	97	98	0	0
+Wondrous Items		Annihilation spectacles	0	0	99	100	0	0
+Wondrous Items		Cauldron of the dead	1	8	0	0	0	0
+Wondrous Items		Mask of giants (lesser)	9	20	0	0	0	0
+Wondrous Items		Cauldron of resurrection	21	32	0	0	0	0
+Wondrous Items		Cauldron of flying	33	48	0	0	0	0
+Wondrous Items		Cauldron of seeing	49	64	0	0	0	0
+Wondrous Items		Lord's banner (terror)	65	76	0	0	0	0
+Wondrous Items		Lord's banner (victory)	77	88	0	0	0	0
+Wondrous Items		Mask of giants (greater)	89	96	0	0	0	0
+Wondrous Items		Lord's banner (crusades)	97	100	0	0	0	0
