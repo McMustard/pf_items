@@ -1,10 +1,10 @@
 Item	Minor Low	Minor High	Medium Low	Medium High	Major Low	Major High
-Armor and Shields	1	4	1	10	1	10
-Weapons	5	9	11	20	11	20
-Potions	10	44	21	30	21	25
-Rings	45	46	31	40	26	35
-Rods	0	0	41	50	36	45
-Scrolls	47	81	51	65	46	55
-Staves	0	0	66	68	56	75
-Wands	82	91	69	83	76	80
-Wondrous Items	92	100	84	100	81	100
+Armor and Shield	1	4	1	10	1	10
+Weapon	5	9	11	20	11	20
+Potion	10	44	21	30	21	25
+Ring	45	46	31	40	26	35
+Rod	0	0	41	50	36	45
+Scroll	47	81	51	65	46	55
+Staff	0	0	66	68	56	75
+Wand	82	91	69	83	76	80
+Wondrous Item	92	100	84	100	81	100

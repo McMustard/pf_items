@@ -13,7 +13,7 @@ import rollers
 
 FILE_SETTLEMENTS = 't_settlements'
 FILE_ITEMTYPES = 't_itemtypes'
-FILE_CRB = 't_corerulebook'
+FILE_CRB = 't_crb'
 FILE_APG = 't_advancedplayersguide'
 
 # Tables
@@ -71,6 +71,15 @@ def loadItemTypes(filename):
     f.close()
 
 
+def parseRange(value):
+    if value == '-':
+        return (0, 0)
+    if '-' in value:
+        strs = value.split('-')
+        return (int(strs[0]), int(strs[1]))
+    return (int(value), int(value))
+
+
 def loadItemFile(filename, table):
     f = open(filename, 'r')
     # Throw away the first line, a header.
@@ -80,17 +89,15 @@ def loadItemFile(filename, table):
         data = line[:-1].split('\t')
         if data[0] not in table:
             table[data[0]] = []
-        table[data[0]].append({'subtype': data[1], 'item': data[2],
-            'minor_min' : int(data[3]), 'minor_max' : int(data[4]),
-            'medium_min': int(data[5]), 'medium_max': int(data[6]),
-            'major_min' : int(data[7]), 'major_max' : int(data[8])})
+        table[data[0]].append({'subtype': data[1],
+            'minor': parseRange(data[2]), 'medium': parseRange(data[3]),
+            'major': parseRange(data[4]), 'special': data[5],
+            'item': data[6], 'cost': data[7]})
 
 
 def lookupItem(table, strength, kind, roll):
-    key_min = strength + '_min'
-    key_max = strength + '_max'
     for row in table[kind]:
-        if roll >= row[key_min] and roll <= row[key_max]:
+        if roll >= row[strength][0] and roll <= row[strength][1]:
                 return (row['item'], row['subtype'])
     print('ERROR: No result for', strength, kind, str(roll))
     return (strength + ' ' + kind + '(' + str(roll) + ')', '')
@@ -207,10 +214,11 @@ def generateItem(strength, kind, roller):
             roll = roller.roll('1d100')
             specials = generateSpecials(strength,
                 subtype + ' Special Ability', roller)
+
     # TODO Spells in Potions, Scrolls, Wands
     if len(specials) > 0:
-        item = item + ', ' + specials
-    return item
+        item = item + ', ' + '/'.join(specials)
+    return '[' + str(roll).rjust(3, ' ') + '] ' + kind + ': ' + item
 
 
 def generateSpecials(strength, kind, roller):
@@ -240,7 +248,7 @@ def generateSpecials(strength, kind, roller):
         specials.append(special)
 
     # Put everything in one string and return it.
-    return '/'.join(specials)
+    return specials
 
 
 #
@@ -274,7 +282,7 @@ if __name__ == '__main__':
     loadSettlements(FILE_SETTLEMENTS)
     loadItemTypes(FILE_ITEMTYPES)
     loadItemFile(FILE_CRB, TABLE_CRB)
-    loadItemFile(FILE_APG, TABLE_APG)
+    #loadItemFile(FILE_APG, TABLE_APG)
 
     # Set up the roller.
     if args.auto:

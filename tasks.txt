@@ -1,0 +1,26 @@
+* Reroll items that fall below a settlement's base value.
+  * Implement item value calculator
+  * Add item values to item files
+
+* When doing a "Reroll Twice":
+  * Reroll duplicate specials.
+  * Reroll incompatibles (wrong item type or conflicting specials)
+  * Reroll > +10 bonuses
+  * More powerful specials override less powerful ones
+
+* Roll armor sizes
+* Roll weapon special materials
+* Roll 30% chance a weapon sheds light, or has runes/etc.
+
+* For now, offer a single-roll function for making corrections.
+
+* Add weapon tables (low priority)
+  * Region
+  * 1-10 other regions, 11-100 that region ?
+  * Region specified by command line
+
+* Add single-item mode for rerolls or treasure
+
+* Need to determine how to select between CRB and APG
+  * For each item type and strength, count the items in CRB and APG, and
+  assign a value 1-100 to use as a cutoff.
