@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+
 import argparse
+import re
 import sys
 
 import rollers
@@ -26,16 +28,29 @@ TABLE_CRB = {}
 TABLE_APG = {}
 
 # Maps the parameter specification of a settlement to its string for table
-# lookups.
+# lookups.  The keys are lower case so that a case insensitive lookup can be
+# done by calling tolower() before doing the lookup.  It's not a perfect
+# case insensitive search according to high Unicode standards, but it's good
+# enough for our needs.  The value string is compared against the settlement
+# itemization table file, so the string must match exactly, case included.
 SETTLEMENT_MAP = {
         'thorp': 'Thorp',
         'hamlet': 'Hamlet',
         'village': 'Village',
         'small-town': 'Small Town',
+        'smalltown': 'Small Town',
         'large-town': 'Large Town',
+        'largetown': 'Large Town',
         'small-city': 'Small City',
+        'smallcity': 'Small City',
         'large-city': 'Large City',
+        'largecity': 'Large City',
         'metropolis': 'Metropolis' }
+
+# Regular Expressions
+
+# None now
+
 
 #
 # Functions
@@ -106,7 +121,7 @@ def lookupItem(table, strength, kind, roll):
 def generateItems(settlement, roller):
     # Convert the command-line parameter to a dict key string.
     try:
-        key = SETTLEMENT_MAP[settlement]
+        key = SETTLEMENT_MAP[settlement.lower()]
     except KeyError:
         print('Internal program error!')
         return
@@ -215,6 +230,9 @@ def generateItem(strength, kind, roller):
             specials = generateSpecials(strength,
                 subtype + ' Special Ability', roller)
 
+    # Determine the cost of the item, as it might need to be rerolled.
+    cost = calculateCost(kind, item, specials)
+
     # TODO Spells in Potions, Scrolls, Wands
     if len(specials) > 0:
         item = item + ', ' + '/'.join(specials)
@@ -249,6 +267,54 @@ def generateSpecials(strength, kind, roller):
 
     # Put everything in one string and return it.
     return specials
+
+
+def calculateArmorCost(item, specials):
+    return 0
+
+def calculateWeaponCost(item, specials):
+    return 0
+
+def calcultePotionCost(item):
+    return 0
+
+def calculateRingCost(item):
+    return 0
+
+def calculateRodCost(item):
+    return 0
+
+def calculateScrollCost(item):
+    return 0
+
+def calculateStaffCost(item):
+    return 0
+
+def calculateWandCost(item):
+    return 0
+
+def calculateWondrousItem(item):
+    return 0
+
+def calculateCost(kind, item, specials):
+    if kind == 'Armor and Shield':
+        return calculateArmorCost(item, specials)
+    elif kind == 'Weapon':
+        return calculateWeaponCost(item, specials)
+    elif kind == 'Potion':
+        return calculatePotionCost(item)
+    elif kind == 'Ring':
+        return calculateRingCost(item)
+    elif kind == 'Rod':
+        return calculateRodCost(item)
+    elif kind == 'Scroll':
+        return calculateScrollCost(item)
+    elif kind == 'Staff':
+        return calculateStaffCost(item)
+    elif kind == 'Wand':
+        return calculateWandCost(item)
+    elif kind == 'Wondrous Item':
+        return calculateWondrousItem(item)
 
 
 #
