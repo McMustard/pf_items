@@ -6,6 +6,9 @@ import argparse
 import re
 import sys
 
+# Local imports
+
+import item
 import rollers
 
 #
@@ -14,16 +17,12 @@ import rollers
 # File names
 
 FILE_SETTLEMENTS = 't_settlements'
-FILE_ITEMTYPES = 't_itemtypes'
 FILE_CRB = 't_crb'
 FILE_APG = 't_advancedplayersguide'
 
 # Tables
 
 TABLE_SETTLEMENTS = {}
-TABLE_TYPES_MINOR = []
-TABLE_TYPES_MEDIUM = []
-TABLE_TYPES_MAJOR = []
 TABLE_CRB = {}
 TABLE_APG = {}
 
@@ -70,22 +69,6 @@ def loadSettlements(filename):
     f.close()
 
 
-def loadItemTypes(filename):
-    f = open(filename, 'r')
-    # Throw away the first line, a header.
-    f.readline()
-    # Now read the remaining lines.
-    for line in f:
-        data = line[:-1].split('\t')
-        TABLE_TYPES_MINOR.append ({'min': int(data[1]), 'max': int(data[2]),
-            'type': data[0]})
-        TABLE_TYPES_MEDIUM.append({'min': int(data[3]), 'max': int(data[4]),
-            'type': data[0]})
-        TABLE_TYPES_MAJOR.append ({'min': int(data[5]), 'max': int(data[6]),
-            'type': data[0]})
-    f.close()
-
-
 def parseRange(value):
     if value == '-':
         return (0, 0)
@@ -93,21 +76,6 @@ def parseRange(value):
         strs = value.split('-')
         return (int(strs[0]), int(strs[1]))
     return (int(value), int(value))
-
-
-def loadItemFile(filename, table):
-    f = open(filename, 'r')
-    # Throw away the first line, a header.
-    f.readline()
-    # Now read the remaining lines.
-    for line in f:
-        data = line[:-1].split('\t')
-        if data[0] not in table:
-            table[data[0]] = []
-        table[data[0]].append({'subtype': data[1],
-            'minor': parseRange(data[2]), 'medium': parseRange(data[3]),
-            'major': parseRange(data[4]), 'special': data[5],
-            'item': data[6], 'cost': data[7]})
 
 
 def lookupItem(table, strength, kind, roll):
@@ -127,7 +95,7 @@ def generateItems(settlement, roller):
         return
     # Print some information for reference.
     print('Generating magic items for a ' + key + ':')
-    print('--------------------')
+    print('-' * 78)
 
     # Start rolling!
 
@@ -158,7 +126,7 @@ def generateItems(settlement, roller):
             print('This ' + key + ' has virtually every minor magic item.')
         else:
             for i in range(count_minor):
-                printRandomItems('minor', roller)
+                printRandomItems('minor', roller, settlement_base)
         print()
 
     # Generate the medium magic items.
@@ -166,7 +134,7 @@ def generateItems(settlement, roller):
         print('Medium Magic Items:')
         print('--------------------')
         for i in range(count_medium):
-            printRandomItems('medium', roller)
+            printRandomItems('medium', roller, settlement_base)
         print()
 
     # Generate the major magic items.
@@ -174,147 +142,13 @@ def generateItems(settlement, roller):
         print('Major Magic Items:')
         print('--------------------')
         for i in range(count_major):
-            printRandomItems('major', roller)
+            printRandomItems('major', roller, settlement_base)
 
 
-def printRandomItems(strength, roller):
-    # First, determine the type of item.
-    roll = roller.roll('1d100')
-    kind = getItemType(strength, roll)
-    # Now, generate an item of that type.
-    print(generateItem(strength, kind, roller))
-
-
-def getItemType(strength, roll):
-    # Select the appropriate table.
-    table = None
-    if strength == 'minor':
-        table = TABLE_TYPES_MINOR
-    elif strength == 'medium':
-        table = TABLE_TYPES_MEDIUM
-    elif strength == 'major':
-        table = TABLE_TYPES_MAJOR
-    # Look for the roll among the mins and maxes.
-    if table != None:
-        for row in table:
-            if roll >= row['min'] and roll <= row['max']:
-                return row['type']
-    return ''
-
-
-def generateItem(strength, kind, roller):
-    # Roll for the item.
-    roll = roller.roll('1d100')
-    # Look up an item
-    # TODO incorporate APG by looking up a weight and another d100
-    (item, subtype) = lookupItem(TABLE_CRB, strength, kind, roll)
-    specials = ''
-
-    # Check for starred items.  This requires another check.
-    if item[-1] == '*':
-        # The item name tells us what we need to roll.
-        nextKind = item[:-1]
-        roll = roller.roll('1d100')
-        (item, subtype) = lookupItem(TABLE_CRB, strength, nextKind, roll)
-
-    while item == 'ADD SPECIAL, ROLL AGAIN':
-        # Look up a new item so we know what subtype to seek out.
-        roll = roller.roll('1d100')
-        (item, subtype) = lookupItem(TABLE_CRB, strength, kind, roll)
-        if item != 'ADD SPECIAL, ROLL AGAIN':
-            if subtype == '':
-                print('ERROR!  No subtype for ' + item)
-                return ''
-            # Roll up a special.
-            roll = roller.roll('1d100')
-            specials = generateSpecials(strength,
-                subtype + ' Special Ability', roller)
-
-    # Determine the cost of the item, as it might need to be rerolled.
-    cost = calculateCost(kind, item, specials)
-
-    # TODO Spells in Potions, Scrolls, Wands
-    if len(specials) > 0:
-        item = item + ', ' + '/'.join(specials)
-    return '[' + str(roll).rjust(3, ' ') + '] ' + kind + ': ' + item
-
-
-def generateSpecials(strength, kind, roller):
-    # If the weapon special ability is not specific enough, pick something.
-    if kind == 'Weapon Special Ability':
-        roll = roller.roll('1d100')
-        if roll <= 50:
-            kind = 'Melee ' + kind
-        else:
-            kind = 'Ranged ' + kind
-    # Collect some specials.
-    specials = []
-    # Go.
-    roll = roller.roll('1d100')
-    special = lookupItem(TABLE_CRB, strength, kind, roll)[0]
-    if special[-1] == '*':
-        # Roll for the specific special.
-        roll = roller.roll('1d100')
-        special = special[:-1] + ':' + \
-                lookupItem(TABLE_CRB, strength, kind, roll)[0]
-
-    # Generate more as needed.
-    if special == 'ROLL TWICE':
-        specials.extend(generateSpecials(strength, kind, roller))
-        specials.extend(generateSpecials(strength, kind, roller))
-    else:
-        specials.append(special)
-
-    # Put everything in one string and return it.
-    return specials
-
-
-def calculateArmorCost(item, specials):
-    return 0
-
-def calculateWeaponCost(item, specials):
-    return 0
-
-def calcultePotionCost(item):
-    return 0
-
-def calculateRingCost(item):
-    return 0
-
-def calculateRodCost(item):
-    return 0
-
-def calculateScrollCost(item):
-    return 0
-
-def calculateStaffCost(item):
-    return 0
-
-def calculateWandCost(item):
-    return 0
-
-def calculateWondrousItem(item):
-    return 0
-
-def calculateCost(kind, item, specials):
-    if kind == 'Armor and Shield':
-        return calculateArmorCost(item, specials)
-    elif kind == 'Weapon':
-        return calculateWeaponCost(item, specials)
-    elif kind == 'Potion':
-        return calculatePotionCost(item)
-    elif kind == 'Ring':
-        return calculateRingCost(item)
-    elif kind == 'Rod':
-        return calculateRodCost(item)
-    elif kind == 'Scroll':
-        return calculateScrollCost(item)
-    elif kind == 'Staff':
-        return calculateStaffCost(item)
-    elif kind == 'Wand':
-        return calculateWandCost(item)
-    elif kind == 'Wondrous Item':
-        return calculateWondrousItem(item)
+def printRandomItems(strength, roller, base_value):
+    # Generate an item
+    a = item.Item.select(strength, roller, base_value)
+    print(a)
 
 
 #
@@ -346,9 +180,6 @@ if __name__ == '__main__':
 
     # Load data files.
     loadSettlements(FILE_SETTLEMENTS)
-    loadItemTypes(FILE_ITEMTYPES)
-    loadItemFile(FILE_CRB, TABLE_CRB)
-    #loadItemFile(FILE_APG, TABLE_APG)
 
     # Set up the roller.
     if args.auto:

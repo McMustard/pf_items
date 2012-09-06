@@ -53,23 +53,29 @@ class ManualDiceRoller(Roller):
         except:
             pass
         # Print instructions for the user.
-        print('Roll ' + dice_expression + ' (enter 0 to roll via software):')
+        print('Roll ' + dice_expression + ' (enter 0 to roll via software):',
+                end='')
         # Set up values in preparation for an indefinite loop.
-        result = ''
+        result = None
         value = 0
-        while result == '':
+        while result == None:
             # Get user input.
             result = stdin.readline()
+            if result == '\n':
+                value = 0
+                break
             try:
                 # See if it's valid and convert to int.
                 value = int(result)
             except ValueError:
                 # Reset string to empty so the loop reiterates.
-                result = ''
+                result = None
         # If the user decided manual rolling was a bad idea, pick it
         # ourselves.
         if value == 0:
-            return rollDice(dice_expression)
+            roll = rollDice(dice_expression)
+            print('    rolled: ', roll)
+            return roll
         # Done.
         return value
 

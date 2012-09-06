@@ -9,6 +9,7 @@
   * More powerful specials override less powerful ones
 
 * Roll armor sizes
+  
 * Roll weapon special materials
 * Roll 30% chance a weapon sheds light, or has runes/etc.
 
@@ -24,3 +25,110 @@
 * Need to determine how to select between CRB and APG
   * For each item type and strength, count the items in CRB and APG, and
   assign a value 1-100 to use as a cutoff.
+
+* Add an option to allow potions of spells with a range of personal
+
+
+Ultimate Equipment
+Item Generation Process:
+
+Types of Item Generation:
+Loot Levels
+   APL -->
+   Wealth --> None, Incidental, Standard, Double, Triple, NPC Gear
+   --> Budget
+   --> Letter Types
+
+Monster Subtype
+   Aberration, Animal, Construct, Dragon, Fey, Humanoid, Magical Beast, Monstrous Humanoid, Ooze, Outsider, Plant, Undead, Vermin -->
+    --> Letter Types
+
+Discovered Treasure?
+
+
+Treasure Groups
+---------------
+Treasure Type -->
+Gold Value -->
+--> List of Items
+
+Random Magic Item
+-----------------
+
+
+
+
+Tables:
+-------------------------------------------------------------------------------
+Magic Armor and Shields, 3-2, p117
+Armor Special Abilities, 3-3, p118
+Shield Special Abilities, 3-4, p120
+Specific Armor, 3-5, p125
+Specific Shields, 3-6, p131
+Magic Weapon, 3-7, p135
+Bane, -, p136
+Melee Weapon Special Abilities, 3-8, p136
+Ranged Weapon Special Abilities, 3-10, p139
+Ammunition Special Abilities, 3-11, p141
+Specific Weapons, 3-12, p150
+Slaying Arrow, -, p160
+Rings, 4-1, p166
+Rods, 4-2, p179
+Metamagic Rods (+1 Spell Level), 4-3, p180
+Metamagic Rods (+2 Spell Level), 4-4, p180
+Metamagic Rods (+3 Spell Level), 4-5, p180
+Staves, 4-6, p193
+Wondrous Items, 5-1, p206
+Belt Slot Wondrous Items, 5-2, p209
+Body Slot Wondrous Items, 5-3, p215
+Chest Slot Wondrous Items, 5-4, p221
+Eye Slot Wondrous Items, 5-5, p225
+Feet Slot Wondrous Items, 5-6, p229
+Hand Slot Wondrous Items, 5-7, p235
+Head Slot Wondrous Items, 5-8, p241
+Headband Slot Wondrous Items, 5-9, p249
+Neck Slot Wondrous Items, 5-10, p255
+Shoulders Slot Wondrous Items, 5-11, p263
+Wrists Slot Wondrous Items, 5-12, p271
+Slotless Wondrous Items, 5-13, p277
+Specific Cursed Items, 6-3, p343
+Random Armor or Shield, 7-12, p370
+Random Weapon, 7-13, p370
+Random Potions and Oils, 7-14, p370
+Type of Potion or Oil, 7-15, p370
+0-Level Potions and Oils, 7-16, p371
+1st Level Potions and Oils, 7-17, p371
+2nd Level Potions and Oils, 7-18, p371
+3rd Level Potions and Oils, 7-19, p372
+Random Scrolls, 7-20, p372
+Type of Scroll, 7-21, p372
+0-Level Arcane Scrolls, 7-22, p372
+1st-Level Arcane Scrolls, 7-23, p373
+2nd-Level Arcane Scrolls, 7-24, p373
+3rd-Level Arcane Scrolls, 7-25, p374
+4th-Level Arcane Scrolls, 7-26, p374
+5th-Level Arcane Scrolls, 7-27, p375
+6th-Level Arcane Scrolls, 7-28, p376
+7th-Level Arcane Scrolls, 7-29, p376
+8th-Level Arcane Scrolls, 7-30, p377
+9th-Level Arcane Scrolls, 7-31, p377
+0-Level Divine Scrolls, 7-32, p378
+1st-Level Divine Scrolls, 7-33, p378
+2nd-Level Divine Scrolls, 7-34, p378
+3rd-Level Divine Scrolls, 7-35, p379
+4th-Level Divine Scrolls, 7-36, p380
+5th-Level Divine Scrolls, 7-37, p380
+6th-Level Divine Scrolls, 7-38, p381
+7th-Level Divine Scrolls, 7-39, p381
+8th-Level Divine Scrolls, 7-40, p382
+9th-Level Divine Scrolls, 7-41, p382
+Random Wands, 7-42, p382
+Type of Wand, 7-43, p382
+0-Level Wands, 7-44, p383
+1st-Level Wands, 7-45, p383
+2nd-Level Wands, 7-46, p384
+3rd-Level Wands, 7-47, p385
+4th-Level Wands, 7-48, p386
+Random Gems, 7-50, p388
+Random Art Objects, 7-51, p390
+****
