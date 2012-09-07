@@ -2,6 +2,7 @@
 # vim: set fileencoding=utf-8 :
 
 from __future__ import print_function
+import random
 import re
 
 # Local imports
@@ -109,59 +110,56 @@ FILE_WONDROUS_ITEMS_SLOTLESS        = 'ue/Wondrous_Items_Slotless'
 FILE_WONDROUS_ITEMS_WRISTS          = 'ue/Wondrous_Items_Wrists'
 
 
-# Regular Expressions
-
-RE_SPELL_LEVEL = re.compile('Spell Level (\d+)')
-
-
 # Functions
 
-# these will actually become methods, but are here for now
+def generate_generic(strength, roller, base_value):
+    # Here, strength is merely 'minor', 'medium', 'major', so we need to.
+    # further qualify it with 'lesser' or 'greater'.
+    
+    # We don't want to use the roller mechanism, since this is not a table
+    # choice, but rather an artifact of the new item system not having
+    # provision for linkage with the settlement item generation system.
 
-def calculatePotionCost(item):
-    match = re.match(RE_SPELL_LEVEL, item)
-    try:
-        spell_level = int(match.group(1))
-        caster_level = 2 * spell_level - 1     
-        if spell_level == 0:
-            spell_level = 0.5
-            caster_level = 1
-        return 50 * spell_level * caster_level
-    except:
-        print('Program error when trying to cost a potion:', item)
-        return None
-    return None
+    # We may decide to change this later, but at least for now, the choice
+    # between them will be 50/50.
+    full_strength = random.choice(['lesser ', 'greater ']) + strength
 
-def calculateScrollCost(item):
-    match = re.match(RE_SPELL_LEVEL, item)
-    try:
-        spell_level = int(match.group(1))
-        caster_level = 2 * spell_level - 1     
-        if spell_level == 0:
-            spell_level = 0.5
-            caster_level = 1
-        return 25 * spell_level * caster_level
-    except:
-        print('Program error when trying to cost a scroll:', item)
-        return None
-    return None
+    # Now, select an item type.
+    roll = roller.roll('1d100')
+    # This lookup only needs minor/medium/major.
+    kind = get_item_type(strength, roll)
 
-def calculateWandCost(item):
-    match = re.match(RE_SPELL_LEVEL, item)
-    try:
-        spell_level = int(match.group(1))
-        caster_level = 2 * spell_level - 1     
-        if spell_level == 0:
-            spell_level = 0.5
-            caster_level = 1
-        return 750 * spell_level * caster_level
-    except:
-        print('Program error when trying to cost a wand:', item)
-        return None
-    return None
+    # TODO use base_value as a limiter
+
+    return generate_specific_item(full_strength, kind, roller)
 
 
-def loadItemTypes(filename):
+def generate_item(description, roller):
+    # description is of the form: lesser/greater major/medium/minor <kind>
+    parts = description.split(' ')
+    strength = parts[0:2]
+    kind = parts[2:]
+    # Now we have the parts in a usable form.
+    generate_specific_item(strength, kind, roller)
+
+
+def generate_specific_item(strength, kind, roller):
+    # Create an object.
+    item = create_item(kind)
+
+    # Finish generating the item
+    return item.generate(strength, roller)
+
+
+def create_item(kind):
+    # Create the apropriate Item subclass.
+    subclass = ITEM_SUBCLASSES[kind]
+    result = subclass.__new__(subclass)
+    result.__init__()
+    return result
+
+
+def load_item_types(filename):
     global TABLE_TYPES_LOADED
     global TABLE_TYPES_MINOR
     global TABLE_TYPES_MEDIUM
@@ -176,19 +174,16 @@ def loadItemTypes(filename):
     # Now read the remaining lines.
     for line in f:
         data = line[:-1].split('\t')
-        TABLE_TYPES_MINOR.append ({'min': int(data[1]), 'max': int(data[2]),
-            'type': data[0]})
-        TABLE_TYPES_MEDIUM.append({'min': int(data[3]), 'max': int(data[4]),
-            'type': data[0]})
-        TABLE_TYPES_MAJOR.append ({'min': int(data[5]), 'max': int(data[6]),
-            'type': data[0]})
+        TABLE_TYPES_MINOR.append ({'type': data[0], 'range': data[1]})
+        TABLE_TYPES_MEDIUM.append({'type': data[0], 'range': data[2]})
+        TABLE_TYPES_MAJOR.append ({'type': data[0], 'range': data[3]})
     f.close()
     TABLE_TYPES_LOADED = True
 
 
-def getItemType(strength, roll):
+def get_item_type(strength, roll):
     # Load Item Types
-    loadItemTypes(FILE_ITEMTYPES)
+    load_item_types(FILE_ITEMTYPES)
     # Select the appropriate table.
     global TABLE_TYPES_MINOR
     global TABLE_TYPES_MEDIUM
@@ -203,12 +198,11 @@ def getItemType(strength, roll):
     # Look for the roll among the mins and maxes.
     if table != None:
         for row in table:
-            if roll >= row['min'] and roll <= row['max']:
-                return row['type']
+            if in_range(roll, row['range']): return row['type']
     return ''
 
 
-def inRange(roll, range_str):
+def in_range(roll, range_str):
     span = (0,0)
     if '-' in range_str:
         span = tuple(range_str.split('-'))
@@ -233,10 +227,10 @@ class Table(object):
         self.metadata = []
         self.columns = []
         self.rows = []
-        self.loadFile(filename)
+        self.load_file(filename)
 
 
-    def loadFile(self, filename):
+    def load_file(self, filename):
         # Open the file.
         f = open(filename, 'r')
         self.metadata = f.readline()[:-1].split('\t')
@@ -246,7 +240,7 @@ class Table(object):
             self.rows.append(line[:-1].split('\t'))
 
 
-    def findRoll(self, roll, strength):
+    def find_roll(self, roll, strength):
         # Indices of commonly used columns
         col_roll = None
         col_strength = None
@@ -260,7 +254,7 @@ class Table(object):
             # No Strength column is not necessarily an error.
             pass
         for row in self.rows:
-            check_range = inRange(roll, row[col_roll])
+            check_range = in_range(roll, row[col_roll])
             check_str = False
             if col_strength is not None:
                 check_str = row[col_strength] == strength
@@ -272,44 +266,7 @@ class Table(object):
         return None
 
 
-
 class Item(object):
-
-    # Factory constructor
-    # kind: the type of item
-    #def __new__(cls, kind):
-    #    # If being invoked directly, look for an appropriate subclass.
-    #    if cls is Item:
-    #        # Look up the subclass in the fixed dict.
-    #        subclass = ITEM_SUBCLASSES[kind]
-    #        # Return a new instance of the subclass.  That, in turn, will call
-    #        # this method, which the initial 'if' covers.
-    #        return ITEM_SUBCLASSES[kind].__new__(subclass)
-    #    # Default implementation
-    #    return super(Item, cls).__new__(cls)
-
-    # A class method that implements an Item subclass factory
-    @classmethod
-    def factory(cls, kind):
-        # Create the apropriate Item subclass.
-        subclass = ITEM_SUBCLASSES[kind]
-        result = subclass.__new__(subclass)
-        result.__init__()
-        return result
-
-    # A class method that randomly selects an item type, then uses the factory
-    # __new__ to create a subclass, which further refines itself with rolls.
-    @classmethod
-    def select(cls, strength, roller, base_value):
-        # First, determine the kind of item to generate.
-        roll = roller.roll('1d100')
-        kind = getItemType(strength, roll)
-        # Create an object.
-        item = Item.factory(kind)
-        # Add the initial roll to its rolls list
-        item.log_roll(roll)
-        # Finish generating the item
-        return item.generate(strength, roller)
 
     #
     # Methods that are not meant to be overridden
@@ -348,7 +305,7 @@ class Item(object):
 
         return self.lookup(strength, roller)
 
-        # LEFT OFF HERE ***********************************
+        # REFERNCE CODE - DELETE EVENTUALLY ********************************
 
         ## Look up an item
         #(item, subtype) = lookupItem(TABLE_CRB, strength, kind, roll)
@@ -469,14 +426,14 @@ class Armor(Item):
         roll = roller.roll('1d100')
         self.rolls.append(roll)
         # Lookup an item.
-        mundane = self.t_random.findRoll(roll, None)
+        mundane = self.t_random.find_roll(roll, None)
         print('Armor/Shield:', mundane['Result'], '('+mundane['Type']+')')
         # Lookup a magic property.
         roll = roller.roll('1d100')
         self.rolls.append(roll)
         magic = None
         if mundane['Type'] == 'armor':
-            magic = self.t_magic.findRoll(roll, strength)
+            magic = self.t_magic.find_roll(roll, strength)
         # TODO LEFT OFF HERE: NEED TO FIGURE OUT HOW TO DECIDE
         # BETWEEN LESSER AND GREATER
 

@@ -146,9 +146,9 @@ def generateItems(settlement, roller):
 
 
 def printRandomItems(strength, roller, base_value):
-    # Generate an item
-    a = item.Item.select(strength, roller, base_value)
-    print(a)
+    # Generate a generic item
+    x = item.generate_generic(strength, roller, base_value)
+    print(x)
 
 
 #
