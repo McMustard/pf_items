@@ -1,6 +1,6 @@
 * Reroll items that fall below a settlement's base value.
-  * Implement item value calculator
-  * Add item values to item files
+  * Implement item value calculator (only needed for weapons and armor)
+  * Add item values to item files (no longer necessary)
 
 * When doing a "Reroll Twice":
   * Reroll duplicate specials.
@@ -9,25 +9,16 @@
   * More powerful specials override less powerful ones
 
 * Roll armor sizes
+  * 1-30: small, 31-90 medium, 91-100 other
   
 * Roll weapon special materials
+  * Need to determine ranges
 * Roll 30% chance a weapon sheds light, or has runes/etc.
-
-* For now, offer a single-roll function for making corrections.
-
-* Add weapon tables (low priority)
-  * Region
-  * 1-10 other regions, 11-100 that region ?
-  * Region specified by command line
 
 * Add single-item mode for rerolls or treasure
 
-* Need to determine how to select between CRB and APG
-  * For each item type and strength, count the items in CRB and APG, and
-  assign a value 1-100 to use as a cutoff.
-
 * Add an option to allow potions of spells with a range of personal
-
+  * Would need to provide alternate tables
 
 Ultimate Equipment
 Item Generation Process:
@@ -54,9 +45,6 @@ Gold Value -->
 
 Random Magic Item
 -----------------
-
-
-
 
 Tables:
 -------------------------------------------------------------------------------

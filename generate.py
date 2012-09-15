@@ -17,14 +17,10 @@ import rollers
 # File names
 
 FILE_SETTLEMENTS = 't_settlements'
-FILE_CRB = 't_crb'
-FILE_APG = 't_advancedplayersguide'
 
 # Tables
 
 TABLE_SETTLEMENTS = {}
-TABLE_CRB = {}
-TABLE_APG = {}
 
 # Maps the parameter specification of a settlement to its string for table
 # lookups.  The keys are lower case so that a case insensitive lookup can be
@@ -37,24 +33,24 @@ SETTLEMENT_MAP = {
         'hamlet': 'Hamlet',
         'village': 'Village',
         'small-town': 'Small Town',
+        'small town': 'Small Town',
         'smalltown': 'Small Town',
         'large-town': 'Large Town',
+        'large town': 'Large Town',
         'largetown': 'Large Town',
         'small-city': 'Small City',
+        'small city': 'Small City',
         'smallcity': 'Small City',
         'large-city': 'Large City',
+        'large city': 'Large City',
         'largecity': 'Large City',
         'metropolis': 'Metropolis' }
-
-# Regular Expressions
-
-# None now
 
 
 #
 # Functions
 
-def loadSettlements(filename):
+def load_settlements(filename):
     f = open(filename, 'r')
     # Throw away the first line, a header.
     f.readline()
@@ -69,7 +65,7 @@ def loadSettlements(filename):
     f.close()
 
 
-def parseRange(value):
+def parse_range(value):
     if value == '-':
         return (0, 0)
     if '-' in value:
@@ -78,7 +74,7 @@ def parseRange(value):
     return (int(value), int(value))
 
 
-def lookupItem(table, strength, kind, roll):
+def lookup_item(table, strength, kind, roll):
     for row in table[kind]:
         if roll >= row[strength][0] and roll <= row[strength][1]:
                 return (row['item'], row['subtype'])
@@ -86,7 +82,7 @@ def lookupItem(table, strength, kind, roll):
     return (strength + ' ' + kind + '(' + str(roll) + ')', '')
 
 
-def generateItems(settlement, roller):
+def generate_settlement_items(settlement, roller):
     # Convert the command-line parameter to a dict key string.
     try:
         key = SETTLEMENT_MAP[settlement.lower()]
@@ -126,7 +122,7 @@ def generateItems(settlement, roller):
             print('This ' + key + ' has virtually every minor magic item.')
         else:
             for i in range(count_minor):
-                printRandomItems('minor', roller, settlement_base)
+                print_random_items('minor', roller, settlement_base)
         print()
 
     # Generate the medium magic items.
@@ -134,7 +130,7 @@ def generateItems(settlement, roller):
         print('Medium Magic Items:')
         print('--------------------')
         for i in range(count_medium):
-            printRandomItems('medium', roller, settlement_base)
+            print_random_items('medium', roller, settlement_base)
         print()
 
     # Generate the major magic items.
@@ -142,10 +138,19 @@ def generateItems(settlement, roller):
         print('Major Magic Items:')
         print('--------------------')
         for i in range(count_major):
-            printRandomItems('major', roller, settlement_base)
+            print_random_items('major', roller, settlement_base)
 
 
-def printRandomItems(strength, roller, base_value):
+def generate_item(description, roller):
+    print('Random ' + description + ':')
+    # Generate an item
+    # TODO Note: This is for debugging.  Remove the loop!
+    for i in range(10):
+        x = item.generate_item(description, roller)
+        print(x)
+
+
+def print_random_items(strength, roller, base_value):
     # Generate a generic item
     x = item.generate_generic(strength, roller, base_value)
     print(x)
@@ -157,13 +162,23 @@ def printRandomItems(strength, roller, base_value):
 if __name__ == '__main__':
 
     # Set up a cushy argument parser.
-    parser = argparse.ArgumentParser(description='Generates magic items for' +
-            ' Pathfinder')
+    parser = argparse.ArgumentParser(description='Generates magic items ' +
+            ' for Pathfinder')
 
-    # The only mandatory argument is settlement type.
-    parser.add_argument('settlement', metavar='SETTLEMENT', 
+    # Type of generation
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    # Generate items for a settlement
+    group.add_argument('--settlement', '-s',
             choices=SETTLEMENT_MAP.keys(), type=str,
-            help='Settlement type (' + ', '.join(SETTLEMENT_MAP.keys()) + ')')
+            help='The settlement size, using the values from the core ' +
+            'rulebook')
+
+    # Generate a specific class of item
+    group.add_argument('--item', '-i',
+            help='Item strength [lesser|greater] (minor|medium|major) ' +
+            'and type of item (armor-and-shield, weapon, etc.).  Ex: ' +
+            '--item="lesser minor Armor or Shield"')
 
     # By default, the program will ask for manual roll results.  This
     # result configures automatic rolls.
@@ -171,15 +186,15 @@ if __name__ == '__main__':
             help='Uses built-in rolling instead of prompting for rolls')
 
     # Error-checking
-    parser.add_argument('--check-errors', action='store_true',
-            help='Instructs the program to check for errors in the item ' +
-            'tables')
+    #parser.add_argument('--check-errors', action='store_true',
+    #        help='Instructs the program to check for errors in the item ' +
+    #        'tables')
 
     # Go.
     args = parser.parse_args()
 
     # Load data files.
-    loadSettlements(FILE_SETTLEMENTS)
+    load_settlements(FILE_SETTLEMENTS)
 
     # Set up the roller.
     if args.auto:
@@ -188,8 +203,11 @@ if __name__ == '__main__':
         roller = rollers.ManualDiceRoller()
 
     # Check data for errors.
-    if args.check_errors:
-        print('Checking for errors')
+    #if args.check_errors:
+    #    print('Checking for errors')
 
     # Process.
-    generateItems(args.settlement, roller)
+    if args.settlement:
+        generate_settlement_items(args.settlement, roller)
+    elif args.item:
+        generate_item(args.item, roller)

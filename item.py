@@ -14,7 +14,7 @@ import generate
 # Keys into the subclass map, also usable for displaying categories, if
 # desired.
 
-KEY_ARMOR         = 'Armor and Shield'
+KEY_ARMOR         = 'Armor/Shield'
 KEY_WEAPON        = 'Weapon'
 KEY_POTION        = 'Potion'
 KEY_RING          = 'Ring'
@@ -137,10 +137,10 @@ def generate_generic(strength, roller, base_value):
 def generate_item(description, roller):
     # description is of the form: lesser/greater major/medium/minor <kind>
     parts = description.split(' ')
-    strength = parts[0:2]
-    kind = parts[2:]
+    strength = ' '.join(parts[0:2])
+    kind = ' '.join(parts[2:])
     # Now we have the parts in a usable form.
-    generate_specific_item(strength, kind, roller)
+    return generate_specific_item(strength, kind, roller)
 
 
 def generate_specific_item(strength, kind, roller):
@@ -202,7 +202,7 @@ def get_item_type(strength, roll):
     return ''
 
 
-def in_range(roll, range_str):
+def split_range(range_str):
     span = (0,0)
     if '-' in range_str:
         span = tuple(range_str.split('-'))
@@ -211,14 +211,47 @@ def in_range(roll, range_str):
         span = tuple(range_str.split('–'))
     else:
         span = (range_str, range_str)
-    rmin = int(span[0])
-    rmax = int(span[1])
+    return (int(span[0]), int(span[1]))
+
+
+def in_range(roll, range_str):
+    (rmin, rmax) = split_range(range_str)
     return roll >= rmin and roll <= rmax
-        
+
+
+def total_range(range_str):
+    (rmin, rmax) = split_range(range_str)
+    return rmax - rmin + 1
+
+
+def parse_price(price_str):
+    match = re.match('\+(.*) gp', price_str)
+    if match:
+        return int(match.group(1).replace(',', ''))
+    else:
+        print('Error: cannot extract a price from', price_str)
+    return 0
+
+
+def parse_enhancement_price(price_str):
+    match = re.match('\+(\d+) bonus', price_str)
+    if match:
+        return int(match.group(1))
+    else:
+        print('Error: cannot extract enhancement bonus from', price_str)
+    return 0
+
 
 #
 # Classes
 #
+
+
+class TableRowMissingError(Exception):
+
+    def __init__(self, message):
+        # Base class init.
+        Exception.__init__(self, message)
 
 
 class Table(object):
@@ -227,6 +260,7 @@ class Table(object):
         self.metadata = []
         self.columns = []
         self.rows = []
+        self.filename = filename
         self.load_file(filename)
 
 
@@ -235,9 +269,27 @@ class Table(object):
         f = open(filename, 'r')
         self.metadata = f.readline()[:-1].split('\t')
         self.columns = f.readline()[:-1].split('\t')
+        col_roll = None
+        col_count = len(self.columns)
+        try:
+            col_roll = self.columns.index('Roll')
+        except ValueError:
+            print('Error finding Roll column in table', self.filename)
+            raise
+        # Total up all the roll ranges
+        total_rolls = 0
+        row_number = 0
         # Read entries as tab-separated values.
         for line in f:
-            self.rows.append(line[:-1].split('\t'))
+            row = line[:-1].split('\t')
+            if len(row) < col_count:
+                print('Error: row', row_number, 'does not have enough columns')
+            total_rolls += total_range(row[col_roll])
+            self.rows.append(row)
+            row_number += 1
+        if total_rolls % 100 != 0:
+            print('Error: The rows in table', self.filename, 'do not total ' +
+                    'up to a multiple of 100; a row is probably missing.')
 
 
     def find_roll(self, roll, strength):
@@ -246,11 +298,12 @@ class Table(object):
         col_strength = None
         try:
             col_roll = self.columns.index('Roll')
-        except:
-            print('Error finding Roll column in table', self.metadata[0])
+        except ValueError:
+            print('Error finding Roll column in table', self.filename)
+            raise
         try:
             col_strength = self.columns.index('Strength')
-        except:
+        except ValueError:
             # No Strength column is not necessarily an error.
             pass
         for row in self.rows:
@@ -263,8 +316,36 @@ class Table(object):
             if check_range and check_str:
                 # Return a dictionary of the resulting data
                 return dict(zip(self.columns, row))
-        return None
+        if col_strength:
+            raise TableRowMissingError('Table ' + self.filename + ': ' +
+                    'There is no row for strength: ' + strength +
+                    ', roll: ' + str(roll) )
+        else:
+            raise TableRowMissingError('Table ' + self.filename + ': ' +
+                    'There is no row for strength: <none>, ' +
+                    'roll: ' + str(roll))
 
+
+    def total_rolls(self, column_name, column_value):
+        col_roll = None
+        col_search = None
+        try:
+            col_roll = self.columns.index('Roll')
+        except ValueError:
+            print('Error finding Roll column in table', self.filename)
+            raise
+        try:
+            col_search = self.columns.index(column_name)
+        except ValueError:
+            print('Error finding',column_name ,'column in table',
+                    self.filename)
+            raise
+        total = 0
+        for row in self.rows:
+            if row[col_search] == column_value:
+                total += total_range(row[col_roll])
+        return total
+            
 
 class Item(object):
 
@@ -412,6 +493,9 @@ class Armor(Item):
         self.t_specials_armor  = Table(FILE_SPECIAL_ABILITIES_ARMOR)
         self.t_specific_shield = Table(FILE_SPECIFIC_SHIELDS)
         self.t_specials_shield = Table(FILE_SPECIAL_ABILITIES_SHIELD)
+        self.armor_threshold = self.t_random.total_rolls('Type', 'armor')
+        self.re_enhancement = re.compile('\+(\d+) armor or shield')
+        self.re_specials = re.compile('with (\w+) \+(\d+) special')
 
     def __repr__(self):
         result = '<Armor'
@@ -425,17 +509,83 @@ class Armor(Item):
         # Roll for the item.
         roll = roller.roll('1d100')
         self.rolls.append(roll)
-        # Lookup an item.
+        # Look up the roll.
         mundane = self.t_random.find_roll(roll, None)
-        print('Armor/Shield:', mundane['Result'], '('+mundane['Type']+')')
-        # Lookup a magic property.
+        armor_piece = mundane['Result']
+        armor_type = mundane['Type']
+
+        # Roll for the magic property.
         roll = roller.roll('1d100')
         self.rolls.append(roll)
-        magic = None
-        if mundane['Type'] == 'armor':
-            magic = self.t_magic.find_roll(roll, strength)
-        # TODO LEFT OFF HERE: NEED TO FIGURE OUT HOW TO DECIDE
-        # BETWEEN LESSER AND GREATER
+        magic = self.t_magic.find_roll(roll, strength)
+        magic_type = magic['Result']
+
+        # Handle it
+        if magic_type.endswith('specific armor or shield'):
+            return self.get_specific_item(roller, strength, armor_type)
+        else:
+            return armor_piece + ' ' + self.get_magic_bonuses(roller,
+                    strength, armor_type, magic_type)
+
+
+    def get_magic_bonuses(self, roller, strength, armor_type, specification):
+        # "Regular" magic item, with an assortment of bonuses.
+        # We already rolled, and know what we need: specification param.
+        enhancement_bonus = 0
+        special_count = 0
+        special_strength = 0
+        # This part is always at the beginning
+        match = self.re_enhancement.match(specification)
+        if match:
+            enhancement_bonus = int(match.group(1))
+        # This might be in the middle of the string
+        match = self.re_specials.search(specification)
+        if match:
+            special_count = {'one': 1, 'two': 2}[match.group(1)]
+            special_strength = '+' + match.group(2)
+        # Construct a string listing the specials.  The enhancement goes first.
+        specials = '+' + str(enhancement_bonus)
+        # Also keep totals for cost calculation.
+        cost_enhancement = enhancement_bonus
+        cost_static = 0
+        print(special_count, special_strength)
+        # Add specials!
+        for i in range(special_count):
+            # Roll for a special
+            roll = roller.roll('1d100')
+            self.rolls.append(roll)
+            # Look it up.
+            result = None
+            if armor_type == 'armor':
+                result = self.t_specials_armor.find_roll(roll,
+                        special_strength)
+            else:
+                result = self.t_specials_shield.find_roll(roll,
+                        special_strength)
+            special = result['Result']
+            price = result['Price']
+            if price.endswith(' gp'):
+                cost_static += parse_price(price)
+            elif price.endswith(' bonus'):
+                cost_enhancement += parse_enhancement_price(price)
+            else:
+                print('Error: this item cannot be priced.')
+            # Add it to the string.
+            specials += '/' + special
+            print(special)
+        return specials
+
+
+    def get_specific_item(self, roller, strength, armor_type):
+        # Roll for the specific armor.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        # Look it up.
+        if armor_type == 'armor':
+            result = self.t_specific_armor.find_roll(roll, strength)
+        else:
+            result = self.t_specific_shield.find_roll(roll, strength)
+        return result['Result']
 
 
 class Weapon(Item):

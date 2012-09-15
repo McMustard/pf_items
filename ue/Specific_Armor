@@ -1,5 +1,5 @@
 Specific Armor	3-5	p125	Ultimate Equipment
-Strength	Roll	Value	Price
+Strength	Roll	Result	Price
 lesser minor	01–50	Mithral shirt	1,100 gp
 lesser minor	51–100	Masterwork armor or nonmagical lesser minor armor made with special material	varies
 greater minor	01–33	Mistmail	2,250 gp
@@ -40,4 +40,3 @@ greater major	77–82	Giant-hide armor (storm giant)	76,665 gp
 greater major	83–88	Daystar half-plate	81,250 gp
 greater major	89–96	Invincible armor	137,650 gp
 greater major	97–100	Prismatic plate	160,650 gp
-
