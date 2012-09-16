@@ -144,16 +144,27 @@ def generate_settlement_items(settlement, roller):
 def generate_item(description, roller):
     print('Random ' + description + ':')
     # Generate an item
-    # TODO Note: This is for debugging.  Remove the loop!
-    for i in range(10):
-        x = item.generate_item(description, roller)
-        print(x)
+    x = item.generate_item(description, roller)
+    print(x)
 
 
 def print_random_items(strength, roller, base_value):
     # Generate a generic item
     x = item.generate_generic(strength, roller, base_value)
     print(x)
+
+
+def test(roller):
+    strengths = ['lesser minor', 'greater minor', 'lesser medium',
+            'greater medium', 'lesser major', 'greater major']
+    items = ['Armor/Shield', 'Weapon']
+    for s in strengths:
+        for i in items:
+            print(s + ' ' + i)
+            print('-' * 78)
+            for c in range(1000):
+                print(item.generate_item(s + ' ' + i, roller),end=', ')
+            print()
 
 
 #
@@ -180,10 +191,18 @@ if __name__ == '__main__':
             'and type of item (armor-and-shield, weapon, etc.).  Ex: ' +
             '--item="lesser minor Armor or Shield"')
 
-    # By default, the program will ask for manual roll results.  This
-    # result configures automatic rolls.
-    parser.add_argument('--auto', '-a', action='store_true',
-            help='Uses built-in rolling instead of prompting for rolls')
+    # Test mode: dump out a whole bunch of items.
+    group.add_argument('--test', '-t', action='store_true',
+            help='Tests the program by generating many items')
+
+    # More of an indicator that the group is finished than anything.
+    group = None
+
+    # By default, the program will roll automatically.  This option will
+    # cause it to prompt, so dice rolls can be entered manually.
+    parser.add_argument('--manual', '-m', action='store_true',
+            help='Prompts for rolls rather than using the built-in roller')
+
 
     # Error-checking
     #parser.add_argument('--check-errors', action='store_true',
@@ -197,10 +216,10 @@ if __name__ == '__main__':
     load_settlements(FILE_SETTLEMENTS)
 
     # Set up the roller.
-    if args.auto:
-        roller = rollers.PseudorandomRoller()
-    else:
+    if args.manual:
         roller = rollers.ManualDiceRoller()
+    else:
+        roller = rollers.PseudorandomRoller()
 
     # Check data for errors.
     #if args.check_errors:
@@ -211,3 +230,5 @@ if __name__ == '__main__':
         generate_settlement_items(args.settlement, roller)
     elif args.item:
         generate_item(args.item, roller)
+    elif args.test:
+        test(roller)

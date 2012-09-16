@@ -113,7 +113,7 @@ FILE_WONDROUS_ITEMS_WRISTS          = 'ue/Wondrous_Items_Wrists'
 # Functions
 
 def generate_generic(strength, roller, base_value):
-    # Here, strength is merely 'minor', 'medium', 'major', so we need to.
+    # Here, strength is merely 'minor', 'medium', 'major', so we need to
     # further qualify it with 'lesser' or 'greater'.
     
     # We don't want to use the roller mechanism, since this is not a table
@@ -128,8 +128,6 @@ def generate_generic(strength, roller, base_value):
     roll = roller.roll('1d100')
     # This lookup only needs minor/medium/major.
     kind = get_item_type(strength, roll)
-
-    # TODO use base_value as a limiter
 
     return generate_specific_item(full_strength, kind, roller)
 
@@ -281,6 +279,7 @@ class Table(object):
         row_number = 0
         # Read entries as tab-separated values.
         for line in f:
+            if line.startswith('#'): continue
             row = line[:-1].split('\t')
             if len(row) < col_count:
                 print('Error: row', row_number, 'does not have enough columns')
@@ -386,44 +385,6 @@ class Item(object):
 
         return self.lookup(strength, roller)
 
-        # REFERNCE CODE - DELETE EVENTUALLY ********************************
-
-        ## Look up an item
-        #(item, subtype) = lookupItem(TABLE_CRB, strength, kind, roll)
-
-        ## Check for starred items.  This requires another check.
-        #if item[-1] == '*':
-        #    # The item name tells us what we need to roll.
-        #    nextKind = item[:-1]
-        #    roll = roller.roll('1d100')
-        #    rolls.append(roll)
-        #    (item, subtype) = lookupItem(TABLE_CRB, strength, nextKind, roll)
-
-        #while item == 'ADD SPECIAL, ROLL AGAIN':
-        #    # Look up a new item so we know what subtype to seek out.
-        #    roll = roller.roll('1d100')
-        #    rolls.append(roll)
-        #    (item, subtype) = lookupItem(TABLE_CRB, strength, kind, roll)
-        #    if item != 'ADD SPECIAL, ROLL AGAIN':
-        #        if subtype == '':
-        #            print('ERROR!  No subtype for ' + item)
-        #            return ''
-        #        # Roll up a special.
-        #        roll = roller.roll('1d100')
-        #        rolls.append(roll)
-        #        specials = generateSpecials(strength,
-        #            subtype + ' Special Ability', roller, rolls)
-
-        ## Determine the cost of the item, as it might need to be rerolled.
-        #cost = pricing.calculateCost(kind, item, specials)
-
-        ## TODO Spells in Potions, Scrolls, Wands
-        #if len(specials) > 0:
-        #    item = item + ', ' + '/'.join(specials)
-        #return (item, rolls, cost)
-
-        return 'Placeholder'
-
 
     # TODO Just a placeholder until I figure out how this will work.
     def generateSpecials(strength, kind, roller, rolls):
@@ -457,6 +418,7 @@ class Item(object):
         # Put everything in one string and return it.
         return specials
 
+
     #
     # Methods that are meant to be overridden
 
@@ -469,11 +431,13 @@ class Item(object):
         result += '>'
         return result
 
+
     # The standard __str__ method
     def __str__(self):
         return 'generic item'
 
-    # Default implementation if the generation initializer.
+
+    # Default implementation of the generation initializer.
     # A generation initializer is necessary in case an item needs to be
     # rerolled using the same parameters.
     def generate_init(self):
@@ -481,10 +445,9 @@ class Item(object):
 
 
 class Armor(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_ARMOR)
-        # Armor and Shield special abilities
-        self.specials = []
         #print("Armor.__init__")
         # Load tables
         self.t_random          = Table(FILE_RANDOM_ARMOR_OR_SHIELD)
@@ -497,13 +460,16 @@ class Armor(Item):
         self.re_enhancement = re.compile('\+(\d+) armor or shield')
         self.re_specials = re.compile('with (\w+) \+(\d+) special')
 
+
     def __repr__(self):
         result = '<Armor'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
+
 
     def lookup(self, strength, roller):
         # Roll for the item.
@@ -511,7 +477,7 @@ class Armor(Item):
         self.rolls.append(roll)
         # Look up the roll.
         mundane = self.t_random.find_roll(roll, None)
-        armor_piece = mundane['Result']
+        armor_base = mundane['Result']
         armor_type = mundane['Type']
 
         # Roll for the magic property.
@@ -524,7 +490,7 @@ class Armor(Item):
         if magic_type.endswith('specific armor or shield'):
             return self.get_specific_item(roller, strength, armor_type)
         else:
-            return armor_piece + ' ' + self.get_magic_bonuses(roller,
+            return armor_base + ' ' + self.get_magic_bonuses(roller,
                     strength, armor_type, magic_type)
 
 
@@ -548,7 +514,6 @@ class Armor(Item):
         # Also keep totals for cost calculation.
         cost_enhancement = enhancement_bonus
         cost_static = 0
-        print(special_count, special_strength)
         # Add specials!
         for i in range(special_count):
             # Roll for a special
@@ -572,7 +537,6 @@ class Armor(Item):
                 print('Error: this item cannot be priced.')
             # Add it to the string.
             specials += '/' + special
-            print(special)
         return specials
 
 
@@ -589,22 +553,106 @@ class Armor(Item):
 
 
 class Weapon(Item):
+
     def __init__(self):
-        Item.__init__(self, KEY_WEAPON)
-        # weapon special abilities
-        self.specials = []
+        Item.__init__(self, KEY_ARMOR)
         #print("Weapon.__init__")
+        # Load tables
+        self.t_random          = Table(FILE_RANDOM_WEAPON)
+        self.t_magic           = Table(FILE_MAGIC_WEAPONS)
+        self.t_specific_weapon = Table(FILE_SPECIFIC_WEAPONS)
+        self.t_specials_melee  = Table(FILE_SPECIAL_ABILITIES_MELEE_WEAPON)
+        self.t_specials_ranged = Table(FILE_SPECIAL_ABILITIES_RANGED_WEAPON)
+        self.re_enhancement = re.compile('\+(\d+) weapon')
+        self.re_specials = re.compile('with (\w+) \+(\d+) special')
+
 
     def __repr__(self):
         result = '<Weapon'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
 
+
     def lookup(self, strength, roller):
-        pass
+        # Roll for the item.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        # Look up the roll.
+        mundane = self.t_random.find_roll(roll, None)
+        weapon_base = mundane['Result']
+        weapon_type = mundane['Type']
+
+        # Roll for the magic property.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        magic = self.t_magic.find_roll(roll, strength)
+        magic_type = magic['Result']
+
+        # Handle it
+        if magic_type.endswith('specific weapon'):
+            return self.get_specific_item(roller, strength, weapon_type)
+        else:
+            return weapon_base + ' ' + self.get_magic_bonuses(roller,
+                    strength, weapon_type, magic_type)
+
+
+    def get_magic_bonuses(self, roller, strength, weapon_type, specification):
+        # Construct a 'specials' string
+        specials = ''
+        # Also keep totals for cost calculation.
+        cost_enhancement = 0
+        cost_static = 0
+        # "Regular" magic item, with an assortment of bonuses.
+        # We already rolled, and know what we need: specification param.
+        enhancement_bonus = 0
+        # This part is always at the beginning
+        match = self.re_enhancement.match(specification)
+        if match:
+            enhancement_bonus = int(match.group(1))
+            cost_enhancement += enhancement_bonus
+            specials += '+' + str(enhancement_bonus)
+        # This might be present, multiple times
+        match = self.re_specials.findall(specification)
+        for part in match:
+            special_count = {'one': 1, 'two': 2}[part[0]]
+            special_strength = '+' + str(part[1])
+            # Add specials!
+            for i in range(special_count):
+                # Roll for a special
+                roll = roller.roll('1d100')
+                self.rolls.append(roll)
+                # Look it up.
+                result = None
+                if weapon_type == 'melee':
+                    result = self.t_specials_melee.find_roll(roll,
+                            special_strength)
+                else:
+                    result = self.t_specials_ranged.find_roll(roll,
+                            special_strength)
+                special = result['Result']
+                price = result['Price']
+                if price.endswith(' gp'):
+                    cost_static += parse_price(price)
+                elif price.endswith(' bonus'):
+                    cost_enhancement += parse_enhancement_price(price)
+                else:
+                    print('Error: this item cannot be priced.')
+                # Add it to the string.
+                specials += '/' + special
+        return specials
+
+
+    def get_specific_item(self, roller, strength, weapon_type):
+        # Roll for the specific armor.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        # Look it up.
+        result = self.t_specific_weapon.find_roll(roll, strength)
+        return result['Result']
 
 
 class Potion(Item):
@@ -712,8 +760,6 @@ class Wand(Item):
 class WondrousItem(Item):
     def __init__(self):
         Item.__init__(self, KEY_WONDROUS_ITEM)
-        # Armor and Shield special abilities
-        self.specials = []
         #print("WondrousItem.__init__")
 
     def __repr__(self):

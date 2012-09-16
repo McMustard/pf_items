@@ -1,4 +1,5 @@
 Melee Weapon Special Abilities	3-8	p136	Ultimate Equipment
+Strength	Roll	Result	Price
 +1	01	Impervious	+3,000 gp
 +1	02	Glamered	+4,000 gp
 +1	03	Allying	+1 bonus
@@ -67,12 +68,19 @@ Melee Weapon Special Abilities	3-8	p136	Ultimate Equipment
 +2	84	Stalking	+2 bonus
 +2	85–91	Unholy	+2 bonus
 +2	92–100	Wounding	+2 bonus
-+4	01–20	Nullifying	+3 bonus
-+4	21–40	Repositioning	+3 bonus
-+4	41–80	Speed	+3 bonus
-+4	81–100	Spellstealing	+3 bonus
-+4/+5	01–40	Brilliant energy	+4 bonus
-+4/+5	41–80	Dancing	+4 bonus
-+4/+5	81–90	Vorpal	+5 bonus
-+4/+5	91–95	Transformative	+10,000 gp
-+4/+5	96–100	Dueling	+14,000 gp
++3	01–20	Nullifying	+3 bonus
++3	21–40	Repositioning	+3 bonus
++3	41–80	Speed	+3 bonus
++3	81–100	Spellstealing	+3 bonus
+#In the book, +4 and +5 items are in the same group, but we'll split them
+#for our algoritm
++4	01–40	Brilliant energy	+4 bonus
++4	41–80	Dancing	+4 bonus
++4	81–90	Vorpal	+5 bonus
++4	91–95	Transformative	+10,000 gp
++4	96–100	Dueling	+14,000 gp
++5	01–40	Brilliant energy	+4 bonus
++5	41–80	Dancing	+4 bonus
++5	81–90	Vorpal	+5 bonus
++5	91–95	Transformative	+10,000 gp
++5	96–100	Dueling	+14,000 gp

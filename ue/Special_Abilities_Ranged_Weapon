@@ -1,5 +1,5 @@
 Ranged Weapon Special Abilities	3-10	p139	Ultimate Equipment
-Strength	Roll	Value	Price
+Strength	Roll	Result	Price
 +1	01	Adaptive	+1,000 gp
 +1	02	Impervious	+3,000 gp
 +1	03	Glamered	+4,000 gp
@@ -39,10 +39,19 @@ Strength	Roll	Value	Price
 +2	77–86	Shocking burst	+2 bonus
 +2	87–90	Stalking	+2 bonus
 +2	91–100	Unholy	+2 bonus
-+3/+4	01–25	Lucky, greater	+3 bonus
-+3/+4	26–45	Reliable, greater	+3 bonus
-+3/+4	46–85	Speed	+3 bonus
-+3/+4	86–94	Brilliant energy	+4 bonus
-+3/+4	95–96	Designating, greater	+4 bonus
-+3/+4	97–98	Nimble shot	+4 bonus
-+3/+4	99–100	Second chance	+4 bonus
+#In the book, +3 and +4 bonuses are in the same group, but we'll split them
+#up for our algorithm
++3	01–25	Lucky, greater	+3 bonus
++3	26–45	Reliable, greater	+3 bonus
++3	46–85	Speed	+3 bonus
++3	86–94	Brilliant energy	+4 bonus
++3	95–96	Designating, greater	+4 bonus
++3	97–98	Nimble shot	+4 bonus
++3	99–100	Second chance	+4 bonus
++4	01–25	Lucky, greater	+3 bonus
++4	26–45	Reliable, greater	+3 bonus
++4	46–85	Speed	+3 bonus
++4	86–94	Brilliant energy	+4 bonus
++4	95–96	Designating, greater	+4 bonus
++4	97–98	Nimble shot	+4 bonus
++4	99–100	Second chance	+4 bonus

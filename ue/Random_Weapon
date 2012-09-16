@@ -1,43 +1,44 @@
 Random Weapon	7-13	p370	Ultimate Equipment
-Roll	Result
-01	Bastard sword
-02–05	Battleaxe
-06	Bolas
-07–08	Club
-09–10	Composite longbow
-11–12	Composite shortbow
-13–16	Dagger
-17	Dart
-18	Dwarven waraxe
-19	Falchion
-20	Gauntlet
-21	Glaive
-22–24	Greataxe
-25	Greatclub
-26–28	Greatsword
-29	Halberd
-30	Handaxe
-31–33	Heavy crossbow
-34	Heavy flail
-35	Heavy mace
-36–37	Lance
-38–40	Light crossbow
-41	Light flail
-42	Light hammer
-43–44	Light mace
-45	Light pick
-46–49	Longbow
-50–51	Longspear
-52–58	Longsword
-59–60	Morningstar
-61	Nunchaku
-62–63	Quarterstaff
-64–65	Rapier
-85–87	Spear
-88	Trident
-89–91	Warhammer
-92	Whip
-93–94	Other light melee weapon
-95–96	Other one-handed melee weapon
-97–98	Other two-handed melee weapon
-99–100	Other ranged weapon
+Roll	Type	Result
+01	melee	Bastard sword
+02–05	melee	Battleaxe
+06	ranged	Bolas
+07–08	melee	Club
+09–10	ranged	Composite longbow
+11–12	ranged	Composite shortbow
+13–16	melee	Dagger
+17	ranged	Dart
+18	melee	Dwarven waraxe
+19	melee	Falchion
+20	melee	Gauntlet
+21	melee	Glaive
+22–24	melee	Greataxe
+25	melee	Greatclub
+26–28	melee	Greatsword
+29	melee	Halberd
+30	melee	Handaxe
+31–33	ranged	Heavy crossbow
+34	melee	Heavy flail
+35	melee	Heavy mace
+36–37	melee	Lance
+38–40	ranged	Light crossbow
+41	melee	Light flail
+42	melee	Light hammer
+43–44	melee	Light mace
+45	melee	Light pick
+46–49	ranged	Longbow
+50–51	melee	Longspear
+52–58	melee	Longsword
+59–60	melee	Morningstar
+61	melee	Nunchaku
+62–63	melee	Quarterstaff
+64–65	melee	Rapier
+66–84	melee	(Error)
+85–87	melee	Spear
+88	melee	Trident
+89–91	melee	Warhammer
+92	melee	Whip
+93–94	melee	Other light melee weapon
+95–96	melee	Other one-handed melee weapon
+97–98	melee	Other two-handed melee weapon
+99–100	ranged	Other ranged weapon
