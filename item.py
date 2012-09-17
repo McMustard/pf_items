@@ -207,6 +207,9 @@ def split_range(range_str):
     elif '–' in range_str:
         # Note: the character mentioned here is hex 2013, not a simple dash
         span = tuple(range_str.split('–'))
+    elif '—' in range_str:
+        # Note: the character mentioned here is hex 2014, not a simple dash
+        span = tuple(range_str.split('—'))
     else:
         span = (range_str, range_str)
     return (int(span[0]), int(span[1]))
@@ -287,8 +290,11 @@ class Table(object):
             self.rows.append(row)
             row_number += 1
         if total_rolls % 100 != 0:
-            print('Error: The rows in table', self.filename, 'do not total ' +
-                    'up to a multiple of 100; a row is probably missing.')
+            # This does not seem to work for slotless wondrous items.
+            # It may be due to the single-digit numbers?
+            #print('Error: The rows in table', self.filename, 'do not total ' +
+            #        'up to a multiple of 100; a row is probably missing.')
+            pass
 
 
     def find_roll(self, roll, strength):
@@ -656,9 +662,17 @@ class Weapon(Item):
 
 
 class Potion(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_POTION)
         #print("Potion.__init__")
+        # Load tables.
+        self.t_random = Table(FILE_RANDOM_POTIONS_AND_OILS)
+        self.t_type = Table(FILE_POTION_OR_OIL_TYPE)
+        self.t_potions_0 = Table(FILE_POTION_OR_OIL_LEVEL_0)
+        self.t_potions_1 = Table(FILE_POTION_OR_OIL_LEVEL_1)
+        self.t_potions_2 = Table(FILE_POTION_OR_OIL_LEVEL_2)
+        self.t_potions_3 = Table(FILE_POTION_OR_OIL_LEVEL_3)
 
     def __repr__(self):
         result = '<Potion'
@@ -669,109 +683,357 @@ class Potion(Item):
         return ''
 
     def lookup(self, strength, roller):
-        pass
+        # Roll for the potion level.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        # Look it up.
+        result = self.t_random.find_roll(roll, strength)
+        spell_level = result['Spell Level']
+        # Determine common or uncommon
+        commonness = 'Common'
+        if spell_level != '0':
+            # Roll and record.
+            roll = roller.roll('1d100')
+            self.rolls.append(roll)
+            # Determine commonness
+            commonness = self.t_type.find_roll(roll, '')['Result']
+        commonness = commonness.lower()
+        # Now roll for and look up the spell.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        result = None
+        if spell_level == '0':
+            result = self.t_potions_0.find_roll(roll, commonness)
+        elif spell_level == '1st':
+            result = self.t_potions_1.find_roll(roll, commonness)
+        elif spell_level == '2nd':
+            result = self.t_potions_2.find_roll(roll, commonness)
+        elif spell_level == '3rd':
+            result = self.t_potions_3.find_roll(roll, commonness)
+        return result['Result']
 
 
 class Ring(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_RING)
         #print("Ring.__init__")
+        # Load tables.
+        self.t_rings = Table(FILE_RINGS)
+
 
     def __repr__(self):
         result = '<Ring'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
 
+
     def lookup(self, strength, roller):
-        pass
+        # Roll for the ring.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        # Look it up.
+        ring = self.t_rings.find_roll(roll, strength)
+        return ring['Result']
 
 
 class Rod(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_ROD)
         #print("Rod.__init__")
+        # Load tables.
+        self.t_rods = Table(FILE_RODS)
+
 
     def __repr__(self):
         result = '<Rod'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
 
+
     def lookup(self, strength, roller):
-        pass
+        # Roll for the rod.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        # Look it up.
+        rod = self.t_rods.find_roll(roll, strength)
+        return rod['Result']
 
 
 class Scroll(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_SCROLL)
         #print("Scroll.__init__")
+        # Load tables.
+        self.t_random = Table(FILE_RANDOM_SCROLLS)
+        self.t_type = Table(FILE_SCROLL_TYPE)
+        self.t_arcane_level_0 = Table(FILE_SCROLLS_ARCANE_LEVEL_0)
+        self.t_arcane_level_1 = Table(FILE_SCROLLS_ARCANE_LEVEL_1)
+        self.t_arcane_level_2 = Table(FILE_SCROLLS_ARCANE_LEVEL_2)
+        self.t_arcane_level_3 = Table(FILE_SCROLLS_ARCANE_LEVEL_3)
+        self.t_arcane_level_4 = Table(FILE_SCROLLS_ARCANE_LEVEL_4)
+        self.t_arcane_level_5 = Table(FILE_SCROLLS_ARCANE_LEVEL_5)
+        self.t_arcane_level_6 = Table(FILE_SCROLLS_ARCANE_LEVEL_6)
+        self.t_arcane_level_7 = Table(FILE_SCROLLS_ARCANE_LEVEL_7)
+        self.t_arcane_level_8 = Table(FILE_SCROLLS_ARCANE_LEVEL_8)
+        self.t_arcane_level_9 = Table(FILE_SCROLLS_ARCANE_LEVEL_9)
+        self.t_divine_level_0 = Table(FILE_SCROLLS_DIVINE_LEVEL_0)
+        self.t_divine_level_1 = Table(FILE_SCROLLS_DIVINE_LEVEL_1)
+        self.t_divine_level_2 = Table(FILE_SCROLLS_DIVINE_LEVEL_2)
+        self.t_divine_level_3 = Table(FILE_SCROLLS_DIVINE_LEVEL_3)
+        self.t_divine_level_4 = Table(FILE_SCROLLS_DIVINE_LEVEL_4)
+        self.t_divine_level_5 = Table(FILE_SCROLLS_DIVINE_LEVEL_5)
+        self.t_divine_level_6 = Table(FILE_SCROLLS_DIVINE_LEVEL_6)
+        self.t_divine_level_7 = Table(FILE_SCROLLS_DIVINE_LEVEL_7)
+        self.t_divine_level_8 = Table(FILE_SCROLLS_DIVINE_LEVEL_8)
+        self.t_divine_level_9 = Table(FILE_SCROLLS_DIVINE_LEVEL_9)
+
 
     def __repr__(self):
         result = '<Scroll'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
 
+
     def lookup(self, strength, roller):
-        pass
+        # Roll a random scroll level
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        random_scroll = self.t_random.find_roll(roll, strength)
+        spell_level = random_scroll['Spell Level']
+        caster_level = random_scroll['Caster Level']
+        # Roll for the scroll type.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        scroll_type = self.t_type.find_roll(roll, '')['Result']
+        # Roll for the spell.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        # Now get the exact scroll.
+        words = scroll_type.split(' ')
+        commonness = words[0].lower()
+        arcaneness = words[1].lower()
+        # Note that unlike potions, there are uncommon level 0 scrolls.
+        result = None
+        if arcaneness == 'arcane':
+            if spell_level == '0':
+                result = self.t_arcane_level_0.find_roll(roll, commonness)
+            elif spell_level == '1st':
+                result = self.t_arcane_level_1.find_roll(roll, commonness)
+            elif spell_level == '2nd':
+                result = self.t_arcane_level_2.find_roll(roll, commonness)
+            elif spell_level == '3rd':
+                result = self.t_arcane_level_3.find_roll(roll, commonness)
+            elif spell_level == '4th':
+                result = self.t_arcane_level_4.find_roll(roll, commonness)
+            elif spell_level == '5th':
+                result = self.t_arcane_level_5.find_roll(roll, commonness)
+            elif spell_level == '6th':
+                result = self.t_arcane_level_6.find_roll(roll, commonness)
+            elif spell_level == '7th':
+                result = self.t_arcane_level_7.find_roll(roll, commonness)
+            elif spell_level == '8th':
+                result = self.t_arcane_level_8.find_roll(roll, commonness)
+            elif spell_level == '9th':
+                result = self.t_arcane_level_9.find_roll(roll, commonness)
+        elif arcaneness == 'divine':
+            if spell_level == '0':
+                result = self.t_divine_level_0.find_roll(roll, commonness)
+            elif spell_level == '1st':
+                result = self.t_divine_level_1.find_roll(roll, commonness)
+            elif spell_level == '2nd':
+                result = self.t_divine_level_2.find_roll(roll, commonness)
+            elif spell_level == '3rd':
+                result = self.t_divine_level_3.find_roll(roll, commonness)
+            elif spell_level == '4th':
+                result = self.t_divine_level_4.find_roll(roll, commonness)
+            elif spell_level == '5th':
+                result = self.t_divine_level_5.find_roll(roll, commonness)
+            elif spell_level == '6th':
+                result = self.t_divine_level_6.find_roll(roll, commonness)
+            elif spell_level == '7th':
+                result = self.t_divine_level_7.find_roll(roll, commonness)
+            elif spell_level == '8th':
+                result = self.t_divine_level_8.find_roll(roll, commonness)
+            elif spell_level == '9th':
+                result = self.t_divine_level_9.find_roll(roll, commonness)
+        return result['Result'] + ' (' + arcaneness + \
+                ', CL ' + caster_level + ')'
 
 
 class Staff(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_STAFF)
         #print("Staff.__init__")
+        # Load tables.
+        self.t_staves = Table(FILE_STAVES)
+
 
     def __repr__(self):
         result = '<Staff'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
 
+
     def lookup(self, strength, roller):
-        pass
+        # Roll for a staff.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        staff = self.t_staves.find_roll(roll, strength)
+        return staff['Result']
 
 
 class Wand(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_WAND)
         #print("Wand.__init__")
+        # Load tables.
+        self.t_random = Table(FILE_RANDOM_WANDS)
+        self.t_type = Table(FILE_WAND_TYPE)
+        self.t_wands_0 = Table(FILE_WAND_LEVEL_0)
+        self.t_wands_1 = Table(FILE_WAND_LEVEL_1)
+        self.t_wands_2 = Table(FILE_WAND_LEVEL_2)
+        self.t_wands_3 = Table(FILE_WAND_LEVEL_3)
+        self.t_wands_4 = Table(FILE_WAND_LEVEL_4)
+
 
     def __repr__(self):
         result = '<Wand'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
 
-    def lookup(self, strength, roller):
-        pass
 
+    def lookup(self, strength, roller):
+        # Roll for spell level.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        wand_spell = self.t_random.find_roll(roll, strength)
+        spell_level = wand_spell['Spell Level']
+        caster_level = wand_spell['Caster Level']
+        # Roll for type.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        wand_type = self.t_type.find_roll(roll, '')
+        commonness = wand_type['Result'].lower()
+        # Roll for the actual wand.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        result = None
+        if spell_level == '0':
+            result = self.t_wands_0.find_roll(roll, commonness)
+        elif spell_level == '1st':
+            result = self.t_wands_1.find_roll(roll, commonness)
+        elif spell_level == '2nd':
+            result = self.t_wands_2.find_roll(roll, commonness)
+        elif spell_level == '3rd':
+            result = self.t_wands_3.find_roll(roll, commonness)
+        elif spell_level == '4th':
+            result = self.t_wands_4.find_roll(roll, commonness)
+        return 'Wand of ' + result['Result'] + '(CL ' + caster_level + ')'
+        
 
 class WondrousItem(Item):
+
     def __init__(self):
         Item.__init__(self, KEY_WONDROUS_ITEM)
         #print("WondrousItem.__init__")
+        # Load tables.
+        self.t_random = Table(FILE_WONDROUS_ITEMS)
+        self.t_belt = Table(FILE_WONDROUS_ITEMS_BELT)
+        self.t_body = Table(FILE_WONDROUS_ITEMS_BODY)
+        self.t_chest = Table(FILE_WONDROUS_ITEMS_CHEST)
+        self.t_eyes = Table(FILE_WONDROUS_ITEMS_EYES)
+        self.t_feet = Table(FILE_WONDROUS_ITEMS_FEET)
+        self.t_hands = Table(FILE_WONDROUS_ITEMS_HANDS)
+        self.t_head = Table(FILE_WONDROUS_ITEMS_HEAD)
+        self.t_headband = Table(FILE_WONDROUS_ITEMS_HEADBAND)
+        self.t_neck = Table(FILE_WONDROUS_ITEMS_NECK)
+        self.t_shoulders = Table(FILE_WONDROUS_ITEMS_SHOULDERS)
+        self.t_slotless = Table(FILE_WONDROUS_ITEMS_SLOTLESS)
+        self.t_wrists = Table(FILE_WONDROUS_ITEMS_WRISTS)
+
+        # This is some test code to find a hole in the slotless
+        # item table.  There is no hole, so the error detection
+        # code in class Table is not good.
+        #for r in range(100):
+        #    self.t_slotless.find_roll(r+1, 'least minor')
+        #    self.t_slotless.find_roll(r+1, 'lesser minor')
+        #    self.t_slotless.find_roll(r+1, 'greater minor')
+        #    self.t_slotless.find_roll(r+1, 'lesser medium')
+        #    self.t_slotless.find_roll(r+1, 'greater medium')
+        #    self.t_slotless.find_roll(r+1, 'lesser major')
+        #    self.t_slotless.find_roll(r+1, 'greater major')
+
 
     def __repr__(self):
         result = '<WondrousItem'
         result += '>'
         return result
 
+
     def __str__(self):
         return ''
 
+
     def lookup(self, strength, roller):
-        pass
+        # Roll for slot.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        slot = self.t_random.find_roll(roll, '')['Result']
+        # Roll for the item.
+        roll = roller.roll('1d100')
+        self.rolls.append(roll)
+        result = None
+        if slot == 'Belts':
+            result = self.t_belt.find_roll(roll, strength)
+        elif slot == 'Body':
+            result = self.t_body.find_roll(roll, strength)
+        elif slot == 'Chest':
+            result = self.t_chest.find_roll(roll, strength)
+        elif slot == 'Eyes':
+            result = self.t_eyes.find_roll(roll, strength)
+        elif slot == 'Feet':
+            result = self.t_feet.find_roll(roll, strength)
+        elif slot == 'Hands':
+            result = self.t_hands.find_roll(roll, strength)
+        elif slot == 'Head':
+            result = self.t_head.find_roll(roll, strength)
+        elif slot == 'Headband':
+            result = self.t_headband.find_roll(roll, strength)
+        elif slot == 'Neck':
+            result = self.t_neck.find_roll(roll, strength)
+        elif slot == 'Shoulders':
+            result = self.t_shoulders.find_roll(roll, strength)
+        elif slot == 'Wrists':
+            result = self.t_wrists.find_roll(roll, strength)
+        elif slot == 'Slotless':
+            result = self.t_slotless.find_roll(roll, strength)
+        # TODO Note that 'least' slotless items aren't accounted for.
+        return result['Result']
 
     
 # A dictionary that maps from an item type string to an Item subclass

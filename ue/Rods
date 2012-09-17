@@ -1,5 +1,8 @@
 Rods	4-2	p179	Ultimate Equipment
-Strength	Roll	Resul	Price
+Strength	Roll	Result	Price
+#The following two rows are placeholders to allow for minor results.
+lesser minor	01–100	(no such thing as a lesser minor rod)	0 gp	
+greater minor	01–100	(no such thing as a greater minor rod)	0 gp	
 lesser medium	01	Metamagic, merciful, minor	1,500 gp
 lesser medium	02–34	Metamagic (+1 spell level), minor	3,000 gp
 lesser medium	35–49	Immovable rod	5,000 gp

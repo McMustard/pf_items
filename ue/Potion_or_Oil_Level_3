@@ -24,8 +24,9 @@ common	82–86	Remove disease	750 gp	CR
 common	87–91	Tongues	750 gp	CR
 common	92–96	Water breathing	750 gp	CR
 common	97–100	Water walk	750 gp	CR
-uncommon	01–12	Burrow	750 gp	UM
-uncommon	11–22	Countless eyes	750 gp	UM
+#Note: made a correction here.  Originally, 1-12,11-22,...
+uncommon	01–11	Burrow	750 gp	UM
+uncommon	12–22	Countless eyes	750 gp	UM
 uncommon	23–34	Daylight	750 gp	CR
 uncommon	35–49	Draconic reservoir	750 gp	APG
 uncommon	50–58	Flame arrow	750 gp	CR

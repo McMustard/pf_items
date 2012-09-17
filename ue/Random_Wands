@@ -7,8 +7,10 @@ greater minor	81—100	2nd	3rd
 lesser medium	01—75	2nd	3rd
 lesser medium	76—100	3rd	5th
 greater medium	01—20	2nd	3rd
-greater medim	21—80	3rd	5th
+greater medium	21—80	3rd	5th
+#The following row is a guessed correction
+greater medium	81—100	4th	7th
 lesser major	01—60	3rd	5th
 lesser major	61—100	4th	7th
 greater major	01—30	3rd	5th
-greater major	31—100	4th	7
+greater major	31—100	4th	7th

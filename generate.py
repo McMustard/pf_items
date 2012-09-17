@@ -157,7 +157,8 @@ def print_random_items(strength, roller, base_value):
 def test(roller):
     strengths = ['lesser minor', 'greater minor', 'lesser medium',
             'greater medium', 'lesser major', 'greater major']
-    items = ['Armor/Shield', 'Weapon']
+    items = ['Armor/Shield', 'Weapon', 'Potion', 'Ring', 'Rod', 'Scroll',
+            'Staff', 'Wand', 'Wondrous Item']
     for s in strengths:
         for i in items:
             print(s + ' ' + i)

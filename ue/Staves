@@ -1,5 +1,7 @@
 Staves	4-6	p193	Ultimate Equipment
-Roll	Value	Price
+Strength	Roll	Result	Price
+lesser minor	01–100	(no such thing as a lesser minor staff)	0 gp
+greater minor	01–100	(no such thing as a greater minor staff)	0 gp
 lesser medium	01–10	Staff of blessed relief	7,200 gp
 lesser medium	11–20	Staff of minor arcana	8,000 gp
 lesser medium	21–30	Staff of tricks	8,800 gp
