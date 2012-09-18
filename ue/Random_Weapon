@@ -1,44 +1,54 @@
 Random Weapon	7-13	p370	Ultimate Equipment
-Roll	Type	Result
-01	melee	Bastard sword
-02–05	melee	Battleaxe
-06	ranged	Bolas
-07–08	melee	Club
-09–10	ranged	Composite longbow
-11–12	ranged	Composite shortbow
-13–16	melee	Dagger
-17	ranged	Dart
-18	melee	Dwarven waraxe
-19	melee	Falchion
-20	melee	Gauntlet
-21	melee	Glaive
-22–24	melee	Greataxe
-25	melee	Greatclub
-26–28	melee	Greatsword
-29	melee	Halberd
-30	melee	Handaxe
-31–33	ranged	Heavy crossbow
-34	melee	Heavy flail
-35	melee	Heavy mace
-36–37	melee	Lance
-38–40	ranged	Light crossbow
-41	melee	Light flail
-42	melee	Light hammer
-43–44	melee	Light mace
-45	melee	Light pick
-46–49	ranged	Longbow
-50–51	melee	Longspear
-52–58	melee	Longsword
-59–60	melee	Morningstar
-61	melee	Nunchaku
-62–63	melee	Quarterstaff
-64–65	melee	Rapier
-66–84	melee	(Error)
-85–87	melee	Spear
-88	melee	Trident
-89–91	melee	Warhammer
-92	melee	Whip
-93–94	melee	Other light melee weapon
-95–96	melee	Other one-handed melee weapon
-97–98	melee	Other two-handed melee weapon
-99–100	ranged	Other ranged weapon
+Roll	Type	Result	Damage Type	Wield Type
+01	melee	Bastard sword	S	one-hand
+02–05	melee	Battleaxe	S	one-hand
+06	ranged	Bolas	B	
+07–08	melee	Club	B	one-hand
+09–10	ranged	Composite longbow		
+11–12	ranged	Composite shortbow		
+13–16	melee	Dagger	PS	light
+17	ranged	Dart	P	
+18	melee	Dwarven waraxe	S	one-hand
+19	melee	Falchion	S	two-hand
+20	melee	Gauntlet	B	
+21	melee	Glaive	S	two-hand
+22–24	melee	Greataxe	S	two-hand
+25	melee	Greatclub	B	two-hand
+26–28	melee	Greatsword	S	two-hand
+29	melee	Halberd	PS	two-hand
+30	melee	Handaxe	S	light
+31–33	ranged	Heavy crossbow		
+34	melee	Heavy flail	B	two-hand
+35	melee	Heavy mace	B	one-hand
+36–37	melee	Lance	P	two-hand
+38–40	ranged	Light crossbow		
+41	melee	Light flail	B	one-hand
+42	melee	Light hammer	B	light
+43–44	melee	Light mace	B	light
+45	melee	Light pick	P	light
+46–49	ranged	Longbow		
+50–51	melee	Longspear	P	two-hand
+52–58	melee	Longsword	S	one-hand
+59–60	melee	Morningstar	BP	one-hand
+61	melee	Nunchaku	B	light
+62–63	melee	Quarterstaff	B	two-hand
+64–65	melee	Rapier	P	one-hand
+#The following lines come from a UE product announcement blog post, comments
+66	melee	Sai	B	light
+67	melee	Sap	B	light
+68–69	melee	Scythe	PS	two-hand
+70–73	ranged	Shortbow		
+74–75	melee	Shortspear	P	one-hand
+76–80	melee	Shortsword	P	light
+81	ranged	Shuriken	P	ammunition
+82	melee	Sickle	S	light
+83–84	ranged	Sling		
+#End of corrected entries
+85–87	melee	Spear	P	two-hand
+88	melee	Trident	P	one-hand
+89–91	melee	Warhammer	B	one-hand
+92	melee	Whip	S	one-hand
+93–94	melee	Other light melee weapon		light
+95–96	melee	Other one-handed melee weapon		one-hand
+97–98	melee	Other two-handed melee weapon		two-hand
+99–100	ranged	Other ranged weapon		
