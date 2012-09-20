@@ -192,7 +192,6 @@ class Table(object):
 
     def load(self):
         if self.loaded: return
-        print('Table.load')
         # Open the file.
         f = open(self.filename, 'r')
         self.metadata = f.readline()[:-1].split('\t')
