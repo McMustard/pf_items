@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+# vim: set fileencoding=utf-8
+
+# Pathfinder Item Generator
+#
+# Copyright 2012, Steven Clark.
+#
+# This program is free software, and is provided "as is", without warranty of
+# any kind, express or implied, to the extent permitted by applicable law.
+# See the full license in the file 'LICENSE'.
+#
+# This software includes Open Game Content.  See the file 'OGL' for more
+# information.
+#
+'''
+This module implements manual and random rollers, that use simple 'd' dice
+expressions for generating random rolls for the Pathfinder Item Generator.
+'''
 
 from __future__ import print_function
 import random

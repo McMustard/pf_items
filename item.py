@@ -1,5 +1,21 @@
 #!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
+# vim: set fileencoding=utf-8
+
+# Pathfinder Item Generator
+#
+# Copyright 2012, Steven Clark.
+#
+# This program is free software, and is provided "as is", without warranty of
+# any kind, express or implied, to the extent permitted by applicable law.
+# See the full license in the file 'LICENSE'.
+#
+# This software includes Open Game Content.  See the file 'OGL' for more
+# information.
+#
+'''
+This module implements the bulk of item generation for the Pathfinder Item
+Generator.
+'''
 
 from __future__ import print_function
 import random
@@ -90,8 +106,9 @@ def load_item_types(filename):
     if TABLE_TYPES_LOADED:
         return
     f = open(filename, 'r')
-    # Throw away the first and second lines, headers.
+    # Throw away the first through third lines, headers.
     # Eventually, we can read them in for metadata.
+    f.readline()
     f.readline()
     f.readline()
     # Now read the remaining lines.
@@ -194,6 +211,9 @@ class Table(object):
         if self.loaded: return
         # Open the file.
         f = open(self.filename, 'r')
+        self.header = f.readline()[:-1]
+        if not self.header.startswith('#'):
+            print('Error in table file', self.filename)
         self.metadata = f.readline()[:-1].split('\t')
         self.columns = f.readline()[:-1].split('\t')
         col_roll = None

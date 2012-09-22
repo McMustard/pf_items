@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+# vim: set fileencoding=utf-8
+
+# Pathfinder Item Generator
+#
+# Copyright 2012, Steven Clark.
+#
+# This program is free software, and is provided "as is", without warranty of
+# any kind, express or implied, to the extent permitted by applicable law.
+# See the full license in the file 'LICENSE'.
+#
+# This software includes Open Game Content.  See the file 'OGL' for more
+# information.
+#
+'''
+This module acts as the command line interface for the Pathfinder Item
+Generator.
+'''
 
 from __future__ import print_function
 
@@ -52,10 +69,12 @@ SETTLEMENT_MAP = {
 
 def load_settlements(filename):
     f = open(filename, 'r')
-    # Throw away the first line, a header.
+    # Throw away the first two lines, headers.
+    f.readline()
     f.readline()
     # Now read the remaining lines.
     for line in f:
+        if line.startswith('#'): continue
         data = line[:-1].split('\t')
         TABLE_SETTLEMENTS[data[0]] = {
                 'base': data[1],
