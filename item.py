@@ -17,6 +17,7 @@ This module implements the bulk of item generation for the Pathfinder Item
 Generator.
 '''
 
+# Library imports
 from __future__ import print_function
 import random
 import re
@@ -191,27 +192,65 @@ def total_range(range_str):
     return rmax - rmin + 1
 
 
-def parse_gold_price(price_str):
-    match = re.match('\+(.*) gp', price_str)
-    if match:
-        return int(match.group(1).replace(',', ''))
-    else:
-        print('Error: cannot extract a price from', price_str)
-    return 0
-
-
-def parse_enhancement_price(price_str):
-    match = re.match('\+(\d+) bonus', price_str)
-    if match:
-        return int(match.group(1))
-    else:
-        print('Error: cannot extract enhancement bonus from', price_str)
-    return 0
-
-
 #
 # Classes
 #
+
+
+class BadPrice(Exception):
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+
+class Price(object):
+
+    def __init__(self, enhancement_type):
+        self.enhancement_type = enhancement_type
+        self.gold = 0
+        self.enhancement = 0
+
+
+    def add_part(self, price_str):
+        if price_str.endswith(' gp'):
+            self.add_gold(price_str)
+        elif price_str.endswith(' bonus'):
+            self.add_enhancement(price_str)
+        else:
+            raise BadPrice('price string ' + price_str + ' does not end with " gp" or " bonus"')
+
+
+    def add_gold(self, price_str):
+        if type(price_str) == int:
+            self.gold += price_str
+            return
+        match = re.match('(\+)?(.*) gp', price_str)
+        if match:
+            self.gold += int(match.group(2).replace(',', ''))
+        else:
+            raise BadPrice('cannot extract a gold price from ' + price_str)
+
+
+    def add_enhancement(self, price_str):
+        if type(price_str) == int:
+            self.enhancement += price_str
+            return
+        match = re.match('\+(\d+) bonus', price_str)
+        if match:
+            self.enhancement += int(match.group(1))
+        else:
+            raise BadPrice('cannot extract enhancement bonus from ' +
+                    price_str)
+
+ 
+    def compute(self):
+        cost = self.gold
+        if self.enhancement > 0:
+             temp = (self.enhancement ** 2) * 1000
+             if self.enhancement_type == 'weapon':
+                 temp *= 2
+             cost += temp
+        return str(cost) + ' gp'
 
 
 class TableRowMissingError(Exception):
@@ -469,7 +508,6 @@ class Armor(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_ARMOR)
-        #print("Armor.__init__")
         # Load tables
         self.t_random          = TABLE_RANDOM_ARMOR_OR_SHIELD
         self.t_magic           = TABLE_MAGIC_ARMOR_AND_SHIELDS
@@ -480,8 +518,23 @@ class Armor(Item):
         self.armor_threshold = self.t_random.total_rolls('Type', 'armor')
         self.re_enhancement = re.compile('\+(\d+) armor or shield')
         self.re_specials = re.compile('with (\w+) \+(\d+) special')
-        # Placeholder for armor details
-        self.placeholder = ''
+        # Armor details
+        # Generic item or specific
+        self.is_generic = True
+        # Armor piece
+        self.armor_base = ''
+        # Armor or shield
+        self.armor_type = ''
+        # Mundane item price
+        self.armor_price = ''
+        # Raw enhancement bonus
+        self.enhancement = 0
+        # Dict of specials to costs
+        self.specials = {}
+        # Specific item name
+        self.specific_name = ''
+        # Specific item cost
+        self.specific_price = '0 gp'
 
 
     def __repr__(self):
@@ -491,9 +544,42 @@ class Armor(Item):
 
 
     def __str__(self):
-        # TODO Armor: or Shield:, not both
-        result = 'Armor/Shield: ' + self.placeholder
+        result = ''
+        # Armor or Shield
+        if self.armor_type == 'armor':
+            result += 'Armor: '
+        else:
+            result += 'Shield: '
+        # Item specifics
+        if self.is_generic:
+            result += self.armor_base
+            if self.enhancement > 0:
+                result += ' +' + str(self.enhancement)
+                for spec in self.specials.keys():
+                    result += '/' + spec
+        else:
+            result += self.specific_name
+        # Cost
+        result += '; ' + self.get_cost()
         return result
+
+
+    def get_cost(self):
+        try:
+            price = Price(self.armor_type)
+            if self.is_generic:
+                price.add_gold(self.armor_price)
+                if self.enhancement:
+                    # Masterwork component
+                    price.add_gold(150)
+                    # Initial enhancement bonus
+                    price.add_enhancement(self.enhancement)
+                    # Special costs
+                    for spec in self.specials.keys():
+                        price.add_part(self.specials[spec])
+            return price.compute()
+        except BadPrice, ex:
+            return 'error with price calculation'
 
 
     def lookup(self):
@@ -504,8 +590,10 @@ class Armor(Item):
         roll = self.roll('1d100')
         # Look up the roll.
         rolled_armor = self.t_random.find_roll(roll, None)
-        armor_base = rolled_armor['Result']
-        armor_type = rolled_armor['Type']
+        self.armor_base = rolled_armor['Result']
+        self.armor_type = rolled_armor['Type']
+        self.armor_price = rolled_armor['Price']
+        self.enhancement = 0
 
         # Roll for the magic property.
         roll = self.roll('1d100')
@@ -514,39 +602,34 @@ class Armor(Item):
 
         # Handle it
         if magic_type.endswith('specific armor or shield'):
-            self.placeholder = self.get_specific_item(armor_type)
+            self.make_specific()
         else:
-            self.placeholder = armor_base + ' ' + self.get_magic_bonuses(
-                    armor_type, magic_type)
+            self.make_generic(magic_type)
 
 
-    def get_magic_bonuses(self, armor_type, specification):
-        # "Regular" magic item, with an assortment of bonuses.
-        # We already rolled, and know what we need: specification param.
-        enhancement_bonus = 0
+    def make_generic(self, specification):
+        self.is_generic = True
+        # "Regular" magic item, with an assortment of bonuses.  We already
+        # know what we need in the specification param.
         special_count = 0
         special_strength = 0
         # This part is always at the beginning
+        print('Spec', specification)
         match = self.re_enhancement.match(specification)
         if match:
-            enhancement_bonus = int(match.group(1))
+            self.enhancement = int(match.group(1))
         # This might be in the middle of the string
         match = self.re_specials.search(specification)
         if match:
             special_count = {'one': 1, 'two': 2}[match.group(1)]
             special_strength = '+' + match.group(2)
-        # Construct a string listing the specials.  The enhancement goes first.
-        specials = '+' + str(enhancement_bonus)
-        # Also keep totals for cost calculation.
-        cost_enhancement = enhancement_bonus
-        cost_static = 0
         # Add specials!
-        for i in range(special_count):
+        while special_count > 0:
             # Roll for a special
             roll = self.roll('1d100')
             # Look it up.
             result = None
-            if armor_type == 'armor':
+            if self.armor_type == 'armor':
                 result = self.t_specials_armor.find_roll(roll,
                         special_strength)
             else:
@@ -554,33 +637,32 @@ class Armor(Item):
                         special_strength)
             special = result['Result']
             price = result['Price']
-            if price.endswith(' gp'):
-                cost_static += parse_gold_price(price)
-            elif price.endswith(' bonus'):
-                cost_enhancement += parse_enhancement_price(price)
-            else:
-                print('Error: this item cannot be priced.')
-            # Add it to the string.
-            specials += '/' + special
-        return specials
+            # If we don't already have the special, add it.
+            if special not in self.specials.keys():
+                self.specials[special] = price
+                special_count -= 1
 
 
-    def get_specific_item(self, armor_type):
+    def make_specific(self):
+        # Specific
+        self.is_generic = False
         # Roll for the specific armor.
         roll = self.roll('1d100')
         # Look it up.
-        if armor_type == 'armor':
-            result = self.t_specific_armor.find_roll(roll, self.strength)
+        result = None
+        if self.armor_type == 'armor':
+            result = self.t_specific_armor.find_roll(
+                    roll, self.strength)
         else:
             result = self.t_specific_shield.find_roll(roll, self.strength)
-        return result['Result']
+        self.specific_name = result['Result']
+        self.specific_price = result['Price']
 
 
 class Weapon(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_ARMOR)
-        #print("Weapon.__init__")
         # Load tables
         self.t_random          = TABLE_RANDOM_WEAPON
         self.t_magic           = TABLE_MAGIC_WEAPONS
@@ -736,7 +818,6 @@ class Potion(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_POTION)
-        #print("Potion.__init__")
         # Load tables.
         self.t_random = TABLE_RANDOM_POTIONS_AND_OILS
         self.t_type = TABLE_POTION_OR_OIL_TYPE
@@ -797,7 +878,6 @@ class Ring(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_RING)
-        #print("Ring.__init__")
         # Load tables.
         self.t_rings = TABLE_RINGS
         # Ring details.
@@ -829,7 +909,6 @@ class Rod(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_ROD)
-        #print("Rod.__init__")
         # Load tables.
         self.t_rods = TABLE_RODS
         # Rod details.
@@ -861,7 +940,6 @@ class Scroll(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_SCROLL)
-        #print("Scroll.__init__")
         # Load tables.
         self.t_random = TABLE_RANDOM_SCROLLS
         self.t_type = TABLE_SCROLL_TYPE
@@ -975,7 +1053,6 @@ class Staff(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_STAFF)
-        #print("Staff.__init__")
         # Load tables.
         self.t_staves = TABLE_STAVES
         # Staff details.
@@ -1006,7 +1083,6 @@ class Wand(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_WAND)
-        #print("Wand.__init__")
         # Load tables.
         self.t_random = TABLE_RANDOM_WANDS
         self.t_type = TABLE_WAND_TYPE
@@ -1067,7 +1143,6 @@ class WondrousItem(Item):
 
     def __init__(self):
         Item.__init__(self, KEY_WONDROUS_ITEM)
-        #print("WondrousItem.__init__")
         # Load tables.
         self.t_random = TABLE_WONDROUS_ITEMS
         self.t_belt = TABLE_WONDROUS_ITEMS_BELT

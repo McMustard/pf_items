@@ -1,55 +1,55 @@
 # Contains Open Game Content.  See file 'OGC' for more information.
 Random Weapon	7-13	p370	Ultimate Equipment
-Roll	Type	Result	Damage Type	Wield Type
-01	melee	Bastard sword	S	one-hand
-02–05	melee	Battleaxe	S	one-hand
-06	ranged	Bolas	B	
-07–08	melee	Club	B	one-hand
-09–10	ranged	Composite longbow		
-11–12	ranged	Composite shortbow		
-13–16	melee	Dagger	PS	light
-17	ranged	Dart	P	
-18	melee	Dwarven waraxe	S	one-hand
-19	melee	Falchion	S	two-hand
-20	melee	Gauntlet	B	
-21	melee	Glaive	S	two-hand
-22–24	melee	Greataxe	S	two-hand
-25	melee	Greatclub	B	two-hand
-26–28	melee	Greatsword	S	two-hand
-29	melee	Halberd	PS	two-hand
-30	melee	Handaxe	S	light
-31–33	ranged	Heavy crossbow		
-34	melee	Heavy flail	B	two-hand
-35	melee	Heavy mace	B	one-hand
-36–37	melee	Lance	P	two-hand
-38–40	ranged	Light crossbow		
-41	melee	Light flail	B	one-hand
-42	melee	Light hammer	B	light
-43–44	melee	Light mace	B	light
-45	melee	Light pick	P	light
-46–49	ranged	Longbow		
-50–51	melee	Longspear	P	two-hand
-52–58	melee	Longsword	S	one-hand
-59–60	melee	Morningstar	BP	one-hand
-61	melee	Nunchaku	B	light
-62–63	melee	Quarterstaff	B	two-hand
-64–65	melee	Rapier	P	one-hand
-#The following lines come from a UE product announcement blog post, comments
-66	melee	Sai	B	light
-67	melee	Sap	B	light
-68–69	melee	Scythe	PS	two-hand
-70–73	ranged	Shortbow		
-74–75	melee	Shortspear	P	one-hand
-76–80	melee	Shortsword	P	light
-81	ranged	Shuriken	P	ammunition
-82	melee	Sickle	S	light
-83–84	ranged	Sling		
-#End of corrected entries
-85–87	melee	Spear	P	two-hand
-88	melee	Trident	P	one-hand
-89–91	melee	Warhammer	B	one-hand
-92	melee	Whip	S	one-hand
-93–94	melee	Other light melee weapon		light
-95–96	melee	Other one-handed melee weapon		one-hand
-97–98	melee	Other two-handed melee weapon		two-hand
-99–100	ranged	Other ranged weapon		
+Roll	Type	Result	Damage Type	Wield Type	Price
+01	melee	Bastard sword	S	one-hand	35 gp
+02–05	melee	Battleaxe	S	one-hand	10 gp
+06	ranged	Bolas	B		5 gp
+07–08	melee	Club	B	one-hand	0 gp
+09–10	ranged	Composite longbow			100
+11–12	ranged	Composite shortbow			75 gp
+13–16	melee	Dagger	PS	light	2 gp
+17	ranged	Dart	P		0.5 gp
+18	melee	Dwarven waraxe	S	one-hand	30 gp
+19	melee	Falchion	S	two-hand	75 gp
+20	melee	Gauntlet	B		2 gp
+21	melee	Glaive	S	two-hand	8 gp
+22–24	melee	Greataxe	S	two-hand	20 gp
+25	melee	Greatclub	B	two-hand	5 gp
+26–28	melee	Greatsword	S	two-hand	50 gp
+29	melee	Halberd	PS	two-hand	10 gp
+30	melee	Handaxe	S	light	6 gp
+31–33	ranged	Heavy crossbow			50 gp
+34	melee	Heavy flail	B	two-hand	15 gp
+35	melee	Heavy mace	B	one-hand	12 gp
+36–37	melee	Lance	P	two-hand	10 gp
+38–40	ranged	Light crossbow			35 gp
+41	melee	Light flail	B	one-hand	8 gp
+42	melee	Light hammer	B	light	1 gp
+43–44	melee	Light mace	B	light	5 gp
+45	melee	Light pick	P	light	4 gp
+46–49	ranged	Longbow			75 gp
+50–51	melee	Longspear	P	two-hand	5 gp
+52–58	melee	Longsword	S	one-hand	15 gp
+59–60	melee	Morningstar	BP	one-hand	8 gp
+61	melee	Nunchaku	B	light	2 gp
+62–63	melee	Quarterstaff	B	two-hand	0 gp
+64–65	melee	Rapier	P	one-hand	20 gp
+#The following lines come from a UE product announcement blog post, comments	
+66	melee	Sai	B	light	1 gp
+67	melee	Sap	B	light	1 gp
+68–69	melee	Scythe	PS	two-hand	18 gp
+70–73	ranged	Shortbow			30 gp
+74–75	melee	Shortspear	P	one-hand	1 gp
+76–80	melee	Shortsword	P	light	10 gp
+81	ranged	Shuriken	P	ammunition(5)	1 gp
+82	melee	Sickle	S	light	6 gp
+83–84	ranged	Sling			0 gp
+#End of corrected entries	
+85–87	melee	Spear	P	two-hand	2 gp
+88	melee	Trident	P	one-hand	15 gp
+89–91	melee	Warhammer	B	one-hand	12 gp
+92	melee	Whip	S	one-hand	1 gp
+93–94	melee	Other light melee weapon		light	
+95–96	melee	Other one-handed melee weapon		one-hand	
+97–98	melee	Other two-handed melee weapon		two-hand	
+99–100	ranged	Other ranged weapon			
