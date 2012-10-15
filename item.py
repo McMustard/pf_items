@@ -51,19 +51,43 @@ TABLE_TYPES_MINOR = []
 TABLE_TYPES_MEDIUM = []
 TABLE_TYPES_MAJOR = []
 
+# Maps the parameter specification of an item type to its standardized value.
+# Use a key converted to lower case to perform the lookup.
+
+ITEM_TYPE_MAP = {
+        'armor'            : 'Armor/Shield',
+        'armor/shield'     : 'Armor/Shield',
+        'armor and shield' : 'Armor/Shield',
+        'armor or shield' : 'Armor/Shield',
+        'weapon'           : 'Weapon',
+        'potion'           : 'Potion',
+        'ring'             : 'Ring',
+        'rod'              : 'Rod',
+        'scroll'           : 'Scroll',
+        'staff'            : 'Staff',
+        'wand'             : 'Wand',
+        'wondrous item'    : 'Wondrous Item',
+        'wondrous'         : 'Wondrous Item' }
+
+
+#
 # Functions
 
 def generate_generic(strength, roller, base_value):
     # Here, strength is merely 'minor', 'medium', 'major', so we need to
     # further qualify it with 'lesser' or 'greater'.
     
-    # We don't want to use the roller mechanism, since this is not a table
-    # choice, but rather an artifact of the new item system not having
-    # provision for linkage with the settlement item generation system.
-
     # We may decide to change this later, but at least for now, the choice
-    # between them will be 50/50.
-    full_strength = random.choice(['lesser ', 'greater ']) + strength
+    # between them will be 50/50.  Because slotless wondrous item can also
+    # be 'least minor', use least if the roll is less than 25.  Item types
+    # without the 'least' level will simply treat it as 'lesser'.
+    full_strength = 'greater '
+    roll = roller.roll('1d100')
+    if roll <= 25 and strength == 'minor':
+        full_strength = 'least '
+    elif roll <= 50:
+        full_strength = 'lesser '
+    full_strength += strength
 
     # Now, select an item type.
     roll = roller.roll('1d100')
@@ -129,15 +153,15 @@ def get_item_type(strength, roll):
     global TABLE_TYPES_MEDIUM
     global TABLE_TYPES_MAJOR
     table = None
-    if strength == 'minor':
-        table = TABLE_TYPES_MINOR
-    elif strength == 'medium':
-        table = TABLE_TYPES_MEDIUM
-    elif strength == 'major':
-        table = TABLE_TYPES_MAJOR
     # Look for the roll among the mins and maxes.
-    if table != None:
-        for row in table:
+    if strength == 'minor':
+        for row in TABLE_TYPES_MINOR:
+            if in_range(roll, row['range']): return row['type']
+    elif strength == 'medium':
+        for row in TABLE_TYPES_MEDIUM:
+            if in_range(roll, row['range']): return row['type']
+    elif strength == 'major':
+        for row in TABLE_TYPES_MAJOR:
             if in_range(roll, row['range']): return row['type']
     return ''
 
@@ -269,14 +293,9 @@ class Table(object):
             if check_range and check_str:
                 # Return a dictionary of the resulting data
                 return dict(zip(self.columns, row))
-        if col_strength:
-            raise TableRowMissingError('Table ' + self.filename + ': ' +
-                    'There is no row for strength: ' + strength +
-                    ', roll: ' + str(roll) )
-        else:
-            raise TableRowMissingError('Table ' + self.filename + ': ' +
-                    'There is no row for strength: <none>, ' +
-                    'roll: ' + str(roll))
+        raise TableRowMissingError('Table ' + self.filename + ': ' +
+                'There is no row for strength: ' + str(strength) +
+                ', roll: ' + str(roll) )
 
 
     def total_rolls(self, column_name, column_value):
@@ -478,6 +497,9 @@ class Armor(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for the item.
         roll = self.roll('1d100')
         # Look up the roll.
@@ -600,6 +622,9 @@ class Weapon(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for the item.
         roll = self.roll('1d100')
         rolled_weapon = self.t_random.find_roll(roll, None)
@@ -739,6 +764,9 @@ class Potion(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for the potion level.
         roll = self.roll('1d100')
         result = self.t_random.find_roll(roll, self.strength)
@@ -787,6 +815,9 @@ class Ring(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for the ring.
         roll = self.roll('1d100')
         # Look it up.
@@ -816,6 +847,9 @@ class Rod(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for the rod.
         roll = self.roll('1d100')
         # Look it up.
@@ -873,6 +907,9 @@ class Scroll(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll a random scroll level
         roll = self.roll('1d100')
         random_scroll = self.t_random.find_roll(roll, self.strength)
@@ -956,6 +993,9 @@ class Staff(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for a staff.
         roll = self.roll('1d100')
         staff = self.t_staves.find_roll(roll, self.strength)
@@ -995,6 +1035,9 @@ class Wand(Item):
 
 
     def lookup(self):
+        # We don't do 'least minor'
+        if self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for spell level.
         roll = self.roll('1d100')
         wand_spell = self.t_random.find_roll(roll, self.strength)
@@ -1042,18 +1085,8 @@ class WondrousItem(Item):
         # Wondrous item details
         self.slot = ''
         self.item = ''
-
-        # This is some test code to find a hole in the slotless
-        # item table.  There is no hole, so the error detection
-        # code in class Table is not good.
-        #for r in range(100):
-        #    self.t_slotless.find_roll(r+1, 'least minor')
-        #    self.t_slotless.find_roll(r+1, 'lesser minor')
-        #    self.t_slotless.find_roll(r+1, 'greater minor')
-        #    self.t_slotless.find_roll(r+1, 'lesser medium')
-        #    self.t_slotless.find_roll(r+1, 'greater medium')
-        #    self.t_slotless.find_roll(r+1, 'lesser major')
-        #    self.t_slotless.find_roll(r+1, 'greater major')
+        # Unlike the other classes, we may do least minor.
+        # So, don't modify self.strength to "fix" that.
 
 
     def __repr__(self):
@@ -1073,6 +1106,9 @@ class WondrousItem(Item):
         # Roll for slot.
         roll = self.roll('1d100')
         self.slot = self.t_random.find_roll(roll, '')['Result']
+        # Note that 'least minor' is only valid for slotless.
+        if self.slot != 'Slotless' and self.strength == 'least minor':
+            self.strength = 'lesser minor'
         # Roll for the item.
         roll = self.roll('1d100')
         result = None

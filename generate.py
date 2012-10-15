@@ -27,155 +27,16 @@ import sys
 
 import item
 import rollers
-
-#
-# Constants
-
-# File names
-
-FILE_SETTLEMENTS = 't_settlements'
-
-# Tables
-
-TABLE_SETTLEMENTS = {}
-
-# Maps the parameter specification of a settlement to its string for table
-# lookups.  The keys are lower case so that a case insensitive lookup can be
-# done by calling tolower() before doing the lookup.  It's not a perfect
-# case insensitive search according to high Unicode standards, but it's good
-# enough for our needs.  The value string is compared against the settlement
-# itemization table file, so the string must match exactly, case included.
-SETTLEMENT_MAP = {
-        'thorp': 'Thorp',
-        'hamlet': 'Hamlet',
-        'village': 'Village',
-        'small-town': 'Small Town',
-        'small town': 'Small Town',
-        'smalltown': 'Small Town',
-        'large-town': 'Large Town',
-        'large town': 'Large Town',
-        'largetown': 'Large Town',
-        'small-city': 'Small City',
-        'small city': 'Small City',
-        'smallcity': 'Small City',
-        'large-city': 'Large City',
-        'large city': 'Large City',
-        'largecity': 'Large City',
-        'metropolis': 'Metropolis' }
+import settlements
 
 
 #
 # Functions
 
-def load_settlements(filename):
-    f = open(filename, 'r')
-    # Throw away the first two lines, headers.
-    f.readline()
-    f.readline()
-    # Now read the remaining lines.
-    for line in f:
-        if line.startswith('#'): continue
-        data = line[:-1].split('\t')
-        TABLE_SETTLEMENTS[data[0]] = {
-                'base': data[1],
-                'minor': data[2],
-                'medium': data[3],
-                'major': data[4] }
-    f.close()
-
-
-def parse_range(value):
-    if value == '-':
-        return (0, 0)
-    if '-' in value:
-        strs = value.split('-')
-        return (int(strs[0]), int(strs[1]))
-    return (int(value), int(value))
-
-
-def lookup_item(table, strength, kind, roll):
-    for row in table[kind]:
-        if roll >= row[strength][0] and roll <= row[strength][1]:
-                return (row['item'], row['subtype'])
-    print('ERROR: No result for', strength, kind, str(roll))
-    return (strength + ' ' + kind + '(' + str(roll) + ')', '')
-
-
-def generate_settlement_items(settlement, roller):
-    # Convert the command-line parameter to a dict key string.
-    try:
-        key = SETTLEMENT_MAP[settlement.lower()]
-    except KeyError:
-        print('Internal program error!')
-        return
-    # Print some information for reference.
-    print('Generating magic items for a ' + key + ':')
-    print('-' * 78)
-
-    # Start rolling!
-
-    # It'll be useful to print the base value of the settlement.
-    settlement_base = TABLE_SETTLEMENTS[key]['base']
-    print('Base value: ' + settlement_base + ' gp')
-    print()
-
-    # Get the dice expressions.
-    expr_minor = TABLE_SETTLEMENTS[key]['minor']
-    expr_medium = TABLE_SETTLEMENTS[key]['medium']
-    expr_major = TABLE_SETTLEMENTS[key]['major']
-
-    # It's easier on the user (if the user is rolling) to roll like-dice
-    # first.  Go through the gauntlet.
-    count_minor = 0
-    if expr_minor != '*':
-        count_minor = roller.roll(expr_minor)
-    count_medium = roller.roll(expr_medium)
-    count_major = roller.roll(expr_major)
-
-    # Generate the minor magic items.  Remember we can get a '*' in a
-    # metropolis.
-    if count_minor > 0 or expr_minor == '*':
-        print('Minor Magic Items:')
-        print('--------------------')
-        if expr_minor == '*':
-            print('This ' + key + ' has virtually every minor magic item.')
-        else:
-            for i in range(count_minor):
-                print_random_items('minor', roller, settlement_base)
-        print()
-
-    # Generate the medium magic items.
-    if count_medium > 0:
-        print('Medium Magic Items:')
-        print('--------------------')
-        for i in range(count_medium):
-            print_random_items('medium', roller, settlement_base)
-        print()
-
-    # Generate the major magic items.
-    if count_major > 0:
-        print('Major Magic Items:')
-        print('--------------------')
-        for i in range(count_major):
-            print_random_items('major', roller, settlement_base)
-
-
-def generate_item(description, roller):
-    print('Random ' + description + ':')
-    # Generate an item
-    x = item.generate_item(description, roller)
-    print(x)
-
-
-def print_random_items(strength, roller, base_value):
-    # Generate a generic item
-    x = item.generate_generic(strength, roller, base_value)
-    print(x)
-
-
 def test(roller):
-    strengths = ['lesser minor', 'greater minor', 'lesser medium',
-            'greater medium', 'lesser major', 'greater major']
+    strengths = ['least minor', 'lesser minor', 'greater minor',
+            'lesser medium', 'greater medium', 'lesser major',
+            'greater major']
     items = ['Armor/Shield', 'Weapon', 'Potion', 'Ring', 'Rod', 'Scroll',
             'Staff', 'Wand', 'Wondrous Item']
     for s in strengths:
@@ -187,68 +48,122 @@ def test(roller):
             print()
 
 
+def make_series(sequence):
+    if len(sequence) == 0: return ''
+    quoted = ['"' + value + '"' for value in sequence]
+    quoted[-1] = 'and ' + quoted[-1]
+    return ', '.join(quoted)
+
+
 #
 # Execution
 
+# Parser subcommands
+
+def run_generate_settlement(args):
+    # Set up the roller.
+    if args.manual:
+        roller = rollers.ManualDiceRoller()
+    else:
+        roller = rollers.PseudorandomRoller()
+    # Generate items.
+    settlements.generate_settlement_items(
+            ' '.join(args.settlement_type), roller)
+
+
+def run_generate_item(args):
+    # Set up the roller.
+    if args.manual:
+        roller = rollers.ManualDiceRoller()
+    else:
+        roller = rollers.PseudorandomRoller()
+    # Generate an item.
+    #item.generate_item(args.strength + ' TYPE', roller)
+    # TODO type, parameters
+
+
+def run_test():
+    print("run_test")
+    # Use an automatic dice roller.
+    roller = rollers.PseudorandomRoller()
+    # Run a test.
+    test(roller)
+
+
 if __name__ == '__main__':
 
+    # Undocumented subcommmand.
+    if len(sys.argv) == 2 and sys.argv[1] == 'test':
+        run_test()
+        sys.exit(0)
+
     # Set up a cushy argument parser.
-    parser = argparse.ArgumentParser(description='Generates magic items ' +
-            ' for Pathfinder')
-
-    # Type of generation
-    group = parser.add_mutually_exclusive_group(required=True)
-
-    # Generate items for a settlement
-    group.add_argument('--settlement', '-s',
-            choices=SETTLEMENT_MAP.keys(), type=str,
-            help='The settlement size, using the values from the core ' +
-            'rulebook')
-
-    # Generate a specific class of item
-    group.add_argument('--item', '-i',
-            help='Item strength [lesser|greater] (minor|medium|major) ' +
-            'and type of item (armor-and-shield, weapon, etc.).  Ex: ' +
-            '--item="lesser minor Armor or Shield"')
-
-    # Test mode: dump out a whole bunch of items.
-    group.add_argument('--test', '-t', action='store_true',
-            help='Tests the program by generating many items')
-
-    # More of an indicator that the group is finished than anything.
-    group = None
-
-    # By default, the program will roll automatically.  This option will
-    # cause it to prompt, so dice rolls can be entered manually.
-    parser.add_argument('--manual', '-m', action='store_true',
-            help='Prompts for rolls rather than using the built-in roller')
-
+    parser = argparse.ArgumentParser(
+            description='Generates magic items for Pathfinder')
 
     # Error-checking
     #parser.add_argument('--check-errors', action='store_true',
     #        help='Instructs the program to check for errors in the item ' +
     #        'tables')
 
+    # Subcommands: type of generation
+    subparsers = parser.add_subparsers()
+
+    # Subcommand: settlement
+
+    # Generate items for a settlement
+    parser_settlement = subparsers.add_parser('settlement',
+            help='Generates magic items for a settlement.')
+
+    parser_settlement.add_argument('settlement_type',
+            metavar='SETTLEMENT_TYPE', nargs='+',
+            help='The settlement size: ' +
+            make_series(settlements.get_keys()) )
+    parser_settlement.set_defaults(func=run_generate_settlement)
+
+    # Subcommand: one for each item type
+
+    # Generate a specific class of item
+    #parser_item = subparsers.add_parser('item')
+
+    # Item type
+
+    parser_item = subparsers.add_parser('item',
+            help='Generate a random magic item')
+    parser_item.set_defaults(func=run_generate_item)
+
+    ## Item strength
+    #parser_item.add_argument('--strength',
+    #        required=True,
+    #        help='The strength of the magic item: "lesser" or "greater", ' +
+    #        'followed by "minor", "medium", or "major".  Slotless wondrous ' +
+    #        'items can also be "least minor".')
+
+    #parser_item.set_defaults(func=run_generate_item)
+
+    ## Perform a simple die roll
+    #parser_roll = subparsers.add_parser('roll',
+    #        help='Performs a die roll according to a simple die expression,' +
+    #        ' e.g. 2d4.')
+
+    ## Test mode: dump out a whole bunch of items.
+    #parser_test = subparsers.add_parser('test',
+    #        help='Runs a test by generating many items.')
+
+    ### More of an indicator that the group is finished than anything.
+    ##group = None
+
+
+    # Options common to several subparsers
+
+    for sub in [parser_settlement, parser_item]:
+        # By default, the program will roll automatically.  This option will
+        # cause it to prompt, so dice rolls can be entered manually.
+        sub.add_argument('--manual', '-m', action='store_true',
+                help='Prompts for rolls rather than using the built-in ' +
+                'roller')
+
     # Go.
     args = parser.parse_args()
+    args.func(args)
 
-    # Load data files.
-    load_settlements(FILE_SETTLEMENTS)
-
-    # Set up the roller.
-    if args.manual:
-        roller = rollers.ManualDiceRoller()
-    else:
-        roller = rollers.PseudorandomRoller()
-
-    # Check data for errors.
-    #if args.check_errors:
-    #    print('Checking for errors')
-
-    # Process.
-    if args.settlement:
-        generate_settlement_items(args.settlement, roller)
-    elif args.item:
-        generate_item(args.item, roller)
-    elif args.test:
-        test(roller)
