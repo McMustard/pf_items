@@ -19,12 +19,26 @@ Generator.
 
 # Library imports
 from __future__ import print_function
+import locale
+import os
 import random
 import re
 
 # Local imports
 import rollers
 import generate
+
+# Module initialization
+if os.name == 'posix':
+    # An extremely recognizable locale string.
+    locale.setlocale(locale.LC_ALL, 'en_US')
+elif os.name == 'nt':
+    # Windows doesn't use the sensible value.
+    locale.setlocale(locale.LC_ALL, 'enu')
+else:
+    # My best guess for other OSes.
+    try: locale.setlocale(locale.LC_ALL, 'en_US')
+    except: pass
 
 # Constants
 
@@ -207,28 +221,56 @@ class Price(object):
 
     def __init__(self, enhancement_type):
         self.enhancement_type = enhancement_type
-        self.gold = 0
+        self.gold = 0.0
         self.enhancement = 0
 
 
     def add_part(self, price_str):
-        if price_str.endswith(' gp'):
+        if type(price_str) == int or type(price_str) == float:
             self.add_gold(price_str)
+        elif price_str.endswith(' gp'):
+            self.add_gold(price_str)
+        elif price_str.endswith(' sp'):
+            self.add_silver(price_str)
+        elif price_str.endswith(' cp'):
+            self.add_copper(price_str)
         elif price_str.endswith(' bonus'):
             self.add_enhancement(price_str)
         else:
             raise BadPrice('price string ' + price_str + ' does not end with " gp" or " bonus"')
 
 
-    def add_gold(self, price_str):
-        if type(price_str) == int:
-            self.gold += price_str
-            return
-        match = re.match('(\+)?(.*) gp', price_str)
-        if match:
-            self.gold += int(match.group(2).replace(',', ''))
+    def add_copper(self, price_str):
+        if type(price_str) == int or type(price_str) == float:
+            self.gold += price_str * 0.01
         else:
-            raise BadPrice('cannot extract a gold price from ' + price_str)
+            match = re.match('(\+)?(.*) cp', price_str)
+            if match:
+                self.gold += float(match.group(2).replace(',', '')) * 0.01
+            else:
+                raise BadPrice('cannot extract a gold price from ' + price_str)
+
+
+    def add_silver(self, price_str):
+        if type(price_str) == int or type(price_str) == float:
+            self.gold += price_str * 0.1
+        else:
+            match = re.match('(\+)?(.*) sp', price_str)
+            if match:
+                self.gold += float(match.group(2).replace(',', '')) * 0.1
+            else:
+                raise BadPrice('cannot extract a gold price from ' + price_str)
+
+
+    def add_gold(self, price_str):
+        if type(price_str) == int or type(price_str) == float:
+            self.gold += price_str
+        else:
+            match = re.match('(\+)?(.*) gp', price_str)
+            if match:
+                self.gold += float(match.group(2).replace(',', ''))
+            else:
+                raise BadPrice('cannot extract a gold price from ' + price_str)
 
 
     def add_enhancement(self, price_str):
@@ -250,7 +292,7 @@ class Price(object):
              if self.enhancement_type == 'weapon':
                  temp *= 2
              cost += temp
-        return str(cost) + ' gp'
+        return locale.format_string('%d', cost, grouping=True) + ' gp'
 
 
 class TableRowMissingError(Exception):
@@ -534,7 +576,7 @@ class Armor(Item):
         # Specific item name
         self.specific_name = ''
         # Specific item cost
-        self.specific_price = '0 gp'
+        self.specific_price = 'error looking up price'
 
 
     def __repr__(self):
@@ -566,9 +608,12 @@ class Armor(Item):
 
     def get_cost(self):
         try:
-            price = Price(self.armor_type)
             if self.is_generic:
+                # Compose a price.
+                price = Price(self.armor_type)
+                # Start with the base cost.
                 price.add_gold(self.armor_price)
+                # Add magic costs.
                 if self.enhancement:
                     # Masterwork component
                     price.add_gold(150)
@@ -577,7 +622,9 @@ class Armor(Item):
                     # Special costs
                     for spec in self.specials.keys():
                         price.add_part(self.specials[spec])
-            return price.compute()
+                return price.compute()
+            else:
+                return self.specific_price
         except BadPrice, ex:
             return 'error with price calculation'
 
@@ -614,7 +661,6 @@ class Armor(Item):
         special_count = 0
         special_strength = 0
         # This part is always at the beginning
-        print('Spec', specification)
         match = self.re_enhancement.match(specification)
         if match:
             self.enhancement = int(match.group(1))
@@ -671,21 +717,25 @@ class Weapon(Item):
         self.t_specials_ranged = TABLE_SPECIAL_ABILITIES_RANGED_WEAPON
         self.re_enhancement = re.compile('\+(\d+) weapon')
         self.re_specials = re.compile('with (\w+) \+(\d+) special')
-        # Item details
+        # Weapon details
+        # Generic item or specific
+        self.is_generic = True
+        # Weapon type
         self.weapon_base = ''
+        # Melee, ranged, ammunition
         self.weapon_type = ''
+        # Light, one-hand, or two-hand
         self.wield_type = ''
-        self.weapon_properties = set()
-        # Base weapon price, or price if specific weapon.
-        self.weapon_base_cost = 0
-        # Weapon enhancement bonus
-        self.magic_enhancement = 0
-        # Tuple: (special name, enhancement cost, static cost)
-        self.magic_specials = []
-        # Enhancement cost of specials
-        self.magic_specials_enhancement_cost = 0
-        # Gold cost of specials
-        self.magic_specials_gold_cost = 0
+        # Mundane item price
+        self.weapon_price = ''
+        # Raw enhancement bonus
+        self.enhancement = 0
+        # Dict of specials to costs
+        self.specials = {}
+        # Specific item name
+        self.specific_name = ''
+        # Specific item cost
+        self.specific_price = 'error looking up price'
 
 
     def __repr__(self):
@@ -695,12 +745,41 @@ class Weapon(Item):
 
 
     def __str__(self):
-        result = 'Weapon: ' + self.weapon_base
-        if self.magic_enhancement:
-            result += ' +' + str(self.magic_enhancement)
-        if self.magic_specials:
-            result += '/' + '/'.join([x for (x,y,z) in self.magic_specials])
+        result = 'Weapon: '
+        if self.is_generic:
+            result += self.weapon_base
+            if self.enhancement > 0:
+                result += ' +' + str(self.enhancement)
+                for spec in self.specials.keys():
+                    result += '/' + spec
+        else:
+            result += self.specific_name
+        # Cost
+        result += '; ' + self.get_cost()
         return result
+
+
+    def get_cost(self):
+        try:
+            if self.is_generic:
+                # Compose a price.
+                price = Price('weapon')
+                # Start with the base cost.
+                price.add_gold(self.weapon_price)
+                # Add magic costs.
+                if self.enhancement:
+                    # Masterwork component
+                    price.add_gold(300)
+                    # Initial enhancement bonus
+                    price.add_enhancement(self.enhancement)
+                    # Special costs
+                    for spec in self.specials.keys():
+                        price.add_part(self.specials[spec])
+                return price.compute()
+            else:
+                return self.specific_price
+        except BadPrice, ex:
+            return 'error with price calculation'
 
 
     def lookup(self):
@@ -709,14 +788,15 @@ class Weapon(Item):
             self.strength = 'lesser minor'
         # Roll for the item.
         roll = self.roll('1d100')
+        # Look up the roll.
         rolled_weapon = self.t_random.find_roll(roll, None)
-        # Fill out weapon details.
         self.weapon_base = rolled_weapon['Result']
         self.weapon_type = rolled_weapon['Type']
         self.damage_type = rolled_weapon['Damage Type']
         self.wield_type = rolled_weapon['Wield Type']
-        self.weapon_properties = []
-        self.magic_specials = []
+        self.weapon_price = rolled_weapon['Price']
+        self.enhancement = 0
+
         # Roll for the magic property.
         roll = self.roll('1d100')
         rolled_magic = self.t_magic.find_roll(roll, self.strength)
@@ -724,60 +804,48 @@ class Weapon(Item):
 
         # Handle it
         if magic_type.endswith('specific weapon'):
-            self.get_specific_item()
+            self.make_specific()
         else:
-            self.get_magic_bonuses(magic_type)
+            self.make_generic(magic_type)
 
 
-    def get_magic_bonuses(self, specification):
+    def make_generic(self, specification):
+        self.is_generic = True
         # The weapon properties determine what kinds of enchantments can be
         # applied.  We don't do this in 'lookup' because it becomes invalid if
         # it needs to be replaced with a specific weapon.
-        if 'B' in self.damage_type: self.weapon_properties.append('bludgeoning')
-        if 'P' in self.damage_type: self.weapon_properties.append('piercing')
-        if 'S' in self.damage_type: self.weapon_properties.append('slashing')
-        self.weapon_properties.extend(
+        properties = []
+        if 'B' in self.damage_type: properties.append('bludgeoning')
+        if 'P' in self.damage_type: properties.append('piercing')
+        if 'S' in self.damage_type: properties.append('slashing')
+        properties.extend(
                 [x for x in self.wield_type.split(',') if len(x) > 0])
-        # TODO track cost to bound it
-        cost_enhancement = 0
-        # This part is always at the beginning
+        special_count = 0
+        special_strength = 0
+        # This part is always at the beginning.
         match = self.re_enhancement.match(specification)
         if match:
-            self.magic_enhancement = int(match.group(1))
-            cost_enhancement += self.magic_enhancement
+            self.enhancement = int(match.group(1))
         # This might be present, multiple times
         match = self.re_specials.findall(specification)
         for part in match:
             special_count = {'one': 1, 'two': 2}[part[0]]
             special_strength = '+' + str(part[1])
-            # Add specials!
-            for i in range(special_count):
-                # Don't stop until we find a valid special
-                while True:
-                    # Generate a special.
-                    special = self.generate_special(special_strength)
-                    if special:
-                        # Note costs.
-                        #cost_static += parse_gold_price(special[2])
-                        #cost_enhancement += parse_enhancement_price(special[1])
-                        # Add it to the list.
-                        self.magic_specials.append(special)
-                        # Found one
-                        break
+        # Add specials!
+        while special_count > 0:
+            # Generate a special.
+            result = self.generate_special(special_strength, properties)
+            special = result['Result']
+            price = result['Price']
+            # If we don't already have the special, add it.
+            if special and special not in self.specials.keys():
+                self.specials[special] = price
+                special_count -= 1
 
 
-    def get_specific_item(self):
-        # Roll for the specific weapon.
+    def generate_special(self, special_strength, properties):
+        # Roll for a special.
         roll = self.roll('1d100')
-        result = self.t_specific_weapon.find_roll(roll, self.strength)
-        self.weapon_base = result['Result']
-        self.price = result['Price']
-
-
-    def generate_special(self, special_strength):
-        # Roll for a special
-        roll = self.roll('1d100')
-        self.rolls.append(roll)
         # Look it up.
         result = None
         if self.weapon_type == 'melee':
@@ -793,14 +861,10 @@ class Weapon(Item):
         disqualifiers = [x for x in set(result['Disqualifiers'].split('.'))
                 if len(x) > 0]
         # Check qualifications.
-        if self.check_qualifiers(set(self.weapon_properties),
+        if self.check_qualifiers(set(properties),
                 set(qualifiers), set(disqualifiers)) == False:
             return None
-        if price.endswith(' gp'):
-            return (special, '', price)
-        elif price.endswith(' bonus'):
-            return (special, price, '')
-        return (special, '', '')
+        return result
 
 
     def check_qualifiers(self, properties, qualifiers, disqualifiers):
@@ -812,6 +876,17 @@ class Weapon(Item):
                 if len(properties.intersection( disqualifiers)) != 0:
                     return False
         return True
+
+
+    def make_specific(self):
+        # Specific
+        self.is_generic = False
+        # Roll for the specific weapon.
+        roll = self.roll('1d100')
+        # Look it up.
+        result = self.t_specific_weapon.find_roll(roll, self.strength)
+        self.specific_name = result['Result']
+        self.specific_price = result['Price']
 
 
 class Potion(Item):
@@ -829,6 +904,7 @@ class Potion(Item):
         self.spell = ''
         self.spell_level = ''
         self.caster_level = ''
+        self.price = ''
 
 
     def __repr__(self):
@@ -841,6 +917,7 @@ class Potion(Item):
         result = 'Potion: ' + self.spell
         result += ' (' + self.spell_level + ' Level'
         result += ', CL ' + self.caster_level + ')'
+        result += '; ' + self.price
         return result
 
 
@@ -872,6 +949,7 @@ class Potion(Item):
         elif self.spell_level == '3rd':
             result = self.t_potions_3.find_roll(roll, commonness)
         self.spell = result['Result']
+        self.price = result['Price']
 
 
 class Ring(Item):
@@ -882,6 +960,7 @@ class Ring(Item):
         self.t_rings = TABLE_RINGS
         # Ring details.
         self.ring = ''
+        self.price = ''
 
 
     def __repr__(self):
@@ -891,7 +970,7 @@ class Ring(Item):
 
 
     def __str__(self):
-        return 'Ring: ' + self.ring
+        return 'Ring: ' + self.ring + '; ' + self.price
 
 
     def lookup(self):
@@ -903,6 +982,7 @@ class Ring(Item):
         # Look it up.
         ring = self.t_rings.find_roll(roll, self.strength)
         self.ring = ring['Result']
+        self.price = ring['Price']
 
 
 class Rod(Item):
@@ -913,6 +993,7 @@ class Rod(Item):
         self.t_rods = TABLE_RODS
         # Rod details.
         self.rod = ''
+        self.price = ''
 
 
     def __repr__(self):
@@ -922,7 +1003,7 @@ class Rod(Item):
 
 
     def __str__(self):
-        return 'Rod: ' + self.rod
+        return 'Rod: ' + self.rod + '; ' + self.price
 
 
     def lookup(self):
@@ -934,6 +1015,7 @@ class Rod(Item):
         # Look it up.
         rod = self.t_rods.find_roll(roll, self.strength)
         self.rod = rod['Result']
+        self.price = rod['Price']
 
 
 class Scroll(Item):
@@ -968,6 +1050,7 @@ class Scroll(Item):
         self.arcaneness = ''
         self.spell_level = ''
         self.caster_level = ''
+        self.price = ''
 
 
     def __repr__(self):
@@ -981,6 +1064,7 @@ class Scroll(Item):
         result += ' (' + self.arcaneness
         result += ', ' + self.spell_level + ' Level'
         result += ', CL ' + self.caster_level + ')'
+        result += '; ' + self.price
         return result
 
 
@@ -1047,6 +1131,7 @@ class Scroll(Item):
             elif self.spell_level == '9th':
                 result = self.t_divine_level_9.find_roll(roll, commonness)
         self.spell = result['Result']
+        self.price = result['Price']
 
 
 class Staff(Item):
@@ -1057,6 +1142,7 @@ class Staff(Item):
         self.t_staves = TABLE_STAVES
         # Staff details.
         self.staff = ''
+        self.price = ''
 
 
     def __repr__(self):
@@ -1066,7 +1152,7 @@ class Staff(Item):
 
 
     def __str__(self):
-        return 'Staff: ' + self.staff
+        return 'Staff: ' + self.staff + '; ' + self.price
 
 
     def lookup(self):
@@ -1077,6 +1163,7 @@ class Staff(Item):
         roll = self.roll('1d100')
         staff = self.t_staves.find_roll(roll, self.strength)
         self.staff = staff['Result']
+        self.price = staff['Price']
 
 
 class Wand(Item):
@@ -1095,6 +1182,7 @@ class Wand(Item):
         self.spell = ''
         self.spell_level = ''
         self.caster_level = ''
+        self.price = ''
 
 
     def __repr__(self):
@@ -1107,6 +1195,7 @@ class Wand(Item):
         result = 'Wand: ' + self.spell
         result += ' (' + self.spell_level + ' Level'
         result += ', CL ' + self.caster_level + ')'
+        result += '; ' + self.price
         return result
 
 
@@ -1137,6 +1226,7 @@ class Wand(Item):
         elif self.spell_level == '4th':
             result = self.t_wands_4.find_roll(roll, commonness)
         self.spell = result['Result']
+        self.price = result['Price']
         
 
 class WondrousItem(Item):
@@ -1160,6 +1250,7 @@ class WondrousItem(Item):
         # Wondrous item details
         self.slot = ''
         self.item = ''
+        self.price = ''
         # Unlike the other classes, we may do least minor.
         # So, don't modify self.strength to "fix" that.
 
@@ -1174,6 +1265,7 @@ class WondrousItem(Item):
         result = 'Wondrous Item: '
         result += self.item
         result += ' (' + self.slot + ')'
+        result += '; ' + self.price
         return result
 
 
@@ -1213,6 +1305,7 @@ class WondrousItem(Item):
             result = self.t_slotless.find_roll(roll, self.strength)
         # TODO Note that 'least' slotless items aren't accounted for.
         self.item = result['Result']
+        self.price = result['Price']
 
     
 # A dictionary that maps from an item type string to an Item subclass
