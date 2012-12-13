@@ -1,0 +1,97 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Specific Weapons	3-12	p150	Ultimate Equipment
+Strength	Roll	Result	Price
+text	range	text	text
+lesser minor	01–02	Tracer bullet	100 gp
+lesser minor	03–08	Sleep arrow	132 gp
+lesser minor	09–10	Dustburst bullet	196 gp
+lesser minor	11–16	Tangle bolt	226 gp
+lesser minor	17–22	Screaming bolt	267 gp
+lesser minor	23–32	Masterwork silver dagger	322 gp
+lesser minor	33–34	Alchemist’s bullet	330 gp
+lesser minor	35–44	Cold iron masterwork longsword	330 gp
+lesser minor	45–50	Hushing arrow	547 gp
+lesser minor	51–56	Hushing arrow, greater	1,047 gp
+lesser minor	57–66	Javelin of lightning	1,500 gp
+lesser minor	67–74	Searing arrow	1,516 gp
+lesser minor	75–82	Sizzling arrow	1,516 gp
+lesser minor	83–84	Burrowing bullet, lesser	1,722 gp
+lesser minor	85–92	Dust bolt	1,730 gp
+lesser minor	93–100	Slaying arrow	2,282 gp
+greater minor	01–20	Adamantine dagger	3,002 gp
+greater minor	21–40	Adamantine battleaxe	3,010 gp
+greater minor	41–50	Burrowing bullet, greater	3,447 gp
+greater minor	51–70	Slaying arrow, greater	4,057 gp
+greater minor	71–80	Lance of jousting	4,310 gp
+greater minor	81–100	Shatterspike	4,315 gp
+lesser medium	01–03	Bloodletting kukri	6,308 gp
+lesser medium	04–09	Boulderhead mace	6,812 gp
+lesser medium	10–14	Beaststrike club	7,300 gp
+lesser medium	15–20	Fighter’s fork	7,315 gp
+lesser medium	21–23	Everflowing aspergillum	7,805 gp
+lesser medium	24–28	Hurricane quarterstaff	7,840 gp
+lesser medium	29–34	Dagger of venom	8,302 gp
+lesser medium	35–39	Gloom blade	8,810 gp
+lesser medium	40–44	Frostbite sling	9,380 gp
+lesser medium	45–49	Trident of stability	9,815 gp
+lesser medium	50–54	Trident of warning	10,115 gp
+lesser medium	55–60	Assassin’s dagger	10,302 gp
+lesser medium	61–66	Dagger of doubling	10,302 gp
+lesser medium	67–71	Earthenflail	11,315 gp
+lesser medium	72–79	Swift obsidian greataxe	11,320 gp
+lesser medium	80–85	Polarity hammer	12,310 gp
+lesser medium	86–93	Blade of binding	12,350 gp
+lesser medium	94–100	Shifter’s sorrow	12,780 gp
+greater medium	01–07	Dragoncatch guisarme	13,308 gp
+greater medium	08–15	Ten-ring sword	14,315 gp
+greater medium	16–21	Triton’s trident	15,065 gp
+greater medium	22–29	Mace of smiting, lesser	16,012 gp
+greater medium	30–37	Disarming blade	17,820 gp
+greater medium	38–42	Lash of the howler	18,305 gp
+greater medium	43–47	Shieldsplitter lance	18,310 gp
+greater medium	48–53	Trident of fish command	18,650 gp
+greater medium	54–59	Quarterstaff of vaulting	19,100 gp
+greater medium	60–65	Firedrake pistol	20,300 gp
+greater medium	66–71	Ricochet hammer	20,301 gp
+greater medium	72–77	Flame tongue	20,715 gp
+greater medium	78–85	Sparkwake starknife	21,324 gp
+greater medium	86–90	Luck blade (0 wishes)	22,060 gp
+greater medium	91–95	Sword of subtlety	22,310 gp
+greater medium	96–100	Sword of the planes	22,315 gp
+lesser major	01–12	Nine lives stealer	23,057 gp
+lesser major	13–26	Undercutting axe	23,310 gp
+lesser major	27–40	Spirit caller	25,302 gp
+lesser major	41–55	Dwarfbond hammer	25,312 gp
+lesser major	56–70	Oathbow	25,600 gp
+lesser major	71–85	Sword of life stealing	25,715 gp
+lesser major	86–100	Cutthroat’s apprentice	33,910 gp
+greater major	01–02	Ghoul’s lament	35,312 gp
+greater major	03–05	Mace of terror	38,552 gp
+greater major	06–07	Hellscourge	39,305 gp
+greater major	08–09	Dragon’s doom	40,310 gp
+greater major	10–13	Life-drinker	40,320 gp
+greater major	14–16	Valor’s minion	41,335 gp
+greater major	17–18	Summoner’s sorrow	42,816 gp
+greater major	19–21	Sylvan scimitar	47,315 gp
+greater major	22–23	Spirit blade	48,502 gp
+greater major	24–26	Heartswood spear	50,302 gp
+greater major	27–29	Rapier of puncturing	50,320 gp
+greater major	30–32	Sun blade	50,335 gp
+greater major	33–37	Blade of the rising sun	51,850 gp
+greater major	38–40	Frost brand	54,475 gp
+greater major	41–45	Dwarven thrower	60,312 gp
+greater major	46–50	Bloodthirst dagger	60,802 gp
+greater major	51–53	Warbringer	61,375 gp
+greater major	54–57	Luck blade (1 wish)	62,360 gp
+greater major	58–61	Guarding blade	65,310 gp
+greater major	62–64	Pistol of the infinite sky	73,300 gp
+greater major	65–69	Mace of smiting	75,312 gp
+greater major	70–73	Blade of the sword-saint	75,350 gp
+greater major	74–76	Scimitar of the spellthief	75,815 gp
+greater major	77–79	Spider’s fang	79,102 gp
+greater major	80–82	Demonsorrow curve blade	90,469 gp
+greater major	83–85	Void scythe	95,318 gp
+greater major	86–89	Luck blade (2 wishes)	102,660 gp
+greater major	90–92	Holy avenger	120,630 gp
+greater major	93–96	Bastard’s sting	123,035 gp
+greater major	97–100	Luck blade (3 wishes)	142,960 gp

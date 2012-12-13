@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import argparse
 import re
+import sqlite3 as sqlite
 import sys
 
 # Local imports
@@ -33,7 +34,7 @@ import settlements
 #
 # Functions
 
-def test(roller):
+def test(conn, roller):
     strengths = ['least minor', 'lesser minor', 'greater minor',
             'lesser medium', 'greater medium', 'lesser major',
             'greater major']
@@ -60,34 +61,34 @@ def make_series(sequence):
 
 # Parser subcommands
 
-def run_generate_settlement(args):
+def run_generate_settlement(conn, args):
     # Set up the roller.
     if args.manual:
         roller = rollers.ManualDiceRoller()
     else:
         roller = rollers.PseudorandomRoller()
     # Generate items.
-    settlements.generate_settlement_items(
+    settlements.generate_settlement_items(conn,
             ' '.join(args.settlement_type), roller)
 
 
-def run_generate_item(args):
+def run_generate_item(conn, args):
     # Set up the roller.
     if args.manual:
         roller = rollers.ManualDiceRoller()
     else:
         roller = rollers.PseudorandomRoller()
     # Generate an item.
-    #item.generate_item(args.strength + ' TYPE', roller)
+    #item.generate_item(conn, args.strength + ' TYPE', roller)
     # TODO type, parameters
 
 
-def run_test():
+def run_test(conn, args):
     print("run_test")
     # Use an automatic dice roller.
     roller = rollers.PseudorandomRoller()
     # Run a test.
-    test(roller)
+    test(conn, roller)
 
 
 if __name__ == '__main__':
@@ -165,5 +166,16 @@ if __name__ == '__main__':
 
     # Go.
     args = parser.parse_args()
-    args.func(args)
+
+    # Open the database.
+    conn = None
+    try:
+        conn = sqlite.connect('data\\data.db')
+        conn.row_factory = sqlite.Row
+        args.func(conn, args)
+    except sqlite.Error, e:
+        print('Error: %s' % e.message)
+        sys.exit(1)
+    finally:
+        if conn: conn.close()
 

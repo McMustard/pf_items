@@ -1,0 +1,37 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Shield Special Abilities	3-4	p120	Ultimate Equipment
+Strength	Roll	Result	Price
+text	range	text	text
++1	01–10	Poison-resistant	+2,250 gp
++1	11–19	Arrow catching	+1 bonus
++1	20–28	Bashing	+1 bonus
++1	29–37	Blinding	+1 bonus
++1	38–46	Clangorous	+1 bonus
++1	47–55	Defiant	+1 bonus
++1	56–64	Fortification (light)	+1 bonus
++1	65–73	Grinding	+1 bonus
++1	74–82	Impervious	+1 bonus
++1	83–91	Mirrored	+1 bonus
++1	92–100	Ramming	+1 bonus
++2	01–15	Rallying	+5,000 gp
++2	16–30	Wyrmsbreath	+5,000 gp
++2	31–50	Animated	+2 bonus
++2	51–67	Arrow deflection	+2 bonus
++2	68–82	Merging	+2 bonus
++2	83–100	Spell resistance (13)	+2 bonus
++3	01–15	Hosteling	+7,500 gp
++3	16–32	Radiant	+7,500 gp
++3	33–49	Fortification (moderate)	+3 bonus
++3	50–66	Ghost touch	+3 bonus
++3	67–83	Spell resistance (15)	+3 bonus
++3	84–98	Wild	+3 bonus
++3	99–100	(Error)	+3 bonus
++4	01–50	Energy resistance	+18,000 gp
++4	51–100	Spell resistance (17)	+4 bonus
++5	1–11	Determination	+30,000 gp
++5	12–27	Energy resistance, improved	+42,000 gp
++5	28–38	Undead controlling	+49,000 gp
++5	39–55	Energy resistance, greater	+66,000 gp
++5	56–70	Fortification (heavy)	+5 bonus
++5	71–85	Reflecting	+5 bonus
++5	86–100	Spell resistance (19)	+5 bonus

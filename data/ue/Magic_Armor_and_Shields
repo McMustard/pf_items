@@ -1,0 +1,47 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Magic Armor and Shields	3-2	p117	Ultimate Equipment
+Strength	Roll	Result
+text	range	text
+lesser minor	01–80	+1 armor or shield
+lesser minor	81–100	Lesser minor specific armor or shield
+greater minor	01–26	+1 armor or shield
+greater minor	27–53	+2 armor or shield
+greater minor	54–80	+1 armor or shield with one +1 special ability
+greater minor	81–100	Greater minor specific armor or shield
+lesser medium	01–10	+1 armor or shield
+lesser medium	11–20	+2 armor or shield
+lesser medium	21–32	+3 armor or shield
+lesser medium	33–44	+1 armor or shield with one +1 special ability
+lesser medium	45–56	+1 armor or shield with two +1 special abilities
+lesser medium	57–68	+1 armor or shield with one +2 special ability
+lesser medium	69–80	+2 armor or shield with one +1 special ability
+lesser medium	81–100	Lesser medium specific armor or shield
+greater medium	01–10	+2 armor or shield
+greater medium	11–22	+3 armor or shield
+greater medium	23–32	+1 armor or shield with one +1 special ability
+greater medium	33–44	+1 armor or shield with one +2 special ability
+greater medium	45–56	+2 armor or shield with one +1 special ability
+greater medium	57–68	+2 armor or shield with one +2 special ability
+greater medium	69–80	+3 armor or shield with one +1 special ability
+greater medium	81–100	Greater medium specific armor or shield
+lesser major	01–10	+3 armor or shield
+lesser major	11–22	+4 armor or shield
+lesser major	23–32	+1 armor or shield with one +2 special ability
+lesser major	33–44	+1 armor or shield with one +3 special ability
+lesser major	45–56	+2 armor or shield with one +2 special ability
+lesser major	57–68	+3 armor or shield with one +1 special ability
+lesser major	69–80	+4 armor or shield with one +1 special ability
+lesser major	81–100 	Lesser major specific armor or shield
+greater major	01–10	+4 armor or shield
+greater major	11–20	+5 armor or shield
+greater major	21–30	+4 armor or shield with one +1 special ability
+greater major	31–38	+4 armor or shield with one +2 special ability
+greater major	39–46	+4 armor or shield with one +3 special ability
+greater major	47–51	+4 armor or shield with one +4 special ability
+greater major	52–59	+5 armor or shield with one +1 special ability
+greater major	60–67	+5 armor or shield with one +2 special ability
+greater major	68–71	+5 armor or shield with one +3 special ability
+greater major	72–74	+5 armor or shield with two +2 special abilities
+greater major	75–77	+5 armor or shield with one +4 special ability
+greater major	78–80	+5 armor or shield with one +5 special ability
+greater major	81–100	Greater major specific armor or shield

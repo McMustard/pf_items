@@ -1,0 +1,45 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+2nd Level Potions and Oils, 7-18, p371
+Strength	Roll	Result	Price	Source
+text	range	text	text	text
+common	01–04	Aid	300 gp	CR
+common	05–07	Align weapon	300 gp	CR
+common	08–11	Barkskin	300 gp	CR
+common	12–16	Bear’s endurance	300 gp	CR
+common	17–20	Blur	300 gp	CR
+common	21–25	Bull’s strength	300 gp	CR
+common	26–30	Cat’s grace	300 gp	CR
+common	31–37	Cure moderate wounds	300 gp	CR
+common	38–41	Darkvision	300 gp	CR
+common	42–44	Delay poison	300 gp	CR
+common	45–49	Eagle’s splendor	300 gp	CR
+common	50–54	Fox’s cunning	300 gp	CR
+common	55–61	Invisibility	300 gp	CR
+common	62–66	Levitate	300 gp	CR
+common	67–71	Owl’s wisdom	300 gp	CR
+common	72–73	Protection from arrows	300 gp	CR
+common	74–76	Remove paralysis	300 gp	CR
+common	77–80	Resist energy, acid	300 gp	CR
+common	81–84	Resist energy, cold	300 gp	CR
+common	85–88	Resist energy, electricity	300 gp	CR
+common	89–92	Resist energy, fire	300 gp	CR
+common	93–94	Resist energy, sonic	300 gp	CR
+common	95–98	Spider climb	300 gp	CR
+common	99–100	Undetectable alignment	300 gp	CR
+uncommon	01–06	Ablative barrier	300 gp	UC
+uncommon	07–14	Acute senses	300 gp	UM
+uncommon	15–19	Arcane lock	300 gp	CR
+uncommon	20–24	Bullet shield	300 gp	UC
+uncommon	25–30	Certain grip	300 gp	UC
+uncommon	31–35	Continual flame	350 gp	CR
+uncommon	36–40	Corruption resistance	300 gp	APG
+uncommon	41–48	Disguise other	300 gp	UM
+uncommon	49–56	Gentle repose	300 gp	CR
+uncommon	57–61	Make whole	300 gp	CR
+uncommon	62–67	Obscure object	300 gp	CR
+uncommon	68–72	Reduce animal	300 gp	CR
+uncommon	73–76	Rope trick	300 gp	CR
+uncommon	77–82	Slipstream	300 gp	APG
+uncommon	83–90	Status	300 gp	CR
+uncommon	91–95	Warp wood	300 gp	CR
+uncommon	96–100	Wood shape	300 gp	CR

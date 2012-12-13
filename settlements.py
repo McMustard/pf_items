@@ -19,7 +19,9 @@ This module performs tasks related to settlement item generation.
 from __future__ import print_function
 
 import re
+import sqlite3 as sqlite
 import sys
+import traceback
 
 # Local imports
 
@@ -109,9 +111,7 @@ def lookup_item(table, strength, kind, roll):
     return (strength + ' ' + kind + '(' + str(roll) + ')', '')
 
 
-def generate_settlement_items(settlement, roller):
-    # Load the settlements file.
-    load_settlements()
+def generate_settlement_items(conn, settlement, roller):
     # Convert the command-line parameter to a dict key string.
     try:
         key = SETTLEMENT_MAP[settlement.lower()]
@@ -124,15 +124,18 @@ def generate_settlement_items(settlement, roller):
 
     # Start rolling!
 
-    # It'll be useful to print the base value of the settlement.
-    settlement_base = TABLE_SETTLEMENTS[key]['base']
-    print('Base value: ' + settlement_base + ' gp')
-    print()
+    # Get the key settlement attributes from the DB.
+    cursor = conn.execute('''SELECT * FROM Settlements WHERE (Size = ?);''',
+            (key,))
+    result = cursor.fetchone()
+    print(result)
+    settlement_base = result['Base']
+    expr_minor = result['Minor']
+    expr_medium = result['Medium']
+    expr_major = result['Major']
 
-    # Get the dice expressions.
-    expr_minor = TABLE_SETTLEMENTS[key]['minor']
-    expr_medium = TABLE_SETTLEMENTS[key]['medium']
-    expr_major = TABLE_SETTLEMENTS[key]['major']
+    print('Base value:', settlement_base, ' gp')
+    print()
 
     # It's easier on the user (if the user is rolling) to roll like-dice
     # first.  Go through the gauntlet.
@@ -151,7 +154,7 @@ def generate_settlement_items(settlement, roller):
             print('This ' + key + ' has virtually every minor magic item.')
         else:
             for i in range(count_minor):
-                print_random_item('minor', roller, settlement_base)
+                print_random_item(conn, 'minor', roller, settlement_base)
         print()
 
     # Generate the medium magic items.
@@ -159,7 +162,7 @@ def generate_settlement_items(settlement, roller):
         print('Medium Magic Items:')
         print('--------------------')
         for i in range(count_medium):
-            print_random_item('medium', roller, settlement_base)
+            print_random_item(conn, 'medium', roller, settlement_base)
         print()
 
     # Generate the major magic items.
@@ -167,14 +170,16 @@ def generate_settlement_items(settlement, roller):
         print('Major Magic Items:')
         print('--------------------')
         for i in range(count_major):
-            print_random_item('major', roller, settlement_base)
+            print_random_item(conn, 'major', roller, settlement_base)
 
 
-def print_random_item(strength, roller, base_value):
+def print_random_item(conn, strength, roller, base_value):
     # Generate a generic item
-    x = item.generate_generic(strength, roller, base_value)
-    print(x)
-
+    try:
+        x = item.generate_generic(conn, strength, roller, base_value)
+        print(x)
+    except:
+        traceback.print_exc(file=sys.stdout)
 
 #
 # Execution

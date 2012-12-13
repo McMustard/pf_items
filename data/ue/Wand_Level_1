@@ -1,0 +1,101 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+1nd-Level Wands	7-45	p384	Ultimate Equipment
+Strength	Roll	Result	Price	Source
+text	range	text	text	text
+common	01–02	Alarm	750 gp	CR
+common	03	Animate rope	750 gp	CR
+common	04–05	Bane	750 gp	CR
+common	06–11	Bless	750 gp	CR
+common	12–14	Burning hands	750 gp	CR
+common	15–17	Cause fear	750 gp	CR
+common	18–19	Charm person	750 gp	CR
+common	20–21	Color spray	750 gp	CR
+common	22–23	Command	750 gp	CR
+common	24	Comprehend languages	750 gp	CR
+common	25–31	Cure light wounds	750 gp	CR
+common	32–33	Disguise self	750 gp	CR
+common	34–37	Divine favor	750 gp	CR
+common	38	Endure elements	750 gp	CR
+common	39–41	Enlarge person	750 gp	CR
+common	42–43	Entangle	750 gp	CR
+common	44–45	Expeditious retreat	750 gp	CR
+common	46	Feather fall	750 gp	CR
+common	47–48	Grease	750 gp	CR
+common	49–50	Identify	750 gp	CR
+common	51–52	Inflict light wounds	750 gp	CR
+common	53–58	Mage armor	750 gp	CR
+common	59–60	Magic fang	750 gp	CR
+common	61–67	Magic missile	750 gp	CR
+common	68	Magic stone	750 gp	CR
+common	69–70	Magic weapon	750 gp	CR
+common	71	Obscuring mist	750 gp	CR
+common	72–73	Produce flame	750 gp	CR
+common	74	Protection from chaos	750 gp	CR
+common	75	Protection from evil	750 gp	CR
+common	76	Protection from good	750 gp	CR
+common	77	Protection from law	750 gp	CR
+common	78–79	Ray of enfeeblement	750 gp	CR
+common	80–81	Remove fear	750 gp	CR
+common	82–84	Shield	750 gp	CR
+common	85–86	Shield of faith	750 gp	CR
+common	87	Shillelagh	750 gp	CR
+common	88–89	Shocking grasp	750 gp	CR
+common	90	Silent image	750 gp	CR
+common	91–94	Sleep	750 gp	CR
+common	95	Summon monster I	750 gp	CR
+common	96	Summon nature’s ally I	750 gp	CR
+common	97–99	True strike	750 gp	CR
+common	100	Unseen servant	750 gp	CR
+uncommon	01–02	Ant haul	750 gp	APG
+uncommon	03–05	Aspect of the falcon	750 gp	APG
+uncommon	06–07	Bless weapon	750 gp	CR
+uncommon	08	Calm animals	750 gp	CR
+uncommon	09–10	Charm animal	750 gp	CR
+uncommon	11–12	Chill touch	750 gp	CR
+uncommon	13–14	Compel hostility	750 gp	UC
+uncommon	15–17	Confusion, lesser	750 gp	CR
+uncommon	18–19	Corrosive touch	750 gp	UM
+uncommon	20–21	Deathwatch	750 gp	CR
+uncommon	22	Detect animals or plants	750 gp	CR
+uncommon	23	Detect chaos	750 gp	CR
+uncommon	24	Detect evil	750 gp	CR
+uncommon	25	Detect good	750 gp	CR
+uncommon	26	Detect law	750 gp	CR
+uncommon	27–28	Detect secret doors	750 gp	CR
+uncommon	29	Detect snares and pits	750 gp	CR
+uncommon	30–31	Detect undead	750 gp	CR
+uncommon	32–35	Doom	750 gp	CR
+uncommon	36–37	Entropic shield	750 gp	CR
+uncommon	38	Erase	750 gp	CR
+uncommon	39	Faerie fire	750 gp	CR
+uncommon	40–41	Feather step	750 gp	APG
+uncommon	42–44	Floating disk	750 gp	CR
+uncommon	45–47	Goodberry	750 gp	CR
+uncommon	48–49	Hide from animals	750 gp	CR
+uncommon	50–51	Hide from undead	750 gp	CR
+uncommon	52	Hideous laughter	750 gp	CR
+uncommon	53–54	Hold portal	750 gp	CR
+uncommon	55–56	Hypnotism	750 gp	CR
+uncommon	57–58	Icicle dagger	750 gp	UM
+uncommon	59–60	Ill omen	750 gp	APG
+uncommon	61–63	Jump	750 gp	CR
+uncommon	64–65	Longstrider	750 gp	CR
+uncommon	66	Magic aura	750 gp	CR
+uncommon	67–68	Mount	750 gp	CR
+uncommon	69	Obscure object	750 gp	CR
+uncommon	70–71	Pass without trace	750 gp	CR
+uncommon	72	Ray of sickening	750 gp	UM
+uncommon	73–75	Reduce person	750 gp	CR
+uncommon	76–78	Sanctuary	750 gp	CR
+uncommon	79–80	Shock shield	750 gp	UC
+uncommon	81–83	Speak with animals	750 gp	CR
+uncommon	84–85	Stone fist	750 gp	APG
+uncommon	86–87	Stone shield	750 gp	ARG
+uncommon	88	Summon minor monster	750 gp	UM
+uncommon	89	Undetectable alignment	750 gp	CR
+uncommon	90–92	Urban grace	750 gp	ARG
+uncommon	93–96	Vanish	750 gp	APG
+uncommon	97	Ventriloquism	750 gp	CR
+uncommon	98	Magic mouth	1,250 gp	CR
+uncommon	99	Bless water	2,000 gp	CR
+uncommon	100	Curse water	2,000 gp	CR

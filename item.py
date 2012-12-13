@@ -84,11 +84,10 @@ ITEM_TYPE_MAP = {
         'wondrous item'    : 'Wondrous Item',
         'wondrous'         : 'Wondrous Item' }
 
-
 #
 # Functions
 
-def generate_generic(strength, roller, base_value):
+def generate_generic(conn, strength, roller, base_value):
     # Here, strength is merely 'minor', 'medium', 'major', so we need to
     # further qualify it with 'lesser' or 'greater'.
     
@@ -107,26 +106,26 @@ def generate_generic(strength, roller, base_value):
     # Now, select an item type.
     roll = roller.roll('1d100')
     # This lookup only needs minor/medium/major.
-    kind = get_item_type(strength, roll)
+    kind = get_item_type(conn, strength, roll)
 
-    return generate_specific_item(full_strength, kind, roller)
+    return generate_specific_item(conn, full_strength, kind, roller)
 
 
-def generate_item(description, roller):
+def generate_item(conn, description, roller):
     # description is of the form: lesser/greater major/medium/minor <kind>
     parts = description.split(' ')
     strength = ' '.join(parts[0:2])
     kind = ' '.join(parts[2:])
     # Now we have the parts in a usable form.
-    return generate_specific_item(strength, kind, roller)
+    return generate_specific_item(conn, strength, kind, roller)
 
 
-def generate_specific_item(strength, kind, roller):
+def generate_specific_item(conn, strength, kind, roller):
     # Create an object.
     item = create_item(kind)
 
     # Finish generating the item
-    return item.generate(strength, roller)
+    return item.generate(conn, strength, roller)
 
 
 def create_item(kind):
@@ -137,73 +136,23 @@ def create_item(kind):
     return result
 
 
-def load_item_types(filename):
-    global TABLE_TYPES_LOADED
-    global TABLE_TYPES_MINOR
-    global TABLE_TYPES_MEDIUM
-    global TABLE_TYPES_MAJOR
-    if TABLE_TYPES_LOADED:
-        return
-    f = open(filename, 'r')
-    # Throw away the first through third lines, headers.
-    # Eventually, we can read them in for metadata.
-    f.readline()
-    f.readline()
-    f.readline()
-    # Now read the remaining lines.
-    for line in f:
-        data = line[:-1].split('\t')
-        TABLE_TYPES_MINOR.append ({'type': data[0], 'range': data[1]})
-        TABLE_TYPES_MEDIUM.append({'type': data[0], 'range': data[2]})
-        TABLE_TYPES_MAJOR.append ({'type': data[0], 'range': data[3]})
-    f.close()
-    TABLE_TYPES_LOADED = True
-
-
-def get_item_type(strength, roll):
-    # Load Item Types
-    load_item_types(FILE_ITEMTYPES)
-    # Select the appropriate table.
-    global TABLE_TYPES_MINOR
-    global TABLE_TYPES_MEDIUM
-    global TABLE_TYPES_MAJOR
-    table = None
-    # Look for the roll among the mins and maxes.
+def get_item_type(conn, strength, roll):
+    cursor = conn.cursor()
+    columns = None
     if strength == 'minor':
-        for row in TABLE_TYPES_MINOR:
-            if in_range(roll, row['range']): return row['type']
+        columns = ('Minor_low', 'Minor_high')
     elif strength == 'medium':
-        for row in TABLE_TYPES_MEDIUM:
-            if in_range(roll, row['range']): return row['type']
+        columns = ('Minor_low', 'Minor_high')
     elif strength == 'major':
-        for row in TABLE_TYPES_MAJOR:
-            if in_range(roll, row['range']): return row['type']
-    return ''
-
-
-def split_range(range_str):
-    span = (0,0)
-    if '-' in range_str:
-        span = tuple(range_str.split('-'))
-    elif '–' in range_str:
-        # Note: the character mentioned here is hex 2013, not a simple dash
-        span = tuple(range_str.split('–'))
-    elif '—' in range_str:
-        # Note: the character mentioned here is hex 2014, not a simple dash
-        span = tuple(range_str.split('—'))
+        columns = ('Major_low', 'Major_high')
     else:
-        span = (range_str, range_str)
-    return (int(span[0]), int(span[1]))
+        # TODO an exception would be nice
+        return ''
+    # Search the database.
+    cursor.execute('''SELECT Item from Item_Types WHERE (? >= {0}) AND
+            (? <= {1});'''.format(*columns), (roll, roll) )
+    return cursor.fetchone()["Item"]
 
-
-def in_range(roll, range_str):
-    (rmin, rmax) = split_range(range_str)
-    return roll >= rmin and roll <= rmax
-
-
-def total_range(range_str):
-    (rmin, rmax) = split_range(range_str)
-    return rmax - rmin + 1
 
 
 #
@@ -295,185 +244,97 @@ class Price(object):
         return locale.format_string('%d', cost, grouping=True) + ' gp'
 
 
-class TableRowMissingError(Exception):
-
-    def __init__(self, message):
-        # Base class init.
-        Exception.__init__(self, message)
-
-
 class Table(object):
 
-    def __init__(self, filename):
-        self.loaded = False
-        self.metadata = []
-        self.columns = []
-        self.rows = []
-        self.filename = filename
+    def __init__(self, table):
+        self.table = table
 
-
-    def load(self):
-        if self.loaded: return
-        # Open the file.
-        f = open(self.filename, 'r')
-        self.header = f.readline()[:-1]
-        if not self.header.startswith('#'):
-            print('Error in table file', self.filename)
-        self.metadata = f.readline()[:-1].split('\t')
-        self.columns = f.readline()[:-1].split('\t')
-        col_roll = None
-        col_count = len(self.columns)
-        try:
-            col_roll = self.columns.index('Roll')
-        except ValueError:
-            print('Error finding Roll column in table', self.filename)
-            raise
-        # Total up all the roll ranges
-        total_rolls = 0
-        row_number = 0
-        # Read entries as tab-separated values.
-        for line in f:
-            if line.startswith('#'): continue
-            row = line[:-1].split('\t')
-            if len(row) < col_count:
-                print('Error: row', row_number, 'does not have enough columns')
-            total_rolls += total_range(row[col_roll])
-            self.rows.append(row)
-            row_number += 1
-        if total_rolls % 100 != 0:
-            # This does not seem to work for slotless wondrous items.
-            # It may be due to the single-digit numbers?
-            #print('Error: The rows in table', self.filename, 'do not total ' +
-            #        'up to a multiple of 100; a row is probably missing.')
-            pass
-        self.loaded = True
-
-
-    def find_roll(self, roll, strength):
-        self.load()
-        # Indices of commonly used columns
-        col_roll = None
-        col_strength = None
-        try:
-            col_roll = self.columns.index('Roll')
-        except ValueError:
-            print('Error finding Roll column in table', self.filename)
-            raise
-        try:
-            col_strength = self.columns.index('Strength')
-        except ValueError:
-            # No Strength column is not necessarily an error.
-            pass
-        for row in self.rows:
-            check_range = in_range(roll, row[col_roll])
-            check_str = False
-            if col_strength is not None:
-                check_str = row[col_strength] == strength
-            else:
-                check_str = True
-            if check_range and check_str:
-                # Return a dictionary of the resulting data
-                return dict(zip(self.columns, row))
-        raise TableRowMissingError('Table ' + self.filename + ': ' +
-                'There is no row for strength: ' + str(strength) +
-                ', roll: ' + str(roll) )
-
-
-    def total_rolls(self, column_name, column_value):
-        self.load()
-        col_roll = None
-        col_search = None
-        try:
-            col_roll = self.columns.index('Roll')
-        except ValueError:
-            print('Error finding Roll column in table', self.filename)
-            raise
-        try:
-            col_search = self.columns.index(column_name)
-        except ValueError:
-            print('Error finding',column_name ,'column in table',
-                    self.filename)
-            raise
-        total = 0
-        for row in self.rows:
-            if row[col_search] == column_value:
-                total += total_range(row[col_roll])
-        return total
-            
+    def find_roll(self, conn, roll, strength):
+        cursor = conn.cursor()
+        if strength == None:
+            cursor.execute('''SELECT * FROM {0} WHERE (? >= Roll_low) AND
+                    (? <= Roll_high);'''.format(self.table),
+                    (roll, roll) )
+        else:
+            cursor.execute('''SELECT * FROM {0} WHERE (? >= Roll_low) AND
+                    (? <= Roll_high) AND (? = Strength);'''.format(
+                        self.table), (roll, roll, strength) )
+        result = cursor.fetchone()
+        return result
 
 # Ultimate Equipment Tables
 
-TABLE_MAGIC_ARMOR_AND_SHIELDS         = Table('ue/Magic_Armor_and_Shields')
-TABLE_MAGIC_WEAPONS                   = Table('ue/Magic_Weapons')
-TABLE_METAMAGIC_RODS_1                = Table('ue/Metamagic_Rods_1')
-TABLE_METAMAGIC_RODS_2                = Table('ue/Metamagic_Rods_2')
-TABLE_METAMAGIC_RODS_3                = Table('ue/Metamagic_Rods_3')
-TABLE_POTION_OR_OIL_LEVEL_0           = Table('ue/Potion_or_Oil_Level_0')
-TABLE_POTION_OR_OIL_LEVEL_1           = Table('ue/Potion_or_Oil_Level_1')
-TABLE_POTION_OR_OIL_LEVEL_2           = Table('ue/Potion_or_Oil_Level_2')
-TABLE_POTION_OR_OIL_LEVEL_3           = Table('ue/Potion_or_Oil_Level_3')
-TABLE_POTION_OR_OIL_TYPE              = Table('ue/Potion_or_Oil_Type')
-TABLE_RANDOM_ARMOR_OR_SHIELD          = Table('ue/Random_Armor_or_Shield')
-TABLE_RANDOM_ART_OBJECTS              = Table('ue/Random_Art_Objects')
-TABLE_RANDOM_GEMS                     = Table('ue/Random_Gems')
-TABLE_RANDOM_POTIONS_AND_OILS         = Table('ue/Random_Potions_and_Oils')
-TABLE_RANDOM_SCROLLS                  = Table('ue/Random_Scrolls')
-TABLE_RANDOM_WANDS                    = Table('ue/Random_Wands')
-TABLE_RANDOM_WEAPON                   = Table('ue/Random_Weapon')
-TABLE_RINGS                           = Table('ue/Rings')
-TABLE_RODS                            = Table('ue/Rods')
-TABLE_SCROLLS_ARCANE_LEVEL_0          = Table('ue/Scrolls_Arcane_Level_0')
-TABLE_SCROLLS_ARCANE_LEVEL_1          = Table('ue/Scrolls_Arcane_Level_1')
-TABLE_SCROLLS_ARCANE_LEVEL_2          = Table('ue/Scrolls_Arcane_Level_2')
-TABLE_SCROLLS_ARCANE_LEVEL_3          = Table('ue/Scrolls_Arcane_Level_3')
-TABLE_SCROLLS_ARCANE_LEVEL_4          = Table('ue/Scrolls_Arcane_Level_4')
-TABLE_SCROLLS_ARCANE_LEVEL_5          = Table('ue/Scrolls_Arcane_Level_5')
-TABLE_SCROLLS_ARCANE_LEVEL_6          = Table('ue/Scrolls_Arcane_Level_6')
-TABLE_SCROLLS_ARCANE_LEVEL_7          = Table('ue/Scrolls_Arcane_Level_7')
-TABLE_SCROLLS_ARCANE_LEVEL_8          = Table('ue/Scrolls_Arcane_Level_8')
-TABLE_SCROLLS_ARCANE_LEVEL_9          = Table('ue/Scrolls_Arcane_Level_9')
-TABLE_SCROLLS_DIVINE_LEVEL_0          = Table('ue/Scrolls_Divine_Level_0')
-TABLE_SCROLLS_DIVINE_LEVEL_1          = Table('ue/Scrolls_Divine_Level_1')
-TABLE_SCROLLS_DIVINE_LEVEL_2          = Table('ue/Scrolls_Divine_Level_2')
-TABLE_SCROLLS_DIVINE_LEVEL_3          = Table('ue/Scrolls_Divine_Level_3')
-TABLE_SCROLLS_DIVINE_LEVEL_4          = Table('ue/Scrolls_Divine_Level_4')
-TABLE_SCROLLS_DIVINE_LEVEL_5          = Table('ue/Scrolls_Divine_Level_5')
-TABLE_SCROLLS_DIVINE_LEVEL_6          = Table('ue/Scrolls_Divine_Level_6')
-TABLE_SCROLLS_DIVINE_LEVEL_7          = Table('ue/Scrolls_Divine_Level_7')
-TABLE_SCROLLS_DIVINE_LEVEL_8          = Table('ue/Scrolls_Divine_Level_8')
-TABLE_SCROLLS_DIVINE_LEVEL_9          = Table('ue/Scrolls_Divine_Level_9')
-TABLE_SCROLL_TYPE                     = Table('ue/Scroll_Type')
-TABLE_SPECIAL_ABILITIES_AMMUNITION    = Table('ue/Special_Abilities_Ammunition')
-TABLE_SPECIAL_ABILITIES_ARMOR         = Table('ue/Special_Abilities_Armor')
-TABLE_SPECIAL_ABILITIES_MELEE_WEAPON  = Table('ue/Special_Abilities_Melee_Weapon')
-TABLE_SPECIAL_ABILITIES_RANGED_WEAPON = Table('ue/Special_Abilities_Ranged_Weapon')
-TABLE_SPECIAL_ABILITIES_SHIELD        = Table('ue/Special_Abilities_Shield')
-TABLE_SPECIAL_BANE                    = Table('ue/Special_Bane')
-TABLE_SPECIAL_SLAYING_ARROW           = Table('ue/Special_Slaying_Arrow')
-TABLE_SPECIFIC_ARMOR                  = Table('ue/Specific_Armor')
-TABLE_SPECIFIC_CURSED_ITEMS           = Table('ue/Specific_Cursed_Items')
-TABLE_SPECIFIC_SHIELDS                = Table('ue/Specific_Shields')
-TABLE_SPECIFIC_WEAPONS                = Table('ue/Specific_Weapons')
-TABLE_STAVES                          = Table('ue/Staves')
-TABLE_WAND_LEVEL_0                    = Table('ue/Wand_Level_0')
-TABLE_WAND_LEVEL_1                    = Table('ue/Wand_Level_1')
-TABLE_WAND_LEVEL_2                    = Table('ue/Wand_Level_2')
-TABLE_WAND_LEVEL_3                    = Table('ue/Wand_Level_3')
-TABLE_WAND_LEVEL_4                    = Table('ue/Wand_Level_4')
-TABLE_WAND_TYPE                       = Table('ue/Wand_Type')
-TABLE_WONDROUS_ITEMS                  = Table('ue/Wondrous_Items')
-TABLE_WONDROUS_ITEMS_BELT             = Table('ue/Wondrous_Items_Belt')
-TABLE_WONDROUS_ITEMS_BODY             = Table('ue/Wondrous_Items_Body')
-TABLE_WONDROUS_ITEMS_CHEST            = Table('ue/Wondrous_Items_Chest')
-TABLE_WONDROUS_ITEMS_EYES             = Table('ue/Wondrous_Items_Eyes')
-TABLE_WONDROUS_ITEMS_FEET             = Table('ue/Wondrous_Items_Feet')
-TABLE_WONDROUS_ITEMS_HANDS            = Table('ue/Wondrous_Items_Hands')
-TABLE_WONDROUS_ITEMS_HEAD             = Table('ue/Wondrous_Items_Head')
-TABLE_WONDROUS_ITEMS_HEADBAND         = Table('ue/Wondrous_Items_Headband')
-TABLE_WONDROUS_ITEMS_NECK             = Table('ue/Wondrous_Items_Neck')
-TABLE_WONDROUS_ITEMS_SHOULDERS        = Table('ue/Wondrous_Items_Shoulders')
-TABLE_WONDROUS_ITEMS_SLOTLESS         = Table('ue/Wondrous_Items_Slotless')
-TABLE_WONDROUS_ITEMS_WRISTS           = Table('ue/Wondrous_Items_Wrists')
+TABLE_MAGIC_ARMOR_AND_SHIELDS         = Table('Magic_Armor_and_Shields')
+TABLE_MAGIC_WEAPONS                   = Table('Magic_Weapons')
+TABLE_METAMAGIC_RODS_1                = Table('Metamagic_Rods_1')
+TABLE_METAMAGIC_RODS_2                = Table('Metamagic_Rods_2')
+TABLE_METAMAGIC_RODS_3                = Table('Metamagic_Rods_3')
+TABLE_POTION_OR_OIL_LEVEL_0           = Table('Potion_or_Oil_Level_0')
+TABLE_POTION_OR_OIL_LEVEL_1           = Table('Potion_or_Oil_Level_1')
+TABLE_POTION_OR_OIL_LEVEL_2           = Table('Potion_or_Oil_Level_2')
+TABLE_POTION_OR_OIL_LEVEL_3           = Table('Potion_or_Oil_Level_3')
+TABLE_POTION_OR_OIL_TYPE              = Table('Potion_or_Oil_Type')
+TABLE_RANDOM_ARMOR_OR_SHIELD          = Table('Random_Armor_or_Shield')
+TABLE_RANDOM_ART_OBJECTS              = Table('Random_Art_Objects')
+TABLE_RANDOM_GEMS                     = Table('Random_Gems')
+TABLE_RANDOM_POTIONS_AND_OILS         = Table('Random_Potions_and_Oils')
+TABLE_RANDOM_SCROLLS                  = Table('Random_Scrolls')
+TABLE_RANDOM_WANDS                    = Table('Random_Wands')
+TABLE_RANDOM_WEAPON                   = Table('Random_Weapon')
+TABLE_RINGS                           = Table('Rings')
+TABLE_RODS                            = Table('Rods')
+TABLE_SCROLLS_ARCANE_LEVEL_0          = Table('Scrolls_Arcane_Level_0')
+TABLE_SCROLLS_ARCANE_LEVEL_1          = Table('Scrolls_Arcane_Level_1')
+TABLE_SCROLLS_ARCANE_LEVEL_2          = Table('Scrolls_Arcane_Level_2')
+TABLE_SCROLLS_ARCANE_LEVEL_3          = Table('Scrolls_Arcane_Level_3')
+TABLE_SCROLLS_ARCANE_LEVEL_4          = Table('Scrolls_Arcane_Level_4')
+TABLE_SCROLLS_ARCANE_LEVEL_5          = Table('Scrolls_Arcane_Level_5')
+TABLE_SCROLLS_ARCANE_LEVEL_6          = Table('Scrolls_Arcane_Level_6')
+TABLE_SCROLLS_ARCANE_LEVEL_7          = Table('Scrolls_Arcane_Level_7')
+TABLE_SCROLLS_ARCANE_LEVEL_8          = Table('Scrolls_Arcane_Level_8')
+TABLE_SCROLLS_ARCANE_LEVEL_9          = Table('Scrolls_Arcane_Level_9')
+TABLE_SCROLLS_DIVINE_LEVEL_0          = Table('Scrolls_Divine_Level_0')
+TABLE_SCROLLS_DIVINE_LEVEL_1          = Table('Scrolls_Divine_Level_1')
+TABLE_SCROLLS_DIVINE_LEVEL_2          = Table('Scrolls_Divine_Level_2')
+TABLE_SCROLLS_DIVINE_LEVEL_3          = Table('Scrolls_Divine_Level_3')
+TABLE_SCROLLS_DIVINE_LEVEL_4          = Table('Scrolls_Divine_Level_4')
+TABLE_SCROLLS_DIVINE_LEVEL_5          = Table('Scrolls_Divine_Level_5')
+TABLE_SCROLLS_DIVINE_LEVEL_6          = Table('Scrolls_Divine_Level_6')
+TABLE_SCROLLS_DIVINE_LEVEL_7          = Table('Scrolls_Divine_Level_7')
+TABLE_SCROLLS_DIVINE_LEVEL_8          = Table('Scrolls_Divine_Level_8')
+TABLE_SCROLLS_DIVINE_LEVEL_9          = Table('Scrolls_Divine_Level_9')
+TABLE_SCROLL_TYPE                     = Table('Scroll_Type')
+TABLE_SPECIAL_ABILITIES_AMMUNITION    = Table('Special_Abilities_Ammunition')
+TABLE_SPECIAL_ABILITIES_ARMOR         = Table('Special_Abilities_Armor')
+TABLE_SPECIAL_ABILITIES_MELEE_WEAPON  = Table('Special_Abilities_Melee_Weapon')
+TABLE_SPECIAL_ABILITIES_RANGED_WEAPON = Table('Special_Abilities_Ranged_Weapon')
+TABLE_SPECIAL_ABILITIES_SHIELD        = Table('Special_Abilities_Shield')
+TABLE_SPECIAL_BANE                    = Table('Special_Bane')
+TABLE_SPECIAL_SLAYING_ARROW           = Table('Special_Slaying_Arrow')
+TABLE_SPECIFIC_ARMOR                  = Table('Specific_Armor')
+TABLE_SPECIFIC_CURSED_ITEMS           = Table('Specific_Cursed_Items')
+TABLE_SPECIFIC_SHIELDS                = Table('Specific_Shields')
+TABLE_SPECIFIC_WEAPONS                = Table('Specific_Weapons')
+TABLE_STAVES                          = Table('Staves')
+TABLE_WAND_LEVEL_0                    = Table('Wand_Level_0')
+TABLE_WAND_LEVEL_1                    = Table('Wand_Level_1')
+TABLE_WAND_LEVEL_2                    = Table('Wand_Level_2')
+TABLE_WAND_LEVEL_3                    = Table('Wand_Level_3')
+TABLE_WAND_LEVEL_4                    = Table('Wand_Level_4')
+TABLE_WAND_TYPE                       = Table('Wand_Type')
+TABLE_WONDROUS_ITEMS                  = Table('Wondrous_Items')
+TABLE_WONDROUS_ITEMS_BELT             = Table('Wondrous_Items_Belt')
+TABLE_WONDROUS_ITEMS_BODY             = Table('Wondrous_Items_Body')
+TABLE_WONDROUS_ITEMS_CHEST            = Table('Wondrous_Items_Chest')
+TABLE_WONDROUS_ITEMS_EYES             = Table('Wondrous_Items_Eyes')
+TABLE_WONDROUS_ITEMS_FEET             = Table('Wondrous_Items_Feet')
+TABLE_WONDROUS_ITEMS_HANDS            = Table('Wondrous_Items_Hands')
+TABLE_WONDROUS_ITEMS_HEAD             = Table('Wondrous_Items_Head')
+TABLE_WONDROUS_ITEMS_HEADBAND         = Table('Wondrous_Items_Headband')
+TABLE_WONDROUS_ITEMS_NECK             = Table('Wondrous_Items_Neck')
+TABLE_WONDROUS_ITEMS_SHOULDERS        = Table('Wondrous_Items_Shoulders')
+TABLE_WONDROUS_ITEMS_SLOTLESS         = Table('Wondrous_Items_Slotless')
+TABLE_WONDROUS_ITEMS_WRISTS           = Table('Wondrous_Items_Wrists')
 
 
 class Item(object):
@@ -503,14 +364,14 @@ class Item(object):
 
     # Generates the item, referring to the subclass, following the Template
     # Method design pattern.
-    def generate(self, strength, roller):
+    def generate(self, conn, strength, roller):
         # Initialize generation parameters.
         self.strength = strength
         self.roller = roller
         # Call the subclass generation initializer.
         self.generate_init()
 
-        self.lookup()
+        self.lookup(conn)
         return self
 
 
@@ -536,7 +397,7 @@ class Item(object):
 
     # The standard __str__ method
     def __str__(self):
-        return 'generic item'
+        return u'generic item'
 
 
     # Default implementation of the generation initializer.
@@ -557,7 +418,8 @@ class Armor(Item):
         self.t_specials_armor  = TABLE_SPECIAL_ABILITIES_ARMOR
         self.t_specific_shield = TABLE_SPECIFIC_SHIELDS
         self.t_specials_shield = TABLE_SPECIAL_ABILITIES_SHIELD
-        self.armor_threshold = self.t_random.total_rolls('Type', 'armor')
+        #self.armor_threshold = self.t_random.total_rolls('Type', 'armor')
+        self.armor_trheshold = 10 # TODO
         self.re_enhancement = re.compile('\+(\d+) armor or shield')
         self.re_specials = re.compile('with (\w+) \+(\d+) special')
         # Armor details
@@ -586,23 +448,23 @@ class Armor(Item):
 
 
     def __str__(self):
-        result = ''
+        result = u''
         # Armor or Shield
         if self.armor_type == 'armor':
-            result += 'Armor: '
+            result += u'Armor: '
         else:
-            result += 'Shield: '
+            result += u'Shield: '
         # Item specifics
         if self.is_generic:
             result += self.armor_base
             if self.enhancement > 0:
-                result += ' +' + str(self.enhancement)
+                result += u' +' + str(self.enhancement)
                 for spec in self.specials.keys():
-                    result += '/' + spec
+                    result += u'/' + spec
         else:
             result += self.specific_name
         # Cost
-        result += '; ' + self.get_cost()
+        result += u'; ' + self.get_cost()
         return result
 
 
@@ -629,14 +491,14 @@ class Armor(Item):
             return 'error with price calculation'
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
         roll = self.roll('1d100')
         # Look up the roll.
-        rolled_armor = self.t_random.find_roll(roll, None)
+        rolled_armor = self.t_random.find_roll(conn, roll, None)
         self.armor_base = rolled_armor['Result']
         self.armor_type = rolled_armor['Type']
         self.armor_price = rolled_armor['Price']
@@ -644,7 +506,7 @@ class Armor(Item):
 
         # Roll for the magic property.
         roll = self.roll('1d100')
-        rolled_magic = self.t_magic.find_roll(roll, self.strength)
+        rolled_magic = self.t_magic.find_roll(conn, roll, self.strength)
         magic_type = rolled_magic['Result']
 
         # Handle it
@@ -654,7 +516,7 @@ class Armor(Item):
             self.make_generic(magic_type)
 
 
-    def make_generic(self, specification):
+    def make_generic(self, conn, specification):
         self.is_generic = True
         # "Regular" magic item, with an assortment of bonuses.  We already
         # know what we need in the specification param.
@@ -676,10 +538,10 @@ class Armor(Item):
             # Look it up.
             result = None
             if self.armor_type == 'armor':
-                result = self.t_specials_armor.find_roll(roll,
+                result = self.t_specials_armor.find_roll(conn, roll,
                         special_strength)
             else:
-                result = self.t_specials_shield.find_roll(roll,
+                result = self.t_specials_shield.find_roll(conn, roll,
                         special_strength)
             special = result['Result']
             price = result['Price']
@@ -697,10 +559,11 @@ class Armor(Item):
         # Look it up.
         result = None
         if self.armor_type == 'armor':
-            result = self.t_specific_armor.find_roll(
+            result = self.t_specific_armor.find_roll(conn, 
                     roll, self.strength)
         else:
-            result = self.t_specific_shield.find_roll(roll, self.strength)
+            result = self.t_specific_shield.find_roll(conn, roll,
+                    self.strength)
         self.specific_name = result['Result']
         self.specific_price = result['Price']
 
@@ -745,17 +608,17 @@ class Weapon(Item):
 
 
     def __str__(self):
-        result = 'Weapon: '
+        result = u'Weapon: '
         if self.is_generic:
             result += self.weapon_base
             if self.enhancement > 0:
-                result += ' +' + str(self.enhancement)
+                result += u' +' + str(self.enhancement)
                 for spec in self.specials.keys():
-                    result += '/' + spec
+                    result += u'/' + spec
         else:
             result += self.specific_name
         # Cost
-        result += '; ' + self.get_cost()
+        result += u'; ' + self.get_cost()
         return result
 
 
@@ -782,14 +645,14 @@ class Weapon(Item):
             return 'error with price calculation'
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
         roll = self.roll('1d100')
         # Look up the roll.
-        rolled_weapon = self.t_random.find_roll(roll, None)
+        rolled_weapon = self.t_random.find_roll(conn, roll, None)
         self.weapon_base = rolled_weapon['Result']
         self.weapon_type = rolled_weapon['Type']
         self.damage_type = rolled_weapon['Damage Type']
@@ -799,14 +662,14 @@ class Weapon(Item):
 
         # Roll for the magic property.
         roll = self.roll('1d100')
-        rolled_magic = self.t_magic.find_roll(roll, self.strength)
+        rolled_magic = self.t_magic.find_roll(conn, roll, self.strength)
         magic_type = rolled_magic['Result']
 
         # Handle it
         if magic_type.endswith('specific weapon'):
-            self.make_specific()
+            self.make_specific(conn)
         else:
-            self.make_generic(magic_type)
+            self.make_generic(conn, magic_type)
 
 
     def make_generic(self, specification):
@@ -834,7 +697,7 @@ class Weapon(Item):
         # Add specials!
         while special_count > 0:
             # Generate a special.
-            result = self.generate_special(special_strength, properties)
+            result = self.generate_special(conn, special_strength, properties)
             special = result['Result']
             price = result['Price']
             # If we don't already have the special, add it.
@@ -843,16 +706,16 @@ class Weapon(Item):
                 special_count -= 1
 
 
-    def generate_special(self, special_strength, properties):
+    def generate_special(self, conn, special_strength, properties):
         # Roll for a special.
         roll = self.roll('1d100')
         # Look it up.
         result = None
         if self.weapon_type == 'melee':
-            result = self.t_specials_melee.find_roll(roll,
+            result = self.t_specials_melee.find_roll(conn, roll,
                     special_strength)
         else:
-            result = self.t_specials_ranged.find_roll(roll,
+            result = self.t_specials_ranged.find_roll(conn, roll,
                     special_strength)
         special = result['Result']
         price = result['Price']
@@ -878,13 +741,13 @@ class Weapon(Item):
         return True
 
 
-    def make_specific(self):
+    def make_specific(self, conn):
         # Specific
         self.is_generic = False
         # Roll for the specific weapon.
         roll = self.roll('1d100')
         # Look it up.
-        result = self.t_specific_weapon.find_roll(roll, self.strength)
+        result = self.t_specific_weapon.find_roll(conn, roll, self.strength)
         self.specific_name = result['Result']
         self.specific_price = result['Price']
 
@@ -914,20 +777,20 @@ class Potion(Item):
 
 
     def __str__(self):
-        result = 'Potion: ' + self.spell
-        result += ' (' + self.spell_level + ' Level'
-        result += ', CL ' + self.caster_level + ')'
-        result += '; ' + self.price
+        result = u'Potion: ' + self.spell
+        result += u' (' + self.spell_level + u' Level'
+        result += u', CL ' + self.caster_level + u')'
+        result += u'; ' + self.price
         return result
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the potion level.
         roll = self.roll('1d100')
-        result = self.t_random.find_roll(roll, self.strength)
+        result = self.t_random.find_roll(conn, roll, self.strength)
         self.spell_level = result['Spell Level']
         self.caster_level = result['Caster Level']
         # Determine common or uncommon
@@ -935,19 +798,19 @@ class Potion(Item):
         if self.spell_level != '0':
             # Roll for common/uncomon
             roll = self.roll('1d100')
-            commonness = self.t_type.find_roll(roll, '')['Result']
+            commonness = self.t_type.find_roll(conn, roll, None)['Result']
         commonness = commonness.lower()
         # Now roll for and look up the spell.
         roll = self.roll('1d100')
         result = None
         if self.spell_level == '0':
-            result = self.t_potions_0.find_roll(roll, commonness)
+            result = self.t_potions_0.find_roll(conn, roll, commonness)
         elif self.spell_level == '1st':
-            result = self.t_potions_1.find_roll(roll, commonness)
+            result = self.t_potions_1.find_roll(conn, roll, commonness)
         elif self.spell_level == '2nd':
-            result = self.t_potions_2.find_roll(roll, commonness)
+            result = self.t_potions_2.find_roll(conn, roll, commonness)
         elif self.spell_level == '3rd':
-            result = self.t_potions_3.find_roll(roll, commonness)
+            result = self.t_potions_3.find_roll(conn, roll, commonness)
         self.spell = result['Result']
         self.price = result['Price']
 
@@ -970,17 +833,17 @@ class Ring(Item):
 
 
     def __str__(self):
-        return 'Ring: ' + self.ring + '; ' + self.price
+        return u'Ring: ' + self.ring + u'; ' + self.price
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the ring.
         roll = self.roll('1d100')
         # Look it up.
-        ring = self.t_rings.find_roll(roll, self.strength)
+        ring = self.t_rings.find_roll(conn, roll, self.strength)
         self.ring = ring['Result']
         self.price = ring['Price']
 
@@ -1003,17 +866,17 @@ class Rod(Item):
 
 
     def __str__(self):
-        return 'Rod: ' + self.rod + '; ' + self.price
+        return u'Rod: ' + self.rod + u'; ' + self.price
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the rod.
         roll = self.roll('1d100')
         # Look it up.
-        rod = self.t_rods.find_roll(roll, self.strength)
+        rod = self.t_rods.find_roll(conn, roll, self.strength)
         self.rod = rod['Result']
         self.price = rod['Price']
 
@@ -1060,26 +923,26 @@ class Scroll(Item):
 
 
     def __str__(self):
-        result = 'Scroll: ' + self.spell
-        result += ' (' + self.arcaneness
-        result += ', ' + self.spell_level + ' Level'
-        result += ', CL ' + self.caster_level + ')'
-        result += '; ' + self.price
+        result = u'Scroll: ' + self.spell
+        result += u' (' + self.arcaneness
+        result += u', ' + self.spell_level + u' Level'
+        result += u', CL ' + self.caster_level + u')'
+        result += u'; ' + self.price
         return result
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll a random scroll level
         roll = self.roll('1d100')
-        random_scroll = self.t_random.find_roll(roll, self.strength)
+        random_scroll = self.t_random.find_roll(conn, roll, self.strength)
         self.spell_level = random_scroll['Spell Level']
         self.caster_level = random_scroll['Caster Level']
         # Roll for the scroll type.
         roll = self.roll('1d100')
-        scroll_type = self.t_type.find_roll(roll, '')['Result']
+        scroll_type = self.t_type.find_roll(conn, roll, None)['Result']
         # Roll for the spell.
         roll = self.roll('1d100')
         # Now get the exact scroll.
@@ -1090,46 +953,46 @@ class Scroll(Item):
         result = None
         if self.arcaneness == 'arcane':
             if self.spell_level == '0':
-                result = self.t_arcane_level_0.find_roll(roll, commonness)
+                result = self.t_arcane_level_0.find_roll(conn, roll, commonness)
             elif self.spell_level == '1st':
-                result = self.t_arcane_level_1.find_roll(roll, commonness)
+                result = self.t_arcane_level_1.find_roll(conn, roll, commonness)
             elif self.spell_level == '2nd':
-                result = self.t_arcane_level_2.find_roll(roll, commonness)
+                result = self.t_arcane_level_2.find_roll(conn, roll, commonness)
             elif self.spell_level == '3rd':
-                result = self.t_arcane_level_3.find_roll(roll, commonness)
+                result = self.t_arcane_level_3.find_roll(conn, roll, commonness)
             elif self.spell_level == '4th':
-                result = self.t_arcane_level_4.find_roll(roll, commonness)
+                result = self.t_arcane_level_4.find_roll(conn, roll, commonness)
             elif self.spell_level == '5th':
-                result = self.t_arcane_level_5.find_roll(roll, commonness)
+                result = self.t_arcane_level_5.find_roll(conn, roll, commonness)
             elif self.spell_level == '6th':
-                result = self.t_arcane_level_6.find_roll(roll, commonness)
+                result = self.t_arcane_level_6.find_roll(conn, roll, commonness)
             elif self.spell_level == '7th':
-                result = self.t_arcane_level_7.find_roll(roll, commonness)
+                result = self.t_arcane_level_7.find_roll(conn, roll, commonness)
             elif self.spell_level == '8th':
-                result = self.t_arcane_level_8.find_roll(roll, commonness)
+                result = self.t_arcane_level_8.find_roll(conn, roll, commonness)
             elif self.spell_level == '9th':
-                result = self.t_arcane_level_9.find_roll(roll, commonness)
+                result = self.t_arcane_level_9.find_roll(conn, roll, commonness)
         elif self.arcaneness == 'divine':
             if self.spell_level == '0':
-                result = self.t_divine_level_0.find_roll(roll, commonness)
+                result = self.t_divine_level_0.find_roll(conn, roll, commonness)
             elif self.spell_level == '1st':
-                result = self.t_divine_level_1.find_roll(roll, commonness)
+                result = self.t_divine_level_1.find_roll(conn, roll, commonness)
             elif self.spell_level == '2nd':
-                result = self.t_divine_level_2.find_roll(roll, commonness)
+                result = self.t_divine_level_2.find_roll(conn, roll, commonness)
             elif self.spell_level == '3rd':
-                result = self.t_divine_level_3.find_roll(roll, commonness)
+                result = self.t_divine_level_3.find_roll(conn, roll, commonness)
             elif self.spell_level == '4th':
-                result = self.t_divine_level_4.find_roll(roll, commonness)
+                result = self.t_divine_level_4.find_roll(conn, roll, commonness)
             elif self.spell_level == '5th':
-                result = self.t_divine_level_5.find_roll(roll, commonness)
+                result = self.t_divine_level_5.find_roll(conn, roll, commonness)
             elif self.spell_level == '6th':
-                result = self.t_divine_level_6.find_roll(roll, commonness)
+                result = self.t_divine_level_6.find_roll(conn, roll, commonness)
             elif self.spell_level == '7th':
-                result = self.t_divine_level_7.find_roll(roll, commonness)
+                result = self.t_divine_level_7.find_roll(conn, roll, commonness)
             elif self.spell_level == '8th':
-                result = self.t_divine_level_8.find_roll(roll, commonness)
+                result = self.t_divine_level_8.find_roll(conn, roll, commonness)
             elif self.spell_level == '9th':
-                result = self.t_divine_level_9.find_roll(roll, commonness)
+                result = self.t_divine_level_9.find_roll(conn, roll, commonness)
         self.spell = result['Result']
         self.price = result['Price']
 
@@ -1155,13 +1018,13 @@ class Staff(Item):
         return 'Staff: ' + self.staff + '; ' + self.price
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for a staff.
         roll = self.roll('1d100')
-        staff = self.t_staves.find_roll(roll, self.strength)
+        staff = self.t_staves.find_roll(conn, roll, self.strength)
         self.staff = staff['Result']
         self.price = staff['Price']
 
@@ -1199,32 +1062,32 @@ class Wand(Item):
         return result
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for spell level.
         roll = self.roll('1d100')
-        wand_spell = self.t_random.find_roll(roll, self.strength)
+        wand_spell = self.t_random.find_roll(conn, roll, self.strength)
         self.spell_level = wand_spell['Spell Level']
         self.caster_level = wand_spell['Caster Level']
         # Roll for type.
         roll = self.roll('1d100')
-        wand_type = self.t_type.find_roll(roll, '')
+        wand_type = self.t_type.find_roll(conn, roll, None)
         commonness = wand_type['Result'].lower()
         # Roll for the actual wand.
         roll = self.roll('1d100')
         result = None
         if self.spell_level == '0':
-            result = self.t_wands_0.find_roll(roll, commonness)
+            result = self.t_wands_0.find_roll(conn, roll, commonness)
         elif self.spell_level == '1st':
-            result = self.t_wands_1.find_roll(roll, commonness)
+            result = self.t_wands_1.find_roll(conn, roll, commonness)
         elif self.spell_level == '2nd':
-            result = self.t_wands_2.find_roll(roll, commonness)
+            result = self.t_wands_2.find_roll(conn, roll, commonness)
         elif self.spell_level == '3rd':
-            result = self.t_wands_3.find_roll(roll, commonness)
+            result = self.t_wands_3.find_roll(conn, roll, commonness)
         elif self.spell_level == '4th':
-            result = self.t_wands_4.find_roll(roll, commonness)
+            result = self.t_wands_4.find_roll(conn, roll, commonness)
         self.spell = result['Result']
         self.price = result['Price']
         
@@ -1269,10 +1132,10 @@ class WondrousItem(Item):
         return result
 
 
-    def lookup(self):
+    def lookup(self, conn):
         # Roll for slot.
         roll = self.roll('1d100')
-        self.slot = self.t_random.find_roll(roll, '')['Result']
+        self.slot = self.t_random.find_roll(conn, roll, None)['Result']
         # Note that 'least minor' is only valid for slotless.
         if self.slot != 'Slotless' and self.strength == 'least minor':
             self.strength = 'lesser minor'
@@ -1280,32 +1143,33 @@ class WondrousItem(Item):
         roll = self.roll('1d100')
         result = None
         if self.slot == 'Belts':
-            result = self.t_belt.find_roll(roll, self.strength)
+            result = self.t_belt.find_roll(conn, roll, self.strength)
         elif self.slot == 'Body':
-            result = self.t_body.find_roll(roll, self.strength)
+            result = self.t_body.find_roll(conn, roll, self.strength)
         elif self.slot == 'Chest':
-            result = self.t_chest.find_roll(roll, self.strength)
+            result = self.t_chest.find_roll(conn, roll, self.strength)
         elif self.slot == 'Eyes':
-            result = self.t_eyes.find_roll(roll, self.strength)
+            result = self.t_eyes.find_roll(conn, roll, self.strength)
         elif self.slot == 'Feet':
-            result = self.t_feet.find_roll(roll, self.strength)
+            result = self.t_feet.find_roll(conn, roll, self.strength)
         elif self.slot == 'Hands':
-            result = self.t_hands.find_roll(roll, self.strength)
+            result = self.t_hands.find_roll(conn, roll, self.strength)
         elif self.slot == 'Head':
-            result = self.t_head.find_roll(roll, self.strength)
+            result = self.t_head.find_roll(conn, roll, self.strength)
         elif self.slot == 'Headband':
-            result = self.t_headband.find_roll(roll, self.strength)
+            result = self.t_headband.find_roll(conn, roll, self.strength)
         elif self.slot == 'Neck':
-            result = self.t_neck.find_roll(roll, self.strength)
+            result = self.t_neck.find_roll(conn, roll, self.strength)
         elif self.slot == 'Shoulders':
-            result = self.t_shoulders.find_roll(roll, self.strength)
+            result = self.t_shoulders.find_roll(conn, roll, self.strength)
         elif self.slot == 'Wrists':
-            result = self.t_wrists.find_roll(roll, self.strength)
+            result = self.t_wrists.find_roll(conn, roll, self.strength)
         elif self.slot == 'Slotless':
-            result = self.t_slotless.find_roll(roll, self.strength)
+            result = self.t_slotless.find_roll(conn, roll, self.strength)
         # TODO Note that 'least' slotless items aren't accounted for.
-        self.item = result['Result']
-        self.price = result['Price']
+        if result != None:
+            self.item = result['Result']
+            self.price = result['Price']
 
     
 # A dictionary that maps from an item type string to an Item subclass
@@ -1322,26 +1186,3 @@ ITEM_SUBCLASSES = {
         KEY_WONDROUS_ITEM : WondrousItem
     }
 
-
-# Test routine
-
-if __name__ == '__main__':
-    # Assert that the string to subclass dictionary works.
-    for key in ITEM_SUBCLASSES:
-        assert Item.factory(key) != None
-
-    # Generate a few items
-    print('Generating ---------')
-    item = Armor()
-    item.generate('minor', rollers.PseudorandomRoller())
-    print(item)
-    
-
-# Some old code for reference
-
-# # Now, generate an item of that type.
-# (item, rolls, cost) = generateItem(strength, kind, roller, rolls)
-# #return '[' + str(roll).rjust(3, ' ') + '] ' + kind + ': ' + item
-# print('[', ', '.join([str(x).rjust(3, ' ') for x in rolls]), ']',
-#         sep='')
-# print('\t', kind, ', ', item, '; ', cost, ' gp', sep='')

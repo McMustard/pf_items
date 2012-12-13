@@ -1,0 +1,39 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+1st Level Potions and Oils	7-17	p371	Ultimate Equipment
+Strength	Roll	Result	Price	Source
+text	range	text	text	text
+common	01–04	Bless weapon	50 gp	CR
+common	05–14	Cure light wounds	50 gp	CR
+common	15–19	Endure elements	50 gp	CR
+common	20–27	Enlarge person	50 gp	CR
+common	28–33	Jump	50 gp	CR
+common	34–41	Mage armor	50 gp	CR
+common	42–47	Magic fang	50 gp	CR
+common	48–55	Magic weapon	50 gp	CR
+common	56–60	Pass without trace	50 gp	CR
+common	61–64	Protection from chaos	50 gp	CR
+common	65–68	Protection from evil	50 gp	CR
+common	69–72	Protection from good	50 gp	CR
+common	73–76	Protection from law	50 gp	CR
+common	77–81	Reduce person	50 gp	CR
+common	82–87	Remove fear	50 gp	CR
+common	88–92	Sanctuary	50 gp	CR
+common	93–100	Shield of faith	50 gp	CR
+uncommon	01–04	Animate rope	50 gp	CR
+uncommon	05–11	Ant haul	50 gp	APG
+uncommon	12–16	Cloak of the shade	50 gp	APG
+uncommon	17–20	Erase	50 gp	CR
+uncommon	21–26	Feather step	50 gp	APG
+uncommon	27–30	Goodberry	50 gp	CR
+uncommon	31–34	Grease	50 gp	CR
+uncommon	35–41	Hide from animals	50 gp	CR
+uncommon	42–49	Hide from undead	50 gp	CR
+uncommon	50–53	Hold portal	50 gp	CR
+uncommon	54–58	Invigorate	50 gp	APG
+uncommon	59–64	Keen senses	50 gp	APG
+uncommon	65–68	Magic stone	50 gp	CR
+uncommon	69–75	Remove sickness	50 gp	UM
+uncommon	76–80	Sanctify corpse	50 gp	UM
+uncommon	81–84	Shillelagh	50 gp	CR
+uncommon	85–92	Touch of the sea	50 gp	APG
+uncommon	93–100	Vanish	50 gp	APG

@@ -1,0 +1,51 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Head Slot Wondrous Items	5-8	p241	Ultimate Equipment
+Strength	Roll	Result	Price
+text	range	text	text
+lesser minor	01–10	Mask of stony demeanor	500 gp
+lesser minor	11–22	Cap of human guise	800 gp
+lesser minor	23–36	Cap of light	900 gp
+lesser minor	37–56	Hat of disguise	1,800 gp
+lesser minor	57–71	Buffering cap	2,000 gp
+lesser minor	72–85	Miser’s mask	3,000 gp
+lesser minor	86–100	Stalker’s mask	3,500 gp
+greater minor	01–12	Circlet of persuasion	4,500 gp
+greater minor	13–21	Grappler’s mask	5,000 gp
+greater minor	22–31	Helm of fearsome mien	5,000 gp
+greater minor	32–40	Jingasa of the fortunate soldier	5,000 gp
+greater minor	41–54	Helm of comprehend languages and read magic	5,200 gp
+greater minor	55–67	Crown of swords	6,000 gp
+greater minor	68–87	Crown of blasting, minor	6,480 gp
+greater minor	88–100	Mask of the krenshar	7,200 gp
+lesser medium	01–16	Helm of the mammoth lord	8,500 gp
+lesser medium	17–30	Veil of fleeting glances	9,000 gp
+lesser medium	31–46	Mask of a thousand tomes	10,000 gp
+lesser medium	47–63	Medusa mask	10,000 gp
+lesser medium	64–80	Cap of the free thinker	12,000 gp
+lesser medium	81–100	Halo of inner calm	16,000 gp
+greater medium	01–06	Cat’s eye crown	18,000 gp
+greater medium	07–12	Maw of the wyrm	18,000 gp
+greater medium	13–19	Mitre of the hierophant	18,000 gp
+greater medium	20–27	Magician’s hat	20,000 gp
+greater medium	28–34	Circlet of mindsight	22,000 gp
+greater medium	35–42	Mask of the skull	22,000 gp
+greater medium	43–50	Howling helm	22,600 gp
+greater medium	51–62	Crown of blasting, major	23,760 gp
+greater medium	63–72	Helm of underwater action	24,000 gp
+greater medium	73–79	Crown of conquest	24,600 gp
+greater medium	80–85	Batrachian helm	26,000 gp
+greater medium	86–94	Helm of telepathy	27,000 gp
+greater medium	95–100	Plague mask	27,000 gp
+lesser major	01–14	Iron circlet of guarded souls	30,000 gp
+lesser major	15–29	Laurel of command	30,000 gp
+lesser major	30–45	Mask of giants, lesser	30,000 gp
+lesser major	46–61	Steel-mind cap	33,600 gp
+lesser major	62–78	Stormlord’s helm	35,000 gp
+lesser major	79–100	Helm of brilliance, lesser	36,000 gp
+greater major	01–14	Judge’s wig	59,200 gp
+greater major	15–39	Helm of teleportation	73,500 gp
+greater major	40–55	Halo of menace	84,000 gp
+greater major	56–68	Mask of giants, greater	90,000 gp
+greater major	69–83	Helm of brilliance	125,000 gp
+greater major	84–92	Helm of electric radiance	125,000 gp
+greater major	93–100	Crown of heaven	150,000 gp

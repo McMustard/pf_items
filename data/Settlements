@@ -1,0 +1,12 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Settlements	TBD	TBD	Game Mastery Guide
+Size	Base	Minor	Medium	Major
+text	int	text	text	text
+Thorp	50	1d4	0	0
+Hamlet	200	1d6	0	0
+Village	500	2d4	1d4	0
+Small Town	1000	3d4	1d6	0
+Large Town	2000	3d4	2d4	1d4
+Small City	4000	4d4	3d4	1d6
+Large City	8000	4d4	3d4	2d4
+Metropolis	16000	*	4d4	3d4

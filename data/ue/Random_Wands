@@ -1,0 +1,18 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Random Wands	7-42	p382	Ultimate Equipment
+Strength	Roll	Spell Level	Caster Level
+text	range	text	text
+lesser minor	01—40	0	1st
+lesser minor	41—100	1st	1st
+greater minor	01—80	1st	1st
+greater minor	81—100	2nd	3rd
+lesser medium	01—75	2nd	3rd
+lesser medium	76—100	3rd	5th
+greater medium	01—20	2nd	3rd
+greater medium	21—80	3rd	5th
+#The following row is a guessed correction
+greater medium	81—100	4th	7th
+lesser major	01—60	3rd	5th
+lesser major	61—100	4th	7th
+greater major	01—30	3rd	5th
+greater major	31—100	4th	7th

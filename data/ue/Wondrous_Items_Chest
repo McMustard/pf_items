@@ -1,0 +1,32 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Chest Slot Wondrous Items	5-4	p221	Ultimate Equipment
+Strength	Roll	Result	Price
+text	range	text	text
+lesser minor	01–15	Bandages of rapid recovery	200 gp
+lesser minor	16–30	Quick runner’s shirt	1,000 gp
+lesser minor	31–50	Endless bandolier	1,500 gp
+lesser minor	51–75	All tools vest	1,800 gp
+lesser minor	76–100	Vest of surgery	3,000 gp
+greater minor	01–10	Sash of the war champion	4,000 gp
+greater minor	11–20	Sipping jacket	5,000 gp
+greater minor	21–31	Tunic of careful casting	5,000 gp
+greater minor	32–42	Vest of escape	5,200 gp
+greater minor	43–52	Cackling hag’s blouse	6,000 gp
+greater minor	53–62	Deadshot vest	6,000 gp
+greater minor	63–70	Prophet’s pectoral	6,000 gp
+greater minor	71–79	Tunic of deadly might	6,000 gp
+greater minor	80–90	Vest of the vengeful tracker	6,000 gp
+greater minor	91–100	Resplendent uniform coat	7,000 gp
+lesser medium	01–13	Shirt of immolation	8,000 gp
+lesser medium	14–28	Snakeskin tunic	8,000 gp
+lesser medium	29–40	Bane baldric	10,000 gp
+lesser medium	41–60	Unfettered shirt	10,000 gp
+lesser medium	61–80	Poisoner’s jacket, lesser	12,000 gp
+lesser medium	81–100	Vest of the cockroach	16,000 gp
+greater medium	01–50	Vest of stable mutation	20,000 gp
+greater medium	51–100	Spectral shroud	26,000 gp
+lesser major	01–60	Mantle of immortality	50,000 gp
+lesser major	61–100	Poisoner’s jacket, greater	58,000 gp
+greater major	01–35	Merciful baldric	60,000 gp
+greater major	36–70	Mantle of faith	76,000 gp
+greater major	71–100	Mantle of spell resistance	90,000 gp

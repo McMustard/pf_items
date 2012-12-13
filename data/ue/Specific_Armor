@@ -1,0 +1,44 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Specific Armor	3-5	p125	Ultimate Equipment
+Strength	Roll	Result	Price
+text	range	text	text
+lesser minor	01–50	Mithral shirt	1,100 gp
+lesser minor	51–100	Masterwork armor or nonmagical lesser minor armor made with special material	varies
+greater minor	01–33	Mistmail	2,250 gp
+greater minor	34–66	Otyugh hide	2,565 gp
+greater minor	67–100	Dragonhide plate	3,300 gp
+lesser medium	01–33	Elven chain	5,150 gp
+lesser medium	34–66	Rhino hide	5,165 gp
+lesser medium	67–100	Morlock hide	8,910 gp
+greater medium	01–15	Adamantine breastplate	10,200 gp
+greater medium	16–25	Soothsayer’s raiment	10,300 gp
+greater medium	26–38	Equestrian plate	10,650 gp
+greater medium	39–50	Enchanted eelskin	11,160 gp
+greater medium	51–62	Boneless leather	12,160 gp
+greater medium	63–72	Murderer’s blackcloth	12,405 gp
+greater medium	73–86	Folding plate	12,650 gp
+greater medium	87–100	Breastplate of vanishing	15,200 gp
+lesser major	01–13	Armor of insults	16,175 gp
+lesser major	14–29	Dwarven plate	16,500 gp
+lesser major	30–45	Banded mail of luck	18,900 gp
+lesser major	46–58	Catskin leather	18,910 gp
+lesser major	59–71	Celestial armor	22,400 gp
+lesser major	72–84	Buccaneer’s breastplate	23,850 gp
+lesser major	85–100	Plate armor of the deep	24,650 gp
+greater major	01–10	Breastplate of command	25,400 gp
+greater major	11–14	Forsaken banded mail	25,400 gp
+greater major	15–24	Mithral full plate of speed	26,500 gp
+greater major	25–28	Warden of the woods	29,350 gp
+greater major	29–32	Scarab breastplate	32,350 gp
+greater major	33–38	Giant-hide armor (ogre)	39,165 gp
+greater major	39–42	Hamatula hide	44,215 gp
+greater major	43–48	Giant-hide armor (hill giant)	46,665 gp
+greater major	49–52	Demon armor	52,260 gp
+greater major	53–58	Giant-hide armor (stone, fire, or frost giant)	54,165 gp
+greater major	59–64	Giant-hide armor (troll)	59,165 gp
+greater major	65–70	Mail of malevolence	61,300 gp
+greater major	71–76	Giant-hide armor (cloud giant)	69,165 gp
+greater major	77–82	Giant-hide armor (storm giant)	76,665 gp
+greater major	83–88	Daystar half-plate	81,250 gp
+greater major	89–96	Invincible armor	137,650 gp
+greater major	97–100	Prismatic plate	160,650 gp

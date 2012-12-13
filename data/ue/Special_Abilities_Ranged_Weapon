@@ -1,0 +1,59 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Ranged Weapon Special Abilities	3-10	p139	Ultimate Equipment
+Strength	Roll	Result	Price	Qualifiers	Disqualifiers
+text	range	text	text	text	text
++1	01	Adaptive	+1,000 gp		
++1	02	Impervious	+3,000 gp		
++1	03	Glamered	+4,000 gp		
++1	04–06	Allying	+1 bonus		
++1	07–15	Bane	+1 bonus		
++1	16	Called	+1 bonus		
++1	17–19	Conductive	+1 bonus		
++1	20	Conserving	+1 bonus		
++1	21–24	Corrosive	+1 bonus		
++1	25	Cruel	+1 bonus		
++1	26–28	Cunning	+1 bonus		
++1	29–36	Distance	+1 bonus		
++1	37–45	Flaming	+1 bonus		
++1	46–54	Frost	+1 bonus		
++1	55–58	Huntsman	+1 bonus		
++1	59–62	Jurist	+1 bonus		
++1	63	Limning	+1 bonus		
++1	64	Lucky	+1 bonus		
++1	65–66	Merciful	+1 bonus		
++1	67	Planar	+1 bonus		
++1	68	Reliable	+1 bonus		
++1	69–76	Returning	+1 bonus		
++1	77–84	Seeking	+1 bonus		
++1	85–92	Shock	+1 bonus		
++1	93–100	Thundering	+1 bonus		
++2	01–10	Anarchic	+2 bonus		
++2	11–13	Anchoring	+2 bonus		
++2	14–23	Axiomatic	+2 bonus		
++2	24–31	Corrosive burst	+2 bonus		
++2	32–34	Designating, lesser	+2 bonus		
++2	35–37	Endless ammunition	+2 bonus		
++2	38–48	Flaming burst	+2 bonus		
++2	49–58	Holy	+2 bonus		
++2	59–69	Icy burst	+2 bonus		
++2	70–73	Igniting	+2 bonus		
++2	74–76	Phase locking	+2 bonus		
++2	77–86	Shocking burst	+2 bonus		
++2	87–90	Stalking	+2 bonus		
++2	91–100	Unholy	+2 bonus		
+#In the book, +3 and +4 bonuses are in the same group, but we'll split them
+#up for our algorithm
++3	01–25	Lucky, greater	+3 bonus		
++3	26–45	Reliable, greater	+3 bonus		
++3	46–85	Speed	+3 bonus		
++3	86–94	Brilliant energy	+4 bonus		
++3	95–96	Designating, greater	+4 bonus		
++3	97–98	Nimble shot	+4 bonus		
++3	99–100	Second chance	+4 bonus		
++4	01–25	Lucky, greater	+3 bonus		
++4	26–45	Reliable, greater	+3 bonus		
++4	46–85	Speed	+3 bonus		
++4	86–94	Brilliant energy	+4 bonus		
++4	95–96	Designating, greater	+4 bonus		
++4	97–98	Nimble shot	+4 bonus		
++4	99–100	Second chance	+4 bonus		

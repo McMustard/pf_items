@@ -1,0 +1,25 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Random Scrolls	7-20	p372	Ultimate Equipment
+Strength	Roll	Spell Level	Caster Level
+text	range	text	text
+lesser minor	01–15	0	1st
+lesser minor	16–95	1st	1st
+lesser minor	96–100	2nd	3rd
+greater minor	01–05	0	1st
+greater minor	06–35	1st	1st
+greater minor	36–90	2nd	3rd
+greater minor	91–100	3rd	5th
+lesser medium	01–10	2nd	3rd
+lesser medium	11–55	3rd	5th
+lesser medium	56–100	4th	7th
+greater medium	01–20	3rd	5th
+greater medium	21–60	4th	7th
+greater medium	61–100	5th	9th
+lesser major	01–30	4th	7th
+lesser major	31–65	5th	9th
+lesser major	66–90	6th	11th
+lesser major	91–100	7th	13th
+greater major	01–05	6th	11th
+greater major	06–35	7th	13th
+greater major	36–70	8th	15th
+greater major	71–100	9th	17th
