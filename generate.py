@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -17,19 +17,20 @@ This module acts as the command line interface for the Pathfinder Item
 Generator.
 '''
 
-from __future__ import print_function
+#
+# Standard Imports
 
 import argparse
 import re
 import sqlite3 as sqlite
 import sys
 
+#
 # Local imports
 
 import item
 import rollers
 import settlements
-
 
 #
 # Functions
@@ -45,7 +46,10 @@ def test(conn, roller):
             print(s + ' ' + i)
             print('-' * 78)
             for c in range(1000):
-                print(item.generate_item(s + ' ' + i, roller),end=', ')
+                x = item.generate_item(conn, s + ' ' + i, roller)
+                x = str(x).replace('\u2019', "'")
+                x = str(x).replace('\u2014', "-")
+                print(x, end=', ')
             print()
 
 
@@ -92,11 +96,6 @@ def run_test(conn, args):
 
 
 if __name__ == '__main__':
-
-    # Undocumented subcommmand.
-    if len(sys.argv) == 2 and sys.argv[1] == 'test':
-        run_test()
-        sys.exit(0)
 
     # Set up a cushy argument parser.
     parser = argparse.ArgumentParser(
@@ -164,6 +163,13 @@ if __name__ == '__main__':
                 help='Prompts for rolls rather than using the built-in ' +
                 'roller')
 
+    # Undocumented subcommmand.
+    if len(sys.argv) == 2 and sys.argv[1] == 'test':
+        conn = sqlite.connect('data\\data.db')
+        conn.row_factory = sqlite.Row
+        run_test(conn, [])
+        sys.exit(0)
+
     # Go.
     args = parser.parse_args()
 
@@ -173,7 +179,7 @@ if __name__ == '__main__':
         conn = sqlite.connect('data\\data.db')
         conn.row_factory = sqlite.Row
         args.func(conn, args)
-    except sqlite.Error, e:
+    except sqlite.Error as e:
         print('Error: %s' % e.message)
         sys.exit(1)
     finally:

@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#vim: set fileencoding=utf-8
+#!/usr/bin/env python3
+# vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
 #
@@ -18,8 +17,7 @@ This module takes the text (tab delimited) data files, and (re)initializes the
 database with the information contained within.
 '''
 
-from __future__ import print_function
-
+#
 # Standard imports
 
 import argparse
@@ -28,14 +26,6 @@ import getpass
 import os
 import sqlite3 as sqlite
 import sys
-
-# Installed imports
-
-# (none)
-
-# Local imports
-
-# (none)
 
 
 #
@@ -128,7 +118,7 @@ class Table(object):
 
     def process(self):
         # Combine the column names and types for easy access.
-        col_data = zip(self.columns, self.types)
+        col_data = list(zip(self.columns, self.types))
         # Form the SQL CREATE TABLE statement.
         parts = []
         row_parts = []
@@ -178,14 +168,14 @@ class Table(object):
 
 def split_range(range_str):
     span = (0,0)
-    if u'-' in range_str:
-        span = tuple(range_str.split(u'-'))
-    elif u'–' in range_str:
+    if '-' in range_str:
+        span = tuple(range_str.split('-'))
+    elif '–' in range_str:
         # Note: the character mentioned here is hex 2013, not a simple dash
-        span = tuple(range_str.split(u'–'))
-    elif u'—' in range_str:
+        span = tuple(range_str.split('–'))
+    elif '—' in range_str:
         # Note: the character mentioned here is hex 2014, not a simple dash
-        span = tuple(range_str.split(u'—'))
+        span = tuple(range_str.split('—'))
     else:
         span = (range_str, range_str)
     return (int(span[0]), int(span[1]))
@@ -325,7 +315,7 @@ def initialize_database(hostname, user_name, database):
         # Build the tables!
         build_tables(con.cursor())
 
-    except sqlite.Error, e:
+    except sqlite.Error as e:
         print('Error: %s' % e.message)
         sys.exit(1)
     finally:

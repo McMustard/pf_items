@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -17,7 +17,9 @@ This module implements manual and random rollers, that use simple 'd' dice
 expressions for generating random rolls for the Pathfinder Item Generator.
 '''
 
-from __future__ import print_function
+#
+# Standard Imports
+
 import random
 from sys import stdin, stdout
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -16,13 +16,15 @@
 This module performs tasks related to settlement item generation.
 '''
 
-from __future__ import print_function
+#
+# Standard Imports
 
 import re
 import sqlite3 as sqlite
 import sys
 import traceback
 
+#
 # Local imports
 
 import item
@@ -128,7 +130,8 @@ def generate_settlement_items(conn, settlement, roller):
     cursor = conn.execute('''SELECT * FROM Settlements WHERE (Size = ?);''',
             (key,))
     result = cursor.fetchone()
-    print(result)
+    if result == None:
+        raise Exception('failed to acquire settlement details')
     settlement_base = result['Base']
     expr_minor = result['Minor']
     expr_medium = result['Medium']
@@ -176,8 +179,25 @@ def generate_settlement_items(conn, settlement, roller):
 def print_random_item(conn, strength, roller, base_value):
     # Generate a generic item
     try:
+        # This should simplify the nesting and logic a little, for retries.
+        retry = False
+        # Get an item.
         x = item.generate_generic(conn, strength, roller, base_value)
-        print(x)
+        # We may need to try some substitutions. A known issue is with the
+        # Windows console, which uses CP437, not UTF-8.
+        try:
+            print(x)
+        except UnicodeEncodeError as ex:
+            retry = True
+
+        if retry:
+            s = str(x)
+            s = s.replace('\u2019', "'")
+            try:
+                print(s)
+            except:
+                print('Error: Unable to print item ({0}).'.format(x.type()))
+                traceback.print_exc(file=sys.stdout)
     except:
         traceback.print_exc(file=sys.stdout)
 

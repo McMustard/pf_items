@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -17,18 +17,23 @@ This module implements the bulk of item generation for the Pathfinder Item
 Generator.
 '''
 
+#
 # Library imports
-from __future__ import print_function
+
 import locale
 import os
 import random
 import re
 
+#
 # Local imports
+
 import rollers
 import generate
 
+#
 # Module initialization
+
 if os.name == 'posix':
     # An extremely recognizable locale string.
     locale.setlocale(locale.LC_ALL, 'en_US')
@@ -397,7 +402,12 @@ class Item(object):
 
     # The standard __str__ method
     def __str__(self):
-        return u'generic item'
+        return 'generic item'
+
+
+    # Type of item
+    def type(self):
+        return 'unspecified item'
 
 
     # Default implementation of the generation initializer.
@@ -448,24 +458,28 @@ class Armor(Item):
 
 
     def __str__(self):
-        result = u''
+        result = ''
         # Armor or Shield
         if self.armor_type == 'armor':
-            result += u'Armor: '
+            result += 'Armor: '
         else:
-            result += u'Shield: '
+            result += 'Shield: '
         # Item specifics
         if self.is_generic:
             result += self.armor_base
             if self.enhancement > 0:
-                result += u' +' + str(self.enhancement)
+                result += ' +' + str(self.enhancement)
                 for spec in self.specials.keys():
-                    result += u'/' + spec
+                    result += '/' + spec
         else:
             result += self.specific_name
         # Cost
-        result += u'; ' + self.get_cost()
+        result += '; ' + self.get_cost()
         return result
+
+
+    def type(self):
+        return 'armor or shield'
 
 
     def get_cost(self):
@@ -487,7 +501,7 @@ class Armor(Item):
                 return price.compute()
             else:
                 return self.specific_price
-        except BadPrice, ex:
+        except BadPrice as ex:
             return 'error with price calculation'
 
 
@@ -511,9 +525,9 @@ class Armor(Item):
 
         # Handle it
         if magic_type.endswith('specific armor or shield'):
-            self.make_specific()
+            self.make_specific(conn)
         else:
-            self.make_generic(magic_type)
+            self.make_generic(conn, magic_type)
 
 
     def make_generic(self, conn, specification):
@@ -551,7 +565,7 @@ class Armor(Item):
                 special_count -= 1
 
 
-    def make_specific(self):
+    def make_specific(self, conn):
         # Specific
         self.is_generic = False
         # Roll for the specific armor.
@@ -608,18 +622,22 @@ class Weapon(Item):
 
 
     def __str__(self):
-        result = u'Weapon: '
+        result = 'Weapon: '
         if self.is_generic:
             result += self.weapon_base
             if self.enhancement > 0:
-                result += u' +' + str(self.enhancement)
+                result += ' +' + str(self.enhancement)
                 for spec in self.specials.keys():
-                    result += u'/' + spec
+                    result += '/' + spec
         else:
             result += self.specific_name
         # Cost
-        result += u'; ' + self.get_cost()
+        result += '; ' + self.get_cost()
         return result
+
+
+    def type(self):
+        return 'weapon'
 
 
     def get_cost(self):
@@ -641,7 +659,7 @@ class Weapon(Item):
                 return price.compute()
             else:
                 return self.specific_price
-        except BadPrice, ex:
+        except BadPrice as ex:
             return 'error with price calculation'
 
 
@@ -672,7 +690,7 @@ class Weapon(Item):
             self.make_generic(conn, magic_type)
 
 
-    def make_generic(self, specification):
+    def make_generic(self, conn, specification):
         self.is_generic = True
         # The weapon properties determine what kinds of enchantments can be
         # applied.  We don't do this in 'lookup' because it becomes invalid if
@@ -695,15 +713,28 @@ class Weapon(Item):
             special_count = {'one': 1, 'two': 2}[part[0]]
             special_strength = '+' + str(part[1])
         # Add specials!
+        retries = 0
         while special_count > 0:
             # Generate a special.
             result = self.generate_special(conn, special_strength, properties)
+            if result == None:
+                # Retry
+                retries += 1
+                if retries > 100:
+                    # TODO find something better
+                    raise Exception('too many retries')
+                continue
             special = result['Result']
             price = result['Price']
             # If we don't already have the special, add it.
             if special and special not in self.specials.keys():
                 self.specials[special] = price
                 special_count -= 1
+        # This tracks the number of retries for the sake of information.
+        #if retries > 0:
+        #    rf = open('retries.txt', 'a')
+        #    rf.write(str(retries))
+        #    rf.close()
 
 
     def generate_special(self, conn, special_strength, properties):
@@ -777,11 +808,15 @@ class Potion(Item):
 
 
     def __str__(self):
-        result = u'Potion: ' + self.spell
-        result += u' (' + self.spell_level + u' Level'
-        result += u', CL ' + self.caster_level + u')'
-        result += u'; ' + self.price
+        result = 'Potion: ' + self.spell
+        result += ' (' + self.spell_level + ' Level'
+        result += ', CL ' + self.caster_level + ')'
+        result += '; ' + self.price
         return result
+
+
+    def type(self):
+        return 'potion'
 
 
     def lookup(self, conn):
@@ -833,7 +868,11 @@ class Ring(Item):
 
 
     def __str__(self):
-        return u'Ring: ' + self.ring + u'; ' + self.price
+        return 'Ring: ' + self.ring + '; ' + self.price
+
+
+    def type(self):
+        return 'ring'
 
 
     def lookup(self, conn):
@@ -866,7 +905,11 @@ class Rod(Item):
 
 
     def __str__(self):
-        return u'Rod: ' + self.rod + u'; ' + self.price
+        return 'Rod: ' + self.rod + '; ' + self.price
+
+
+    def type(self):
+        return 'rod'
 
 
     def lookup(self, conn):
@@ -923,12 +966,16 @@ class Scroll(Item):
 
 
     def __str__(self):
-        result = u'Scroll: ' + self.spell
-        result += u' (' + self.arcaneness
-        result += u', ' + self.spell_level + u' Level'
-        result += u', CL ' + self.caster_level + u')'
-        result += u'; ' + self.price
+        result = 'Scroll: ' + self.spell
+        result += ' (' + self.arcaneness
+        result += ', ' + self.spell_level + ' Level'
+        result += ', CL ' + self.caster_level + ')'
+        result += '; ' + self.price
         return result
+
+
+    def type(self):
+        return 'scroll'
 
 
     def lookup(self, conn):
@@ -1018,6 +1065,10 @@ class Staff(Item):
         return 'Staff: ' + self.staff + '; ' + self.price
 
 
+    def type(self):
+        return 'staff'
+
+
     def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -1060,6 +1111,10 @@ class Wand(Item):
         result += ', CL ' + self.caster_level + ')'
         result += '; ' + self.price
         return result
+
+
+    def type(self):
+        return 'wand'
 
 
     def lookup(self, conn):
@@ -1130,6 +1185,10 @@ class WondrousItem(Item):
         result += ' (' + self.slot + ')'
         result += '; ' + self.price
         return result
+
+
+    def type(self):
+        return 'wondrous item'
 
 
     def lookup(self, conn):
