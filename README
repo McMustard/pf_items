@@ -16,8 +16,7 @@ Ultimate Equipment.
 
 2. Prerequisites
 
-This software requires Python 2.7.  It may work under older versions of Python,
-but it was developed and tested using 2.7.
+This software requires Python 3.x (ideally; it has only been tested with 3.3).
 
 3. How to Use
 

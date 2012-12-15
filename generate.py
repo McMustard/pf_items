@@ -65,6 +65,24 @@ def make_series(sequence):
 
 # Parser subcommands
 
+def print_item(x):
+    retry = False
+    try:
+        print(x)
+    except UnicodeEncodeError as ex:
+        retry = True
+
+    if retry:
+        s = str(x)
+        s = s.replace('\u2019', "'")
+        try:
+            print(s)
+        except:
+            print('Error: Unable to print item ({0}).'.format(x.type()))
+            #Enable only when debugging.
+            #traceback.print_exc(file=sys.stdout)
+
+
 def run_generate_settlement(conn, args):
     # Set up the roller.
     if args.manual:
@@ -72,8 +90,25 @@ def run_generate_settlement(conn, args):
     else:
         roller = rollers.PseudorandomRoller()
     # Generate items.
-    settlements.generate_settlement_items(conn,
-            ' '.join(args.settlement_type), roller)
+    settlement = ' '.join(args.settlement_type)
+    result = settlements.generate_settlement_items(conn, settlement, roller)
+    # Print the results.
+    # TODO normalize the settlement type to a pretty form, not the param form.
+    print('Magic items for a ', settlement, ':', sep='')
+    print('-' * 78)
+    print('Base value:', result.base_value, 'gp')
+    print()
+    print('Minor Magic Items')
+    print('-' * 78)
+    for x in result.minor_items: print_item(x)
+    print('\n')
+    print('Medium Magic Items')
+    print('-' * 78)
+    for x in result.medium_items: print_item(x)
+    print('\n')
+    print('Major Magic Items')
+    print('-' * 78)
+    for x in result.major_items: print_item(x)
 
 
 def run_generate_item(conn, args):
@@ -181,7 +216,6 @@ if __name__ == '__main__':
         args.func(conn, args)
     except sqlite.Error as e:
         print('Error: %s' % e.message)
-        sys.exit(1)
     finally:
         if conn: conn.close()
 

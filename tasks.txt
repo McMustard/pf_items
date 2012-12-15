@@ -1,14 +1,9 @@
 * Reroll items that fall below a settlement's base value.
-  * Implement item value calculator (only needed for weapons and armor)
-  * Add item values to item files (no longer necessary)
   * This is practically impossible, due to the existence of potions, as they are cheap.
     The best solution (subjective, but there are good reasons) is not to follow that rule.
     Potions generated are simply guaranteed to be there.
 
 * Weapon and armor special abilities
-  * Reroll duplicate specials.
-  * Reroll incompatibles (wrong item type or conflicting specials)
-  * Reroll > +10 bonuses (probably not a concern any more due to UE's tables)
   * More powerful specials override less powerful ones.
     Perhaps can use string comparisons to determine when this occurs.
 
@@ -18,6 +13,7 @@
   
 * Roll weapon special materials
   * Need to determine ranges, there's no table for this.
+  * This also affects cost.
 * Roll 30% chance a weapon sheds light, or has runes/etc.
 
 * Add treasure generation mode.

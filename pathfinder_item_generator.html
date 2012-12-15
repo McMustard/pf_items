@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+    <meta charset="utf-8"/>
+    <head>
+        <!-- Min version, hosted on Google
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+        -->
+        <!-- Development version, local
+        -->
+        <script src="jquery-1.8.3.dev.js" /></script>
+
+        <!-- Document Preparation -->
+        <script>
+            $(document).ready(function(){
+                $("#btn_gen_settlement").click(function(event){
+                    // Get the user's Settlement Size selection.
+                    var settlement = $("select#settlement_size").val()
+
+                    //// Perform the item generation.
+                    //$.post("cgi-bin/webgen.py",{mode:"settlement",
+                    //    settlement_size: settlement},
+                    //    function(xml){
+                    //        $("#results").text(xml);
+                    //        console.log(xml);
+                    //    });
+
+                    var data_str = "mode=settlement&settlement_size=" +
+                        settlement;
+                    var data_jsn = {"mode": "settlement",
+                        "settlement_size": settlement};
+
+                    $.ajax({
+                        type: "POST",
+                        url:  "cgi-bin/webgen.py",
+                        datatype: "json",
+                        data: JSON.stringify(data_jsn),
+                        success: function(response) {
+                            var results = $("#results");
+                            console.log("Results: %o", results);
+                            results.html("");
+                            results.html("<h4>Results:</h4>");
+                            results.append("<em>Base Value:</em> " +
+                                   response.base_value + "gp<br/>");
+                            if (response.minor_items.length > 0) {
+                                results.append("<strong>Minor Items:</strong><br/>");
+                                results.append("<ul>");
+                                for (i in response.minor_items) {
+                                    results.append("<ul>" +
+                                        response.minor_items[i] + "</ul>");
+                                }
+                                results.append("</ul>");
+                            }
+                            if (response.medium_items.length > 0) {
+                                results.append("<strong>Medium Items:</strong><br/>");
+                                results.append("<ul>");
+                                for (i in response.medium_items) {
+                                    results.append("<ul>" +
+                                        response.medium_items[i] + "</ul>");
+                                }
+                                results.append("</ul>");
+                            }
+                            if (response.major_items.length > 0) {
+                                results.append("<strong>Major Items:</strong><br/>");
+                                results.append("<ul>");
+                                for (i in response.major_items) {
+                                    results.append("<ul>" +
+                                        response.major_items[i] + "</ul>");
+                                }
+                                results.append("</ul>");
+                            }
+                        }
+                    });
+
+                    // Prevent the default action, which reloads the page.
+                    // There's probably a more elegant way to set this up.
+                    event.preventDefault();
+                });
+            });
+        </script>
+    </head>
+
+    <body>
+        <!-- Header -->
+        <h1>Item Generator Prototype</h1>
+        <h2>Settlement Magic Items</h2>
+        <div id="settlement_form">
+            <form name="generate_settlement" action="">
+                <fieldset>
+                    <label for="settlement" id="settlement_label">
+                        Settlement Size:
+                    </label>
+                    <select id="settlement_size" name="settlement_size">
+                        <option>Thorp</option>
+                        <option>Hamlet</option>
+                        <option>Village</option>
+                        <option>Small Town</option>
+                        <option>Large Town</option>
+                        <option>Small City</option>
+                        <option>Large City</option>
+                        <option selected="selected">Metropolis</option>
+                    </select>
+                    <button id="btn_gen_settlement">
+                        Generate</button>
+                    <!--
+                    <input type="submit" name="submit" class="button"
+                    id="submit_button" value="Generate"/>
+                    -->
+                </fieldset>
+            </form>
+        </div>
+
+        <!-- The results will go here -->
+        <div id="results">
+        Results
+        </div>
+    </body>
+
+</html>
