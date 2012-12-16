@@ -1,11 +1,11 @@
-Pathfinder Item Generator
+PFRPG Item Generator
 Version 0.1
 21 September 2012
 -------------------------------------------------------------------------------
 
 1. Identification
 
-The Pathfinder Item Generator is a tool to assist with the selection of
+The PFRPG Item Generator is a tool to assist with the selection of
 random items from the Pathinder Roleplaying Game.  It is intended for GMs who
 wish to generate available magic items for settlements, or items found from
 vanquished monsters, loot caches, and treasure hoards.  For settlement item
@@ -16,7 +16,7 @@ Ultimate Equipment.
 
 2. Prerequisites
 
-This software requires Python 3.x (ideally; it has only been tested with 3.3).
+This software requires Python 3.x (tested with 3.0 and 3.3).
 
 3. How to Use
 
