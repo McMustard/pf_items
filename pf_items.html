@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+    <!-- This file is part of a software package, released using the "MIT
+    license".  Details will be added to this file in a future revision.
+    -->
+
+    <meta charset="utf-8"/>
+
+    <head>
+        <title>PFRPG Random Item Generator</title>
+
+        <!-- jQuery -->
+        <!-- Min version, hosted on Google -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+        <!-- Development version, local
+        <script src="jquery-1.8.3.dev.js" /></script>
+        -->
+
+        <!-- Generation script -->
+        <script src = generate.js> </script>
+    </head>
+
+    <body>
+        <!-- Header -->
+        <h1>Item Generator</h1>
+        <h3>for the Pathfinder Roleplaying Game</h3>
+        <h2>Settlement Magic Items</h2>
+        <div id="settlement_form">
+            <form name="generate_settlement" action="">
+                <fieldset>
+                    <label for="settlement" id="settlement_label">
+                        Settlement Size:
+                    </label>
+                    <select id="settlement_size" name="settlement_size">
+                        <option>Thorp</option>
+                        <option>Hamlet</option>
+                        <option>Village</option>
+                        <option>Small Town</option>
+                        <option>Large Town</option>
+                        <option>Small City</option>
+                        <option>Large City</option>
+                        <option selected="selected">Metropolis</option>
+                    </select>
+                    <button id="btn_gen_settlement">
+                        Generate</button>
+                </fieldset>
+            </form>
+        </div>
+
+        <!-- The results will go here -->
+        <h3>Results:</h3>
+        <div id="results"></div>
+    </body>
+
+    <hr/>
+
+    <small>
+        <p>
+        This software is Copyright 2012 Steven Clark.<br/>
+        It is intended for use with the Pathfinder Roleplaying Game, published
+        by Paizo Publishing, LLC.
+        </p>
+
+        <p>
+        Compatibility with the Pathfinder Roleplaying Game requires the
+        Pathfinder Roleplaying Game from Paizo Publishing, LLC. See
+        <a href="http://paizo.com/pathfinderRPG">
+            http://paizo.com/pathfinderRPG</a> for more information on the
+        Pathfinder Roleplaying Game. Paizo Publishing, LLC does not guarantee
+        compatibility, and does not endorse this product.
+        </p>
+
+        <p>
+        Pathfinder is a registered trademark of Paizo Publishing, LLC, and the
+        Pathfinder Roleplaying Game and the Pathfinder Roleplaying Game
+        Compatibility Logo are trademarks of Paizo Publishing, LLC, and are
+        used under the Pathfinder Roleplaying Game Compatibility License. See
+        <a href="http://paizo.com/pathfinderRPG/compatibility">
+            http://paizo.com/pathfinderRPG/compatibility</a> for more
+        information on the compatibility license.
+        </p>
+        
+        <p>Pathfinder and associated marks and logos are trademarks of Paizo
+        Publishing, LLC, and are used under license. See
+        <a href="paizo.com/pathfinderRPG">paizo.com/pathfinderRPG</a> for more
+        information on the Pathfinder Roleplaying Game.
+        </p>
+
+        <p>
+        This software includes and/or references Open Game Content
+        (see the <a href="OGL.txt">Open Game License</a> for details).
+        </p>
+    </small>
+</html>

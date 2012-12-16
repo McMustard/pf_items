@@ -1,5 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/local/bin/python3.0
 # vim: set fileencoding=utf-8
+
+# Note: The shebang is set specifically for _my_ server deployment.
+# It's probably a good idea to search for some method of making it a bit more
+# standardized. Perhaps a symlink that must be set up on deployment?
 
 # Pathfinder Item Generator
 #
@@ -38,10 +42,10 @@ import settlements
 if __name__ == '__main__':
 
     # Enable CGI traceback manager (DEVELOPMENT)
-    cgitb.enable(display=0, logdir='tblog.txt')
+    cgitb.enable(display=0, logdir='logs')
     
     # Output selection for debugging.
-    #f = open('log.txt', 'a')
+    #f = open('logs', 'a')
     f = sys.stdout
     #f = sys.stderr
     
@@ -53,7 +57,7 @@ if __name__ == '__main__':
     # If an exception happens, return HTML containing an error.
     try:
         # Open the database.
-        conn = sqlite.connect('data\\data.db')
+        conn = sqlite.connect('data/data.db')
         conn.row_factory = sqlite.Row
 
         # Mode of operation:

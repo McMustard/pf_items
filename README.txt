@@ -105,11 +105,11 @@ generation of treasure hoards, and generation of random coins, jewels, and art.
 
 The software in this package is copyright (c) 2012, Steven Clark.  All rights
 reserved, and is stated in each source code file.
-See the file "LICENSE" for licensing information, terms and conditions for
+See the file "LICENSE.txt" for licensing information, terms and conditions for
 usage, and a DISCLAIMER OF ALL WARRANTIES.
 
-This softare package also includes Open Game Content.  See the file "OGL" for
-a copy of the Open Game License and list of Open Game Content used by this
+This softare package also includes Open Game Content.  See the file "OGL.txt"
+for a copy of the Open Game License and list of Open Game Content used by this
 software.
 
 All trademarks referenced herein are property of their respective holders.

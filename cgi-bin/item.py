@@ -29,7 +29,6 @@ import re
 # Local imports
 
 import rollers
-import generate
 
 #
 # Module initialization
