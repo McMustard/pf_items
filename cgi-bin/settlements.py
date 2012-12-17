@@ -117,8 +117,8 @@ def generate_settlement_items(conn, settlement, roller):
     # metropolis.
     if count_minor > 0 or expr_minor == '*':
         if expr_minor == '*':
-            result['minor_items'].append('This ' + key + ' has virtually ' +
-                'every minor magic item.')
+            result['minor_items'].append('This ' + key.lower() +
+                    ' has virtually every minor magic item.')
         else:
             for i in range(count_minor):
                 x = get_random_item(conn, 'minor', roller, settlement_base)

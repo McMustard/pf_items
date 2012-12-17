@@ -315,6 +315,9 @@ def initialize_database(hostname, user_name, database):
         # Build the tables!
         build_tables(con.cursor())
 
+        # Commit
+        con.commit()
+
     except sqlite.Error as e:
         print('Error: %s' % e.message)
         sys.exit(1)

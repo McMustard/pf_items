@@ -59,16 +59,20 @@ KEY_STAFF         = 'Staff'
 KEY_WAND          = 'Wand'
 KEY_WONDROUS_ITEM = 'Wondrous Item'
 
-# Data file names
-FILE_ITEMTYPES = 't_itemtypes'
+# Option values for specifying magic items parameters.
 
-# Tables
-# Filled in on first use
+# There is no official term for this, but I call them "degrees".
+DEGREE_OPTIONS = ['least', 'lesser', 'greater']
 
-TABLE_TYPES_LOADED = False
-TABLE_TYPES_MINOR = []
-TABLE_TYPES_MEDIUM = []
-TABLE_TYPES_MAJOR = []
+# I use "strength" for minor, medium, or major, with an otional degree before
+# it.
+STRENGTH_OPTIONS = ['minor', 'medium', 'major']
+
+# Comprehensive item types, including subtypes.
+TYPE_OPTIONS = ['armor/shield', 'armor', 'shield', 'weapon', 'potion',
+        'ring', 'rod', 'scroll', 'staff', 'wand', 'wondrous', 'belt', 'belts',
+        'body', 'chest', 'eyes', 'feet', 'hand', 'hands', 'head', 'headband',
+        'neck', 'shoulders', 'slotless', 'wrist', 'wrists']
 
 # Maps the parameter specification of an item type to its standardized value.
 # Use a key converted to lower case to perform the lookup.
@@ -77,7 +81,7 @@ ITEM_TYPE_MAP = {
         'armor'            : 'Armor/Shield',
         'armor/shield'     : 'Armor/Shield',
         'armor and shield' : 'Armor/Shield',
-        'armor or shield' : 'Armor/Shield',
+        'armor or shield'  : 'Armor/Shield',
         'weapon'           : 'Weapon',
         'potion'           : 'Potion',
         'ring'             : 'Ring',
@@ -88,8 +92,50 @@ ITEM_TYPE_MAP = {
         'wondrous item'    : 'Wondrous Item',
         'wondrous'         : 'Wondrous Item' }
 
+# As above, but includes subtypes
+ITEM_SUBTYPE_MAP = {
+        'armor/shield'     : ('Armor/Shield', ''),
+        'armor and shield' : ('Armor/Shield', ''),
+        'armor or shield'  : ('Armor/Shield', ''),
+        'weapon'           : ('Weapon', ''),
+        'potion'           : ('Potion', ''),
+        'ring'             : ('Ring', ''),
+        'rod'              : ('Rod', ''),
+        'scroll'           : ('Scroll', ''),
+        'staff'            : ('Staff', ''),
+        'wand'             : ('Wand', ''),
+        'wondrous item'    : ('Wondrous Item', ''),
+        'wondrous'         : ('Wondrous Item', ''),
+        'belt'             : ('Wondrous Item', 'Belts'),
+        'belts'            : ('Wondrous Item', 'Belts'),
+        'body'             : ('Wondrous Item', 'Body'),
+        'chest'            : ('Wondrous Item', 'Chest'),
+        'eyes'             : ('Wondrous Item', 'Eyes'),
+        'feet'             : ('Wondrous Item', 'Feet'),
+        'hand'             : ('Wondrous Item', 'Hands'),
+        'hands'            : ('Wondrous Item', 'Hands'),
+        'head'             : ('Wondrous Item', 'Head'),
+        'headband'         : ('Wondrous Item', 'Headband'),
+        'neck'             : ('Wondrous Item', 'Neck'),
+        'shoulders'        : ('Wondrous Item', 'Shoulders'),
+        'slotless'         : ('Wondrous Item', 'Slotless'),
+        'wrist'            : ('Wondrous Item', 'Wrists'),
+        'wrists'           : ('Wondrous Item', 'Wrists')
+        }
+
 #
 # Functions
+
+def extract_keywords(sequence, keywords):
+    '''Searches the specified sequence for the specified keywords, returns
+    a set containing the matches, and eliminates the matching items from
+    the sequence.'''
+    sequence_as_set = set(sequence)
+    keywords_as_set = set(keywords)
+    intersect = sequence_as_set.intersection(keywords_as_set)
+    for x in intersect: sequence.remove(x)
+    return intersect
+
 
 def generate_generic(conn, strength, roller, base_value):
     # Here, strength is merely 'minor', 'medium', 'major', so we need to
@@ -116,12 +162,38 @@ def generate_generic(conn, strength, roller, base_value):
 
 
 def generate_item(conn, description, roller):
-    # description is of the form: lesser/greater major/medium/minor <kind>
-    parts = description.split(' ')
-    strength = ' '.join(parts[0:2])
-    kind = ' '.join(parts[2:])
+    # 'description' contains keywords.
+    keywords = description.split(' ')
+
+    # least/lesser/greater
+    degrees = extract_keywords(keywords, DEGREE_OPTIONS)
+    if len(degrees) != 1:
+        raise Exception('must specify exactly one of: ' +
+                ', '.join(DEGREE_OPTIONS))
+
+    # minor/medium/major
+    strengths = extract_keywords(keywords, STRENGTH_OPTIONS)
+    if len(strengths) != 1:
+        raise Exception('must specify exactly one of: ' +
+                ', '.join(STRENGTH_OPTIONs))
+
+    # item types and subtypes
+    types = extract_keywords(keywords, TYPE_OPTIONS)
+    if len(types) != 1:
+        raise Exception('must specify exactly one of: ' +
+                ', '.join(TYPE_OPTIONS))
+
+    # Look for leftover keywords.
+    if len(keywords) > 0:
+        raise Exception('ignoring keywords:', *keywords)
+
+    # Get singular values.
+    degree = degrees.pop()
+    strength = strengths.pop()
+    kind = types.pop() # avoiding 'type' reserved word
+
     # Now we have the parts in a usable form.
-    return generate_specific_item(conn, strength, kind, roller)
+    return generate_specific_item(conn, degree + ' ' + strength, kind, roller)
 
 
 def generate_specific_item(conn, strength, kind, roller):
@@ -133,10 +205,15 @@ def generate_specific_item(conn, strength, kind, roller):
 
 
 def create_item(kind):
+    # Look up the kind of item for its official name.
+    (main_kind, subtype) = ITEM_SUBTYPE_MAP[kind]
+
     # Create the apropriate Item subclass.
-    subclass = ITEM_SUBCLASSES[kind]
+    subclass = ITEM_SUBCLASSES[main_kind]
     result = subclass.__new__(subclass)
     result.__init__()
+    # Set the subtype (applicable only sometimes)
+    result.subtype = subtype
     return result
 
 
@@ -364,6 +441,10 @@ class Item(object):
         self.strength = ''
         # Roller
         self.roller = None
+        # Subtype (when Wondrous)
+        self.subtype = ''
+        # Situational parameters
+        self.parameters = []
 
 
     # Generates the item, referring to the subclass, following the Template
@@ -1191,9 +1272,13 @@ class WondrousItem(Item):
 
 
     def lookup(self, conn):
-        # Roll for slot.
-        roll = self.roll('1d100')
-        self.slot = self.t_random.find_roll(conn, roll, None)['Result']
+        # If we have a subtype, we won't need to roll for a slot.
+        if self.subtype not in [None, '']:
+            self.slot = self.subtype 
+        else:
+            # Roll for slot.
+            roll = self.roll('1d100')
+            self.slot = self.t_random.find_roll(conn, roll, None)['Result']
         # Note that 'least minor' is only valid for slotless.
         if self.slot != 'Slotless' and self.strength == 'least minor':
             self.strength = 'lesser minor'
@@ -1224,7 +1309,6 @@ class WondrousItem(Item):
             result = self.t_wrists.find_roll(conn, roll, self.strength)
         elif self.slot == 'Slotless':
             result = self.t_slotless.find_roll(conn, roll, self.strength)
-        # TODO Note that 'least' slotless items aren't accounted for.
         if result != None:
             self.item = result['Result']
             self.price = result['Price']

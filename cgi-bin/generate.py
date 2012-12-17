@@ -35,7 +35,88 @@ import settlements
 #
 # Functions
 
-def test(conn, roller):
+def make_series(sequence):
+    '''Accepts a sequence, and returns a string containing a comma-separated
+    list of the items, enclosed in double quotes.'''
+    if len(sequence) == 0: return ''
+    quoted = ['"' + value + '"' for value in sequence]
+    quoted[-1] = 'and ' + quoted[-1]
+    return ', '.join(quoted)
+
+
+#
+# Execution
+
+def print_item(x):
+    '''Prints an item to standard out.  Parameter 'x' is already a string,
+    but this function catches Unicode-related exceptions, which occur when
+    standard out happens to be the Windows console, which is not Unicode .'''
+
+    retry = False
+    try:
+        print(x)
+    except UnicodeEncodeError as ex:
+        retry = True
+
+    if retry:
+        s = str(x)
+        s = s.replace('\u2019', "'")
+        try:
+            print(s)
+        except:
+            print('Error: Unable to print item ({0}).'.format(x.type()))
+
+
+def run_generate_settlement(conn, args):
+    '''Runs the settlement item generator.'''
+    # Set up the roller.
+    if args.manual:
+        roller = rollers.ManualDiceRoller()
+    else:
+        roller = rollers.PseudorandomRoller()
+    # Generate items.
+    settlement = (' '.join(args.settlement_type)).lower()
+    result = settlements.generate_settlement_items(conn, settlement, roller)
+    # Print the results.
+    print('Magic items for a ', settlement, ':', sep='')
+    print('-' * 78)
+    print('Base value:', result['base_value'], 'gp')
+    print()
+    print('Minor Magic Items')
+    print('-' * 78)
+    for x in result['minor_items']:
+        print_item(x)
+    print('\n')
+    print('Medium Magic Items')
+    print('-' * 78)
+    for x in result['medium_items']:
+        print_item(x)
+    print('\n')
+    print('Major Magic Items')
+    print('-' * 78)
+    for x in result['major_items']:
+        print_item(x)
+
+
+def run_generate_item(conn, args):
+    '''Runs the individual item generator.'''
+    # Set up the roller.
+    if args.manual:
+        roller = rollers.ManualDiceRoller()
+    else:
+        roller = rollers.PseudorandomRoller()
+    # Generate an item.
+    keywords = (' '.join(args.item_args)).lower()
+    x = item.generate_item(conn, keywords, roller)
+    print_item(str(x))
+
+
+def run_test(conn, args):
+    '''Runs a test that exhaustively tests the item generation code.'''
+    print("run_test")
+    # Use an automatic dice roller.
+    roller = rollers.PseudorandomRoller()
+    # Run a test.
     strengths = ['least minor', 'lesser minor', 'greater minor',
             'lesser medium', 'greater medium', 'lesser major',
             'greater major']
@@ -51,83 +132,6 @@ def test(conn, roller):
                 x = str(x).replace('\u2014', "-")
                 print(x, end=', ')
             print()
-
-
-def make_series(sequence):
-    if len(sequence) == 0: return ''
-    quoted = ['"' + value + '"' for value in sequence]
-    quoted[-1] = 'and ' + quoted[-1]
-    return ', '.join(quoted)
-
-
-#
-# Execution
-
-# Parser subcommands
-
-def print_item(x):
-    retry = False
-    try:
-        print(x)
-    except UnicodeEncodeError as ex:
-        retry = True
-
-    if retry:
-        s = str(x)
-        s = s.replace('\u2019', "'")
-        try:
-            print(s)
-        except:
-            print('Error: Unable to print item ({0}).'.format(x.type()))
-            #Enable only when debugging.
-            #traceback.print_exc(file=sys.stdout)
-
-
-def run_generate_settlement(conn, args):
-    # Set up the roller.
-    if args.manual:
-        roller = rollers.ManualDiceRoller()
-    else:
-        roller = rollers.PseudorandomRoller()
-    # Generate items.
-    settlement = ' '.join(args.settlement_type)
-    result = settlements.generate_settlement_items(conn, settlement, roller)
-    # Print the results.
-    # TODO normalize the settlement type to a pretty form, not the param form.
-    print('Magic items for a ', settlement, ':', sep='')
-    print('-' * 78)
-    print('Base value:', result.base_value, 'gp')
-    print()
-    print('Minor Magic Items')
-    print('-' * 78)
-    for x in result.minor_items: print_item(x)
-    print('\n')
-    print('Medium Magic Items')
-    print('-' * 78)
-    for x in result.medium_items: print_item(x)
-    print('\n')
-    print('Major Magic Items')
-    print('-' * 78)
-    for x in result.major_items: print_item(x)
-
-
-def run_generate_item(conn, args):
-    # Set up the roller.
-    if args.manual:
-        roller = rollers.ManualDiceRoller()
-    else:
-        roller = rollers.PseudorandomRoller()
-    # Generate an item.
-    #item.generate_item(conn, args.strength + ' TYPE', roller)
-    # TODO type, parameters
-
-
-def run_test(conn, args):
-    print("run_test")
-    # Use an automatic dice roller.
-    roller = rollers.PseudorandomRoller()
-    # Run a test.
-    test(conn, roller)
 
 
 if __name__ == '__main__':
@@ -156,38 +160,22 @@ if __name__ == '__main__':
             make_series(settlements.get_keys()) )
     parser_settlement.set_defaults(func=run_generate_settlement)
 
-    # Subcommand: one for each item type
-
-    # Generate a specific class of item
-    #parser_item = subparsers.add_parser('item')
-
-    # Item type
+    # Subcommand: individual item
 
     parser_item = subparsers.add_parser('item',
             help='Generate a random magic item')
+
+    parser_item.add_argument('item_args',
+            metavar='ITEM_PARAMETERS', nargs='+',
+            help='A specification of the item paramters (better description' +
+            'coming in a future version)')
     parser_item.set_defaults(func=run_generate_item)
 
-    ## Item strength
-    #parser_item.add_argument('--strength',
-    #        required=True,
-    #        help='The strength of the magic item: "lesser" or "greater", ' +
-    #        'followed by "minor", "medium", or "major".  Slotless wondrous ' +
-    #        'items can also be "least minor".')
+    # Subcommand: simple die roll
 
-    #parser_item.set_defaults(func=run_generate_item)
-
-    ## Perform a simple die roll
     #parser_roll = subparsers.add_parser('roll',
     #        help='Performs a die roll according to a simple die expression,' +
     #        ' e.g. 2d4.')
-
-    ## Test mode: dump out a whole bunch of items.
-    #parser_test = subparsers.add_parser('test',
-    #        help='Runs a test by generating many items.')
-
-    ### More of an indicator that the group is finished than anything.
-    ##group = None
-
 
     # Options common to several subparsers
 
@@ -200,7 +188,7 @@ if __name__ == '__main__':
 
     # Undocumented subcommmand.
     if len(sys.argv) == 2 and sys.argv[1] == 'test':
-        conn = sqlite.connect('data\\data.db')
+        conn = sqlite.connect('data.db')
         conn.row_factory = sqlite.Row
         run_test(conn, [])
         sys.exit(0)
@@ -211,11 +199,12 @@ if __name__ == '__main__':
     # Open the database.
     conn = None
     try:
-        conn = sqlite.connect('data\\data.db')
+        conn = sqlite.connect('data.db')
         conn.row_factory = sqlite.Row
         args.func(conn, args)
     except sqlite.Error as e:
-        print('Error: %s' % e.message)
+        print(e)
+        #print('Error: %s' % e.message)
     finally:
         if conn: conn.close()
 
