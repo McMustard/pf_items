@@ -45,9 +45,9 @@ if __name__ == '__main__':
     cgitb.enable(display=0, logdir='logs')
     
     # Output selection for debugging.
-    #f = open('logs', 'a')
     f = sys.stdout
     #f = sys.stderr
+    #f = open('log.txt', 'a')
     
     # Access the CGI form
     #form = cgi.FieldStorage()
@@ -67,11 +67,9 @@ if __name__ == '__main__':
         #     Generate a single item, perhaps as a reroll.
         # More to come: treature hoards, monster loot, etc.
 
-        #mode = form["mode"].value
         mode = params["mode"]
 
         if mode == "settlement":
-            #settlement_size = form["settlement_size"].value
             settlement_size = params["settlement_size"]
             result = settlements.generate_settlement_items(conn,
                     settlement_size, rollers.PseudorandomRoller())
@@ -80,37 +78,20 @@ if __name__ == '__main__':
             print('', file=f)
             print(json.dumps(result), file=f)
 
-            # Older, XML version
-            #print('<b>Base Value:</b>', result.base_value, 'gp ', file=f)
-            #print('<br/>', file=f)
-            #print('<p>Minor Items</p>', file=f)
-            #print('<ul>', file=f)
-            #for x in result.minor_items:
-            #    print('<li>', x, '</li>', file=f)
-            #print('</ul>', file=f)
-            #print('<p>Medium Items</p>', file=f)
-            #print('<ul>', file=f)
-            #for x in result.medium_items:
-            #    print('<li>', x, '</li>', file=f)
-            #print('</ul>', file=f)
-            #print('<p>Major Items</p>', file=f)
-            #print('<ul>', file=f)
-            #for x in result.major_items:
-            #    print('<li>', x, '</li>', file=f)
-            #print('</ul>', file=f)
-
         elif mode == "single-item":
             strength = form["strength"].value
             # Not yet implemented.
             pass
 
     except sqlite.Error as e:
-        #print('Error: %s' % e.message, file=f)
+        print('Error: ', e, file=f)
+        traceback.print_exc(file=f)
         pass
 
     except Exception as ex:
         print("<h1>Error!</h1>", file=f)
         traceback.print_exc(file=f)
+        pass
 
     finally:
         if conn: conn.close()

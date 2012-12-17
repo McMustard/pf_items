@@ -188,7 +188,7 @@ if __name__ == '__main__':
 
     # Undocumented subcommmand.
     if len(sys.argv) == 2 and sys.argv[1] == 'test':
-        conn = sqlite.connect('data.db')
+        conn = sqlite.connect('data/data.db')
         conn.row_factory = sqlite.Row
         run_test(conn, [])
         sys.exit(0)
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     # Open the database.
     conn = None
     try:
-        conn = sqlite.connect('data.db')
+        conn = sqlite.connect('data/data.db')
         conn.row_factory = sqlite.Row
         args.func(conn, args)
     except sqlite.Error as e:

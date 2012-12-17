@@ -206,7 +206,7 @@ def generate_specific_item(conn, strength, kind, roller):
 
 def create_item(kind):
     # Look up the kind of item for its official name.
-    (main_kind, subtype) = ITEM_SUBTYPE_MAP[kind]
+    (main_kind, subtype) = ITEM_SUBTYPE_MAP[kind.lower()]
 
     # Create the apropriate Item subclass.
     subclass = ITEM_SUBCLASSES[main_kind]
