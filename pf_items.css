@@ -1,0 +1,71 @@
+/*
+*/
+
+body
+{
+	color:black;
+	background:#E6E6B8;
+	font-family:serif;
+}
+
+h1.title, h2.title, h3.title
+{
+    text-align:center;
+	font-family:sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6
+{
+	font-family:sans-serif;
+}
+
+/* Indent paragraphs by default. */
+p
+{
+	text-indent:5ex
+}
+
+span.legal > *
+{
+    text-indent:0em;
+    font-size:0.75em;
+    font-family:sans-serif;
+}
+
+a:link
+{
+	color:blue;
+	background:transparent;
+}
+
+a:visited
+{
+	color:purple;
+	background:transparent;
+}
+
+/* Do not show a "visited" state for page selectors. */
+a.page_link:visited
+{
+    color:blue;
+    background:transparent;
+}
+
+a:active
+{
+	color:white;
+	background:transparent;
+}
+
+code
+{
+	color:black;
+	background:transparent;
+	font-family:monospace;
+}
+
+/* I'd like to change this at some point. */
+div[id$="_results"]
+{
+    font-family:sans-serif;
+}

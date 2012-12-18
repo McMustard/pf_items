@@ -11,27 +11,45 @@
 
         <!-- jQuery -->
         <!-- Min version, hosted on Google -->
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
-        <!-- Development version, local
-        <script src="jquery-1.8.3.dev.js" /></script>
-        -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"/></script>
 
         <!-- Generation script -->
-        <script src = generate.js> </script>
+        <script src="generate.js"/></script>
+
+        <!-- Style sheet links -->
+        <link rel="stylesheet" href="pf_items.css" type="text/css"
+            media="screen" />
     </head>
 
     <body>
         <!-- Header -->
-        <h1>Item Generator</h1>
-        <h3>for the Pathfinder Roleplaying Game</h3>
-        <h2>Settlement Magic Items</h2>
-        <div id="settlement_form">
-            <form name="generate_settlement" action="">
+        <h1 class="title">Item Generator</h1>
+        <h3 class="title">for the Pathfinder Roleplaying Game</h3>
+
+        <!-- Mode selector -->
+        <div class="page_list">
+            Item Generators:
+            <span class="pager">
+                <span class="page_label"
+                    id="page_settlement_unsel">Settlement</span>
+                <a href="#" class="page_link"
+                    id="page_settlement_sel">Settlement</a>
+            </span>
+            |
+            <span class="pager">
+                <span class="page_label"
+                    id="page_individual_unsel">Individual</span>
+                <a href="#" class="page_link"
+                    id="page_individual_sel">Individual</a>
+            </span>
+        </div>
+
+        <!-- Form for generating items for a settlement. -->
+        <div class="page" id="page_settlement">
+            <form id="form_settlement" action="">
                 <fieldset>
-                    <label for="settlement" id="settlement_label">
-                        Settlement Size:
-                    </label>
-                    <select id="settlement_size" name="settlement_size">
+                    <label for="size">Settlement Size:</label>
+                    <select name="size">
                         <option>Thorp</option>
                         <option>Hamlet</option>
                         <option>Village</option>
@@ -41,20 +59,70 @@
                         <option>Large City</option>
                         <option selected="selected">Metropolis</option>
                     </select>
-                    <button id="btn_gen_settlement">
-                        Generate</button>
+                    <input type="button" name="generate" value="Generate"
+                        id="btn_settlement_generate" />
                 </fieldset>
             </form>
+
+            <!-- The results will go here -->
+            <h3>Results:</h3>
+            <div id="settlement_results"></div>
         </div>
 
-        <!-- The results will go here -->
-        <h3>Results:</h3>
-        <div id="results"></div>
+        <!-- Form for generating individual items. -->
+        <div class="page" id="page_individual">
+            <form id="form_individual" action="">
+                <fieldset>
+                    <label for="strength">Strength:</label>
+                    <select name="strength">
+                        <option>least minor</option>
+                        <option>lesser minor</option>
+                        <option>greater minor</option>
+                        <option>lesser medium</option>
+                        <option>greater medium</option>
+                        <option>lesser major</option>
+                        <option>greater major</option>
+                    </select>
+                    <label for="type">Type:</label>
+                    <select name="type">
+                        <option>armor/shield</option>
+                        <option>weapon</option>
+                        <option>potion</option>
+                        <option>ring</option>
+                        <option>rod</option>
+                        <option>scroll</option>
+                        <option>staff</option>
+                        <option>wand</option>
+                        <option>wondrous item</option>
+                        <option>belt</option>
+                        <option>body</option>
+                        <option>chest</option>
+                        <option>eyes</option>
+                        <option>feet</option>
+                        <option>hands</option>
+                        <option>head</option>
+                        <option>headband</option>
+                        <option>neck</option>
+                        <option>shoulders</option>
+                        <option>slotless</option>
+                        <option>wrists</option>
+                    </select>
+                    <input type="button" name="generate" value="Generate"
+                        id="btn_individual_generate" />
+                </fieldset>
+            </form>
+
+            <!-- The results will go here -->
+            <h3>Results:</h3>
+            <div id="individual_results"></div>
+        </div>
+
     </body>
 
-    <hr/>
 
-    <small>
+    <!-- Copyright and Legal -->
+    <hr/>
+    <span class="legal">
         <p>
         This software is Copyright 2012 Steven Clark.<br/>
         It is intended for use with the Pathfinder Roleplaying Game, published

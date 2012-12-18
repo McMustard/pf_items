@@ -23,8 +23,6 @@ This module is the web interface for item generation.
 #
 # Standard Imports
 
-import cgi
-import cgitb
 import json
 import sqlite3 as sqlite
 import sys
@@ -33,25 +31,33 @@ import traceback
 #
 # Local Imports
 
+import item
 import rollers
 import settlements
 
 #
 # Execution
 
+def output_json(result, f):
+    print('Content-Type: application/json', file=f)
+    print('', file=f)
+    print(json.dumps(result), file=f)
+
 if __name__ == '__main__':
 
-    # Enable CGI traceback manager (DEVELOPMENT)
-    cgitb.enable(display=0, logdir='logs')
-    
-    # Output selection for debugging.
+    DEBUG = False
+    #DEBUG = True
+
+    # Output selection for normal mode or debugging.
     f = sys.stdout
-    #f = sys.stderr
-    #f = open('log.txt', 'a')
+    if DEBUG:
+        f = open('log.txt', 'a')
     
     # Access the CGI form
-    #form = cgi.FieldStorage()
     params = json.load(sys.stdin)
+
+    if DEBUG:
+        print('Paramers:', params, file=f)
 
     conn = None
     # If an exception happens, return HTML containing an error.
@@ -67,30 +73,32 @@ if __name__ == '__main__':
         #     Generate a single item, perhaps as a reroll.
         # More to come: treature hoards, monster loot, etc.
 
-        mode = params["mode"]
+        mode = params['mode']
 
-        if mode == "settlement":
-            settlement_size = params["settlement_size"]
+        if mode == 'settlement':
+            settlement_size = params['size']
             result = settlements.generate_settlement_items(conn,
                     settlement_size, rollers.PseudorandomRoller())
-            result['settlement_size'] = settlement_size
-            print('Content-Type: application/json', file=f)
-            print('', file=f)
-            print(json.dumps(result), file=f)
+            output_json(result, f)
 
-        elif mode == "single-item":
-            strength = form["strength"].value
-            # Not yet implemented.
-            pass
+        elif mode == 'individual':
+            strength = params['strength']
+            kind = params['type']
+            result = item.generate_item(conn, strength + ' ' + kind,
+                    rollers.PseudorandomRoller())
+            # In this case, item is an Item object.
+            output_json(str(result), f)
 
     except sqlite.Error as e:
         print('Error: ', e, file=f)
-        traceback.print_exc(file=f)
+        if DEBUG:
+            traceback.print_exc(file=f)
         pass
 
     except Exception as ex:
-        print("<h1>Error!</h1>", file=f)
-        traceback.print_exc(file=f)
+        print('<h1>Error!</h1>', file=f)
+        if DEBUG:
+            traceback.print_exc(file=f)
         pass
 
     finally:
