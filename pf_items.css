@@ -1,17 +1,16 @@
 /*
 */
 
+*
+{
+    font-family:sans-serif;
+}
+
 body
 {
 	color:black;
 	background:#E6E6B8;
 	font-family:serif;
-}
-
-h1.title, h2.title, h3.title
-{
-    text-align:center;
-	font-family:sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6
@@ -30,6 +29,7 @@ span.legal > *
     text-indent:0em;
     font-size:0.75em;
     font-family:sans-serif;
+
 }
 
 a:link
@@ -64,8 +64,22 @@ code
 	font-family:monospace;
 }
 
-/* I'd like to change this at some point. */
-div[id$="_results"]
+h1 < div.title
 {
-    font-family:sans-serif;
+    text-align:center;
 }
+
+.title
+{
+    text-align:center;
+}
+
+.footer_logo
+{
+    float:left;
+}
+
+.footer_text
+{
+}
+

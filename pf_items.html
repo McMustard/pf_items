@@ -23,12 +23,12 @@
 
     <body>
         <!-- Header -->
-        <h1 class="title">Item Generator</h1>
+        <h1 class="title">Random Item Generator</h1>
         <h3 class="title">for the Pathfinder Roleplaying Game</h3>
 
         <!-- Mode selector -->
         <div class="page_list">
-            Item Generators:
+            <h3>Item Generators</h3>
             <span class="pager">
                 <span class="page_label"
                     id="page_settlement_unsel">Settlement</span>
@@ -43,6 +43,7 @@
                     id="page_individual_sel">Individual</a>
             </span>
         </div>
+        <br/>
 
         <!-- Form for generating items for a settlement. -->
         <div class="page" id="page_settlement">
@@ -65,8 +66,10 @@
             </form>
 
             <!-- The results will go here -->
-            <h3>Results:</h3>
-            <div id="settlement_results"></div>
+            <h3>Results</h3>
+            <fieldset>
+                <div id="settlement_results"><br/></div>
+            </fieldset>
         </div>
 
         <!-- Form for generating individual items. -->
@@ -113,8 +116,10 @@
             </form>
 
             <!-- The results will go here -->
-            <h3>Results:</h3>
-            <div id="individual_results"></div>
+            <h3>Results</h3>
+            <fieldset>
+                <div id="individual_results"><br/></div>
+            </fieldSet>
         </div>
 
     </body>
@@ -122,7 +127,10 @@
 
     <!-- Copyright and Legal -->
     <hr/>
-    <span class="legal">
+    <h3>Legal</h3>
+    <img class="footer_logo" src="Pathfinder RPG Compatibility Logo.png" />
+    <span class="legal footer_text">
+        <br/><!-- Kind of a sloppy fix, but I'll figure someting out later-->
         <p>
         This software is Copyright 2012 Steven Clark.<br/>
         It is intended for use with the Pathfinder Roleplaying Game, published
