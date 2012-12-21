@@ -29,7 +29,13 @@ span.legal > *
     text-indent:0em;
     font-size:0.75em;
     font-family:sans-serif;
+}
 
+span.notes > *
+{
+    text-indent:0em;
+    font-size:0.75em;
+    font-family:sans-serif;
 }
 
 a:link

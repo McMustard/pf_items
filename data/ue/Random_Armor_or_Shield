@@ -20,7 +20,7 @@ range	text	text	text
 78–81	armor	Splint mail	200 gp
 82–87	armor	Studded leather armor	25 gp
 88–90	shield	Tower shield	30 gp
-91–93	armor	Other light armor	
-94–95	armor	Other medium armor	
-96–98	armor	Other heavy armor	
-99–100	shield	Other shield	
+91–93	armor	Other light armor	0 gp
+94–95	armor	Other medium armor	0 gp
+96–98	armor	Other heavy armor	0 gp
+99–100	shield	Other shield	0 gp

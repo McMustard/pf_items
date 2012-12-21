@@ -6,7 +6,7 @@ range	text	text	text	text	text
 02–05	melee	Battleaxe	S	one-hand	10 gp
 06	ranged	Bolas	B		5 gp
 07–08	melee	Club	B	one-hand	0 gp
-09–10	ranged	Composite longbow			100
+09–10	ranged	Composite longbow			100 gp
 11–12	ranged	Composite shortbow			75 gp
 13–16	melee	Dagger	PS	light	2 gp
 17	ranged	Dart	P		0.5 gp
@@ -50,7 +50,7 @@ range	text	text	text	text	text
 88	melee	Trident	P	one-hand	15 gp
 89–91	melee	Warhammer	B	one-hand	12 gp
 92	melee	Whip	S	one-hand	1 gp
-93–94	melee	Other light melee weapon		light	
-95–96	melee	Other one-handed melee weapon		one-hand	
-97–98	melee	Other two-handed melee weapon		two-hand	
-99–100	ranged	Other ranged weapon			
+93–94	melee	Other light melee weapon		light	0 gp
+95–96	melee	Other one-handed melee weapon		one-hand	0 gp
+97–98	melee	Other two-handed melee weapon		two-hand	0 gp
+99–100	ranged	Other ranged weapon			0 gp

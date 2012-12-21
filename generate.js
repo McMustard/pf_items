@@ -42,18 +42,22 @@ $(document).ready(function(){
     // Default page
     select_page("settlement");
 
-    setup_generator("settlement", process_settlement_response)
-    setup_generator("individual", process_individual_response)
+    setup_generator("settlement", process_settlement_response, true)
+    setup_generator("individual", process_individual_response, true)
 });
 
 // Sets up a button to "submit" a form.
-function setup_generator(page, handler) {
+function setup_generator(page, handler, clear) {
     // Set up the form's Generate button handler.
     $("#btn_" + page + "_generate").click(function(event){
         // Get the form data.
         var json = get_form_data("form_" + page, page);
         // Debug
         console.log("Sending request: ", json);
+        //// Debug: Clear the current results.
+        //if (clear) {
+        //    $("#" + page + "_results").html("");
+        //}
         // Send the request.
         send_request(json, handler);
         // Prevent the default action, which reloads the page.

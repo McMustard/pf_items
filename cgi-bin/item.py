@@ -21,6 +21,7 @@ Generator.
 # Library imports
 
 import locale
+import math
 import os
 import random
 import re
@@ -58,6 +59,10 @@ KEY_SCROLL        = 'Scroll'
 KEY_STAFF         = 'Staff'
 KEY_WAND          = 'Wand'
 KEY_WONDROUS_ITEM = 'Wondrous Item'
+
+# Roll 'redirections'
+
+ROLL_LEAST_MINOR = "Roll on the Least Minor table"
 
 # Option values for specifying magic items parameters.
 
@@ -141,24 +146,41 @@ def generate_generic(conn, strength, roller, base_value):
     # Here, strength is merely 'minor', 'medium', 'major', so we need to
     # further qualify it with 'lesser' or 'greater'.
     
-    # We may decide to change this later, but at least for now, the choice
-    # between them will be 50/50.  Because slotless wondrous item can also
-    # be 'least minor', use least if the roll is less than 25.  Item types
-    # without the 'least' level will simply treat it as 'lesser'.
-    full_strength = 'greater '
-    roll = roller.roll('1d100')
-    if roll <= 25 and strength == 'minor':
-        full_strength = 'least '
-    elif roll <= 50:
-        full_strength = 'lesser '
-    full_strength += strength
+    # This will account for specified and unspecified base values.
+    min_price = Price(base_value)
+    value = Price('0 gp')
+    x = None
+    count = 0
+    while value < min_price:
+        # We may decide to change this later, but at least for now, the choice
+        # between them will be 50/50.  Because slotless wondrous item can also
+        # be 'least minor', use least if the roll is less than 25.  Item types
+        # without the 'least' level will simply treat it as 'lesser'.
+        full_strength = 'greater '
+        roll = roller.roll('1d100')
+        if roll <= 25 and strength == 'minor':
+            full_strength = 'least '
+        elif roll <= 50:
+            full_strength = 'lesser '
+        full_strength += strength
 
-    # Now, select an item type.
-    roll = roller.roll('1d100')
-    # This lookup only needs minor/medium/major.
-    kind = get_item_type(conn, strength, roll)
+        # Now, select an item type.
+        roll = roller.roll('1d100')
+        # This lookup only needs minor/medium/major.
+        kind = get_item_type(conn, strength, roll)
 
-    return generate_specific_item(conn, full_strength, kind, roller)
+        x = generate_specific_item(conn, full_strength, kind, roller)
+        try:
+            value = x.get_cost()
+        except BadPrice as ex:
+            value = Price('')
+        #if value < min_price:
+        #    print_item('rerolling ' + str(x))
+        #    print(' due to low price: ' + str(value))
+        count += 1
+        if count > 1000:
+            return 'Error: gave up after 1000 tries; <error> gp'
+    return x
 
 
 def generate_item(conn, description, roller):
@@ -235,6 +257,25 @@ def get_item_type(conn, strength, roll):
     return cursor.fetchone()["Item"]
 
 
+def print_item(x):
+    '''Prints an item to standard out.  Parameter 'x' is already a string,
+    but this function catches Unicode-related exceptions, which occur when
+    standard out happens to be the Windows console, which is not Unicode .'''
+
+    retry = False
+    try:
+        print(x)
+    except UnicodeEncodeError as ex:
+        retry = True
+
+    if retry:
+        s = str(x)
+        s = s.replace('\u2019', "'")
+        try:
+            print(s)
+        except:
+            print('Error: Unable to print item ({0}).'.format(x.type()))
+
 
 #
 # Classes
@@ -249,58 +290,53 @@ class BadPrice(Exception):
 
 class Price(object):
 
-    def __init__(self, enhancement_type):
+    def __init__(self, initial_value, enhancement_type=''):
         self.enhancement_type = enhancement_type
         self.gold = 0.0
         self.enhancement = 0
+        self.piece_expr = re.compile('(((\d{1,3},)*\d+) *(pp|gp|sp|cp)[, ]*)', re.I)
+        # Initialize with the provided string
+        self.add(initial_value)
 
 
-    def add_part(self, price_str):
+    def __lt__(self, other):
+        return self.gold < other.gold
+
+
+    def __le__(self, other):
+        return self.gold <= other.gold
+
+
+    def __str__(self):
+        return self.compute()
+
+
+    def add(self, price_str):
+        # If the value provided is int or float, add it directly.
         if type(price_str) == int or type(price_str) == float:
-            self.add_gold(price_str)
-        elif price_str.endswith(' gp'):
-            self.add_gold(price_str)
-        elif price_str.endswith(' sp'):
-            self.add_silver(price_str)
-        elif price_str.endswith(' cp'):
-            self.add_copper(price_str)
+            self.gold += float(price_str)
+        # If it's a bonus, the price depends on the sum, so it defers.
         elif price_str.endswith(' bonus'):
             self.add_enhancement(price_str)
+        # Empty string is non-value.
+        elif price_str == None or price_str == '':
+            self.gold = float('nan')
+        # Otherwise, it might be a pp/gp/sp/cp string.
         else:
-            raise BadPrice('price string ' + price_str + ' does not end with " gp" or " bonus"')
+            self.add_expression(price_str)
 
 
-    def add_copper(self, price_str):
-        if type(price_str) == int or type(price_str) == float:
-            self.gold += price_str * 0.01
-        else:
-            match = re.match('(\+)?(.*) cp', price_str)
-            if match:
-                self.gold += float(match.group(2).replace(',', '')) * 0.01
-            else:
-                raise BadPrice('cannot extract a gold price from ' + price_str)
-
-
-    def add_silver(self, price_str):
-        if type(price_str) == int or type(price_str) == float:
-            self.gold += price_str * 0.1
-        else:
-            match = re.match('(\+)?(.*) sp', price_str)
-            if match:
-                self.gold += float(match.group(2).replace(',', '')) * 0.1
-            else:
-                raise BadPrice('cannot extract a gold price from ' + price_str)
-
-
-    def add_gold(self, price_str):
-        if type(price_str) == int or type(price_str) == float:
-            self.gold += price_str
-        else:
-            match = re.match('(\+)?(.*) gp', price_str)
-            if match:
-                self.gold += float(match.group(2).replace(',', ''))
-            else:
-                raise BadPrice('cannot extract a gold price from ' + price_str)
+    def add_expression(self, expr):
+        for piece in self.piece_expr.finditer(expr):
+            # Group 2 is the count, group 4 is the type.
+            scale = 0.0
+            count = float(piece.group(2).replace(',',''))
+            coin_type = piece.group(4)
+            if   coin_type == 'pp': scale = 10.0
+            elif coin_type == 'gp': scale =  1.0
+            elif coin_type == 'sp': scale = 0.10
+            elif coin_type == 'cp': scale = 0.01
+            self.gold += (count * scale)
 
 
     def add_enhancement(self, price_str):
@@ -316,13 +352,15 @@ class Price(object):
 
  
     def compute(self):
+        if math.isnan(self.gold):
+            return '<error> gp'
         cost = self.gold
         if self.enhancement > 0:
              temp = (self.enhancement ** 2) * 1000
              if self.enhancement_type == 'weapon':
                  temp *= 2
              cost += temp
-        return locale.format_string('%d', cost, grouping=True) + ' gp'
+        return locale.format_string('%.2f', cost, grouping=True) + ' gp'
 
 
 class Table(object):
@@ -490,6 +528,10 @@ class Item(object):
         return 'unspecified item'
 
 
+    def get_cost(self):
+        return Price('0 gp')
+
+
     # Default implementation of the generation initializer.
     # A generation initializer is necessary in case an item needs to be
     # rerolled using the same parameters.
@@ -520,7 +562,7 @@ class Armor(Item):
         # Armor or shield
         self.armor_type = ''
         # Mundane item price
-        self.armor_price = ''
+        self.armor_price = '0 gp'
         # Raw enhancement bonus
         self.enhancement = 0
         # Dict of specials to costs
@@ -554,7 +596,10 @@ class Armor(Item):
         else:
             result += self.specific_name
         # Cost
-        result += '; ' + self.get_cost()
+        try:
+            result += '; ' + str(self.get_cost())
+        except BadPrice as ex:
+            result += '; pricing error'
         return result
 
 
@@ -563,26 +608,22 @@ class Armor(Item):
 
 
     def get_cost(self):
-        try:
-            if self.is_generic:
-                # Compose a price.
-                price = Price(self.armor_type)
-                # Start with the base cost.
-                price.add_gold(self.armor_price)
-                # Add magic costs.
-                if self.enhancement:
-                    # Masterwork component
-                    price.add_gold(150)
-                    # Initial enhancement bonus
-                    price.add_enhancement(self.enhancement)
-                    # Special costs
-                    for spec in self.specials.keys():
-                        price.add_part(self.specials[spec])
-                return price.compute()
-            else:
-                return self.specific_price
-        except BadPrice as ex:
-            return 'error with price calculation'
+        if self.is_generic:
+            # Compose a price.
+            # Start with the base cost.
+            price = Price(self.armor_price, self.armor_type)
+            # Add magic costs.
+            if self.enhancement:
+                # Masterwork component
+                price.add(150)
+                # Initial enhancement bonus
+                price.add_enhancement(self.enhancement)
+                # Special costs
+                for spec in self.specials.keys():
+                    price.add(self.specials[spec])
+            return price
+        else:
+            return Price(self.specific_price)
 
 
     def lookup(self, conn):
@@ -684,7 +725,7 @@ class Weapon(Item):
         # Light, one-hand, or two-hand
         self.wield_type = ''
         # Mundane item price
-        self.weapon_price = ''
+        self.weapon_price = '0 gp'
         # Raw enhancement bonus
         self.enhancement = 0
         # Dict of specials to costs
@@ -712,7 +753,10 @@ class Weapon(Item):
         else:
             result += self.specific_name
         # Cost
-        result += '; ' + self.get_cost()
+        try:
+            result += '; ' + str(self.get_cost())
+        except BadPrice as ex:
+            result += '; pricing error'
         return result
 
 
@@ -721,26 +765,22 @@ class Weapon(Item):
 
 
     def get_cost(self):
-        try:
-            if self.is_generic:
-                # Compose a price.
-                price = Price('weapon')
-                # Start with the base cost.
-                price.add_gold(self.weapon_price)
-                # Add magic costs.
-                if self.enhancement:
-                    # Masterwork component
-                    price.add_gold(300)
-                    # Initial enhancement bonus
-                    price.add_enhancement(self.enhancement)
-                    # Special costs
-                    for spec in self.specials.keys():
-                        price.add_part(self.specials[spec])
-                return price.compute()
-            else:
-                return self.specific_price
-        except BadPrice as ex:
-            return 'error with price calculation'
+        if self.is_generic:
+            # Compose a price.
+            # Start with the base cost.
+            price = Price(self.weapon_price, 'weapon')
+            # Add magic costs.
+            if self.enhancement:
+                # Masterwork component
+                price.add(300)
+                # Initial enhancement bonus
+                price.add_enhancement(self.enhancement)
+                # Special costs
+                for spec in self.specials.keys():
+                    price.add(self.specials[spec])
+            return price
+        else:
+            return Price(self.specific_price)
 
 
     def lookup(self, conn):
@@ -899,6 +939,10 @@ class Potion(Item):
         return 'potion'
 
 
+    def get_cost(self):
+        return Price(self.price)
+
+
     def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -955,6 +999,10 @@ class Ring(Item):
         return 'ring'
 
 
+    def get_cost(self):
+        return Price(self.price)
+
+
     def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -990,6 +1038,10 @@ class Rod(Item):
 
     def type(self):
         return 'rod'
+
+
+    def get_cost(self):
+        return Price(self.price)
 
 
     def lookup(self, conn):
@@ -1056,6 +1108,10 @@ class Scroll(Item):
 
     def type(self):
         return 'scroll'
+
+
+    def get_cost(self):
+        return Price(self.price)
 
 
     def lookup(self, conn):
@@ -1149,6 +1205,10 @@ class Staff(Item):
         return 'staff'
 
 
+    def get_cost(self):
+        return Price(self.price)
+
+
     def lookup(self, conn):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -1195,6 +1255,10 @@ class Wand(Item):
 
     def type(self):
         return 'wand'
+
+
+    def get_cost(self):
+        return Price(self.price)
 
 
     def lookup(self, conn):
@@ -1248,7 +1312,7 @@ class WondrousItem(Item):
         # Wondrous item details
         self.slot = ''
         self.item = ''
-        self.price = ''
+        self.price = '0 gp'
         # Unlike the other classes, we may do least minor.
         # So, don't modify self.strength to "fix" that.
 
@@ -1269,6 +1333,10 @@ class WondrousItem(Item):
 
     def type(self):
         return 'wondrous item'
+
+
+    def get_cost(self):
+        return Price(self.price)
 
 
     def lookup(self, conn):
@@ -1309,6 +1377,13 @@ class WondrousItem(Item):
             result = self.t_wrists.find_roll(conn, roll, self.strength)
         elif self.slot == 'Slotless':
             result = self.t_slotless.find_roll(conn, roll, self.strength)
+        # The table might be directing us to roll on another table.
+        if result != None and result['Result'] == ROLL_LEAST_MINOR:
+            roll = self.roll('1d100')
+            result = None
+            # This special result only happens on the slotless table.
+            result = self.t_slotless.find_roll(conn, roll, 'least minor')
+        # Perform a final check on the rolled item.
         if result != None:
             self.item = result['Result']
             self.price = result['Price']
@@ -1328,3 +1403,72 @@ ITEM_SUBCLASSES = {
         KEY_WONDROUS_ITEM : WondrousItem
     }
 
+# Tester
+if __name__ == '__main__':
+
+    def test(price, expected_str):
+        p = Price(price)
+        print('Test: "', price, '" --> ', p, ' = ', expected_str, sep='')
+        assert(p.compute() == expected_str)
+
+    # These tests don't work in European locales, but I'm not too concerned
+    # at the moment.
+    test(0  , '0.00 gp')
+    test(0.5, '0.50 gp')
+    test(1.5, '1.50 gp')
+    test(1000, '1,000.00 gp')
+    test('' , '<error> gp')
+    test('0 cp', '0.00 gp')
+    test('10 cp', '0.10 gp')
+    test('1 sp', '0.10 gp')
+    test('10 sp', '1.00 gp')
+    # Some of these strings are really strange, and perhaps _shouldn't_ be
+    # considered valid, but we'll let it slide.
+    test('1sp1cp', '0.11 gp')
+    test('1sp1 cp', '0.11 gp')
+    test('1sp 1cp', '0.11 gp')
+    test('1sp 1 cp', '0.11 gp')
+    test('1 sp1cp', '0.11 gp')
+    test('1 sp1 cp', '0.11 gp')
+    test('1 sp 1cp', '0.11 gp')
+    test('1 sp 1 cp', '0.11 gp')
+    test('1sp,1cp', '0.11 gp')
+    test('1sp,1 cp', '0.11 gp')
+    test('1sp, 1cp', '0.11 gp')
+    test('1sp ,1cp', '0.11 gp')
+    test('1sp , 1cp', '0.11 gp')
+    test('1sp, 1 cp', '0.11 gp')
+    test('1sp ,1 cp', '0.11 gp')
+    test('1sp , 1 cp', '0.11 gp')
+    test('1 sp,1cp', '0.11 gp')
+    test('1 sp,1 cp', '0.11 gp')
+    test('1 sp, 1cp', '0.11 gp')
+    test('1 sp ,1cp', '0.11 gp')
+    test('1 sp , 1cp', '0.11 gp')
+    test('1 sp, 1 cp', '0.11 gp')
+    test('1 sp ,1 cp', '0.11 gp')
+    test('1 sp , 1 cp', '0.11 gp')
+    test('1gp1sp1cp', '1.11 gp')
+    test('1 gp 1sp1 cp', '1.11 gp')
+    test('1gp,1sp 1cp', '1.11 gp')
+    test('1 gp1sp 1 cp', '1.11 gp')
+    test('1gp 1 sp1cp', '1.11 gp')
+    test('1 gp,1 sp1 cp', '1.11 gp')
+    test('1gp1 sp 1cp', '1.11 gp')
+    test('1 gp 1 sp 1 cp', '1.11 gp')
+    test('1gp,1sp,1cp', '1.11 gp')
+    test('1 gp1sp,1 cp', '1.11 gp')
+    test('1gp 1sp, 1cp', '1.11 gp')
+    test('1 gp,1sp ,1cp', '1.11 gp')
+    test('1gp1sp , 1cp', '1.11 gp')
+    test('1 gp 1sp, 1 cp', '1.11 gp')
+    test('1gp,1sp ,1 cp', '1.11 gp')
+    test('1 gp1sp , 1 cp', '1.11 gp')
+    test('1gp 1 sp,1cp', '1.11 gp')
+    test('1 gp,1 sp,1 cp', '1.11 gp')
+    test('1gp1 sp, 1cp', '1.11 gp')
+    test('1 gp 1 sp ,1cp', '1.11 gp')
+    test('1gp,1 sp , 1cp', '1.11 gp')
+    test('1 gp1 sp, 1 cp', '1.11 gp')
+    test('1gp 1 sp ,1 cp', '1.11 gp')
+    test('1 gp,1 sp , 1 cp', '1.11 gp')

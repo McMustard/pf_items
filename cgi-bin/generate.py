@@ -47,26 +47,6 @@ def make_series(sequence):
 #
 # Execution
 
-def print_item(x):
-    '''Prints an item to standard out.  Parameter 'x' is already a string,
-    but this function catches Unicode-related exceptions, which occur when
-    standard out happens to be the Windows console, which is not Unicode .'''
-
-    retry = False
-    try:
-        print(x)
-    except UnicodeEncodeError as ex:
-        retry = True
-
-    if retry:
-        s = str(x)
-        s = s.replace('\u2019', "'")
-        try:
-            print(s)
-        except:
-            print('Error: Unable to print item ({0}).'.format(x.type()))
-
-
 def run_generate_settlement(conn, args):
     '''Runs the settlement item generator.'''
     # Set up the roller.
@@ -82,20 +62,23 @@ def run_generate_settlement(conn, args):
     print('-' * 78)
     print('Base value:', result['base_value'], 'gp')
     print()
-    print('Minor Magic Items')
-    print('-' * 78)
-    for x in result['minor_items']:
-        print_item(x)
-    print('\n')
-    print('Medium Magic Items')
-    print('-' * 78)
-    for x in result['medium_items']:
-        print_item(x)
-    print('\n')
-    print('Major Magic Items')
-    print('-' * 78)
-    for x in result['major_items']:
-        print_item(x)
+    if len(result['minor_items']) > 0:
+        print('Minor Magic Items')
+        print('-' * 78)
+        for x in result['minor_items']:
+            item.print_item(x)
+        print('\n')
+    if len(result['medium_items']) > 0:
+        print('Medium Magic Items')
+        print('-' * 78)
+        for x in result['medium_items']:
+            item.print_item(x)
+        print('\n')
+    if len(result['major_items']) > 0:
+        print('Major Magic Items')
+        print('-' * 78)
+        for x in result['major_items']:
+            item.print_item(x)
 
 
 def run_generate_item(conn, args):
@@ -108,7 +91,7 @@ def run_generate_item(conn, args):
     # Generate an item.
     keywords = (' '.join(args.item_args)).lower()
     x = item.generate_item(conn, keywords, roller)
-    print_item(str(x))
+    item.print_item(str(x))
 
 
 def run_test(conn, args):
