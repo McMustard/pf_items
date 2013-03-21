@@ -1,6 +1,6 @@
 PFRPG Item Generator
-Version 0.1
-21 September 2012
+Version 0.3
+17 February 2013
 -------------------------------------------------------------------------------
 
 1. Identification
@@ -103,10 +103,10 @@ generation of treasure hoards, and generation of random coins, jewels, and art.
 
 4. Legal
 
-The software in this package is copyright (c) 2012, Steven Clark.  All rights
-reserved, and is stated in each source code file.
-See the file "LICENSE.txt" for licensing information, terms and conditions for
-usage, and a DISCLAIMER OF ALL WARRANTIES.
+The software in this package is copyright (c) 2012-2013, Steven Clark.  All
+rights reserved, and is stated in each source code file.  See the file
+"LICENSE.txt" for licensing information, terms and conditions for usage, and a
+DISCLAIMER OF ALL WARRANTIES.
 
 This softare package also includes Open Game Content.  See the file "OGL.txt"
 for a copy of the Open Game License and list of Open Game Content used by this

@@ -3,7 +3,7 @@
 
 # Pathfinder Item Generator
 #
-# Copyright 2012, Steven Clark.
+# Copyright 2012-2013, Steven Clark.
 #
 # This program is free software, and is provided "as is", without warranty of
 # any kind, express or implied, to the extent permitted by applicable law.
@@ -157,7 +157,7 @@ def generate_generic(conn, strength, roller, base_value):
         # be 'least minor', use least if the roll is less than 25.  Item types
         # without the 'least' level will simply treat it as 'lesser'.
         full_strength = 'greater '
-        roll = roller.roll('1d100')
+        roll = roller.roll('1d100', 'degree')
         if roll <= 25 and strength == 'minor':
             full_strength = 'least '
         elif roll <= 50:
@@ -165,7 +165,7 @@ def generate_generic(conn, strength, roller, base_value):
         full_strength += strength
 
         # Now, select an item type.
-        roll = roller.roll('1d100')
+        roll = roller.roll('1d100', 'item type')
         # This lookup only needs minor/medium/major.
         kind = get_item_type(conn, strength, roll)
 
@@ -381,6 +381,7 @@ class Table(object):
         result = cursor.fetchone()
         return result
 
+
 # Ultimate Equipment Tables
 
 TABLE_MAGIC_ARMOR_AND_SHIELDS         = Table('Magic_Armor_and_Shields')
@@ -499,8 +500,8 @@ class Item(object):
 
 
     # Rolls and keeps a log of the rolled values.
-    def roll(self, roll_expr):
-        roll = self.roller.roll(roll_expr)
+    def roll(self, roll_expr, purpose):
+        roll = self.roller.roll(roll_expr, purpose)
         self.rolls.append((roll_expr, roll))
         return roll
 
@@ -631,7 +632,7 @@ class Armor(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'armor type')
         # Look up the roll.
         rolled_armor = self.t_random.find_roll(conn, roll, None)
         self.armor_base = rolled_armor['Result']
@@ -640,7 +641,7 @@ class Armor(Item):
         self.enhancement = 0
 
         # Roll for the magic property.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'armor magic property')
         rolled_magic = self.t_magic.find_roll(conn, roll, self.strength)
         magic_type = rolled_magic['Result']
 
@@ -669,7 +670,8 @@ class Armor(Item):
         # Add specials!
         while special_count > 0:
             # Roll for a special
-            roll = self.roll('1d100')
+            roll = self.roll('1d100', 'armor special ability ' + str(
+                len(self.specials.keys()) + 1)  )
             # Look it up.
             result = None
             if self.armor_type == 'armor':
@@ -690,7 +692,7 @@ class Armor(Item):
         # Specific
         self.is_generic = False
         # Roll for the specific armor.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'specific magic armor')
         # Look it up.
         result = None
         if self.armor_type == 'armor':
@@ -788,7 +790,7 @@ class Weapon(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'weapon type')
         # Look up the roll.
         rolled_weapon = self.t_random.find_roll(conn, roll, None)
         self.weapon_base = rolled_weapon['Result']
@@ -799,7 +801,7 @@ class Weapon(Item):
         self.enhancement = 0
 
         # Roll for the magic property.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'weapon magic property')
         rolled_magic = self.t_magic.find_roll(conn, roll, self.strength)
         magic_type = rolled_magic['Result']
 
@@ -859,7 +861,8 @@ class Weapon(Item):
 
     def generate_special(self, conn, special_strength, properties):
         # Roll for a special.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'weapon special ability ' + str(
+            len(self.specials.keys()) + 1)  )
         # Look it up.
         result = None
         if self.weapon_type == 'melee':
@@ -896,7 +899,7 @@ class Weapon(Item):
         # Specific
         self.is_generic = False
         # Roll for the specific weapon.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'specific magic weapon')
         # Look it up.
         result = self.t_specific_weapon.find_roll(conn, roll, self.strength)
         self.specific_name = result['Result']
@@ -948,7 +951,7 @@ class Potion(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the potion level.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'potion level')
         result = self.t_random.find_roll(conn, roll, self.strength)
         self.spell_level = result['Spell Level']
         self.caster_level = result['Caster Level']
@@ -956,11 +959,11 @@ class Potion(Item):
         commonness = 'Common' # default
         if self.spell_level != '0':
             # Roll for common/uncomon
-            roll = self.roll('1d100')
+            roll = self.roll('1d100', 'potion rarity')
             commonness = self.t_type.find_roll(conn, roll, None)['Result']
         commonness = commonness.lower()
         # Now roll for and look up the spell.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'potion spell')
         result = None
         if self.spell_level == '0':
             result = self.t_potions_0.find_roll(conn, roll, commonness)
@@ -1008,7 +1011,7 @@ class Ring(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the ring.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'specific ring')
         # Look it up.
         ring = self.t_rings.find_roll(conn, roll, self.strength)
         self.ring = ring['Result']
@@ -1049,7 +1052,7 @@ class Rod(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the rod.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'specific rod')
         # Look it up.
         rod = self.t_rods.find_roll(conn, roll, self.strength)
         self.rod = rod['Result']
@@ -1119,15 +1122,15 @@ class Scroll(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll a random scroll level
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'scroll level')
         random_scroll = self.t_random.find_roll(conn, roll, self.strength)
         self.spell_level = random_scroll['Spell Level']
         self.caster_level = random_scroll['Caster Level']
         # Roll for the scroll type.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'scroll type')
         scroll_type = self.t_type.find_roll(conn, roll, None)['Result']
         # Roll for the spell.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'scroll spell')
         # Now get the exact scroll.
         words = scroll_type.split(' ')
         commonness = words[0].lower()
@@ -1214,7 +1217,7 @@ class Staff(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for a staff.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'specific staff')
         staff = self.t_staves.find_roll(conn, roll, self.strength)
         self.staff = staff['Result']
         self.price = staff['Price']
@@ -1266,16 +1269,16 @@ class Wand(Item):
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for spell level.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'wand level')
         wand_spell = self.t_random.find_roll(conn, roll, self.strength)
         self.spell_level = wand_spell['Spell Level']
         self.caster_level = wand_spell['Caster Level']
         # Roll for type.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'wand type')
         wand_type = self.t_type.find_roll(conn, roll, None)
         commonness = wand_type['Result'].lower()
         # Roll for the actual wand.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'wand spell')
         result = None
         if self.spell_level == '0':
             result = self.t_wands_0.find_roll(conn, roll, commonness)
@@ -1345,13 +1348,13 @@ class WondrousItem(Item):
             self.slot = self.subtype 
         else:
             # Roll for slot.
-            roll = self.roll('1d100')
+            roll = self.roll('1d100', 'wondrous item slot')
             self.slot = self.t_random.find_roll(conn, roll, None)['Result']
         # Note that 'least minor' is only valid for slotless.
         if self.slot != 'Slotless' and self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
-        roll = self.roll('1d100')
+        roll = self.roll('1d100', 'specific wondrous item')
         result = None
         if self.slot == 'Belts':
             result = self.t_belt.find_roll(conn, roll, self.strength)
@@ -1379,7 +1382,7 @@ class WondrousItem(Item):
             result = self.t_slotless.find_roll(conn, roll, self.strength)
         # The table might be directing us to roll on another table.
         if result != None and result['Result'] == ROLL_LEAST_MINOR:
-            roll = self.roll('1d100')
+            roll = self.roll('1d100', 'least minor wondrous item')
             result = None
             # This special result only happens on the slotless table.
             result = self.t_slotless.find_roll(conn, roll, 'least minor')

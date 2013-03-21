@@ -3,7 +3,7 @@
 
 # Pathfinder Item Generator
 #
-# Copyright 2012, Steven Clark.
+# Copyright 2012-2013, Steven Clark.
 #
 # This program is free software, and is provided "as is", without warranty of
 # any kind, express or implied, to the extent permitted by applicable law.
@@ -109,9 +109,9 @@ def generate_settlement_items(conn, settlement, roller):
     # first.  Go through the gauntlet.
     count_minor = 0
     if expr_minor != '*':
-        count_minor = roller.roll(expr_minor)
-    count_medium = roller.roll(expr_medium)
-    count_major = roller.roll(expr_major)
+        count_minor = roller.roll(expr_minor, 'number of minor items')
+    count_medium = roller.roll(expr_medium, 'number of medium items')
+    count_major = roller.roll(expr_major, 'number of major items')
 
     # Generate the minor magic items.  Remember we can get a '*' in a
     # metropolis.

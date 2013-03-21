@@ -3,7 +3,7 @@
 
 # Pathfinder Item Generator
 #
-# Copyright 2012, Steven Clark.
+# Copyright 2012-2013, Steven Clark.
 #
 # This program is free software, and is provided "as is", without warranty of
 # any kind, express or implied, to the extent permitted by applicable law.
@@ -47,13 +47,13 @@ def rollDice(dice_expression):
 class Roller(object):
     # Roll a random number according to the specified dice expression.
     # Return integers only.
-    def roll(self, dice_expression):
+    def roll(self, dice_expression, purpose):
         # 0 is an invalid value.
         return 0
 
 class PseudorandomRoller(Roller):
     # Roll a random number using the handy-dandy function we have here.
-    def roll(self, dice_expression):
+    def roll(self, dice_expression, purpose):
         # Simply return flat numbers.
         try:
             return int(dice_expression)
@@ -65,14 +65,15 @@ class PseudorandomRoller(Roller):
 # Instructs the user via the command line to roll dice and input the results
 # to return.
 class ManualDiceRoller(Roller):
-    def roll(self, dice_expression):
+    def roll(self, dice_expression, purpose):
         # Simply return flat numbers.
         try:
             return int(dice_expression)
         except:
             pass
         # Print instructions for the user.
-        print('Roll ' + dice_expression + ' (enter 0 to roll via software):',
+        print('Roll ' + dice_expression + ' for ' + purpose + \
+                ' (enter 0 to roll via software):',
                 end='')
         # Set up values in preparation for an indefinite loop.
         result = None
