@@ -2,3 +2,5 @@
 *.pyc
 # Vim swap files
 *.swp
+# MacIntosh stuff
+.DS_Store
