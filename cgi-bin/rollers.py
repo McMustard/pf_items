@@ -20,6 +20,8 @@ expressions for generating random rolls for the Pathfinder Item Generator.
 #
 # Standard Imports
 
+from __future__ import print_function
+
 import random
 from sys import stdin, stdout
 

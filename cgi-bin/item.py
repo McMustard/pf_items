@@ -25,6 +25,7 @@ import math
 import os
 import random
 import re
+import sys
 
 #
 # Local imports
@@ -129,7 +130,26 @@ ITEM_SUBTYPE_MAP = {
         }
 
 #
+# Variables
+
+ENABLE_CACHE = False
+CACHE_TYPE = 0
+
+# Indicates that bad items will not be discarded.
+ENUMERATION_MODE = False
+
+
+#
 # Functions
+
+def enable_caching(cache_type):
+    global ENABLE_CACHE, CACHE_TYPE
+    ENABLE_CACHE = True
+    CACHE_TYPE = cache_type
+
+def set_enumeration():
+    global ENUMERATION_MODE
+    ENUMERATION_MODE = True
 
 def extract_keywords(sequence, keywords):
     '''Searches the specified sequence for the specified keywords, returns
@@ -142,7 +162,7 @@ def extract_keywords(sequence, keywords):
     return intersect
 
 
-def generate_generic(conn, strength, roller, base_value):
+def generate_generic(conn, strength, roller, base_value, listener):
     # Here, strength is merely 'minor', 'medium', 'major', so we need to
     # further qualify it with 'lesser' or 'greater'.
     
@@ -169,21 +189,18 @@ def generate_generic(conn, strength, roller, base_value):
         # This lookup only needs minor/medium/major.
         kind = get_item_type(conn, strength, roll)
 
-        x = generate_specific_item(conn, full_strength, kind, roller)
+        x = generate_specific_item(conn, full_strength, kind, roller, listener)
         try:
             value = x.get_cost()
         except BadPrice as ex:
             value = Price('')
-        #if value < min_price:
-        #    print_item('rerolling ' + str(x))
-        #    print(' due to low price: ' + str(value))
         count += 1
         if count > 1000:
             return 'Error: gave up after 1000 tries; <error> gp'
     return x
 
 
-def generate_item(conn, description, roller):
+def generate_item(conn, description, roller, listener):
     # 'description' contains keywords.
     keywords = description.split(' ')
 
@@ -215,15 +232,15 @@ def generate_item(conn, description, roller):
     kind = types.pop() # avoiding 'type' reserved word
 
     # Now we have the parts in a usable form.
-    return generate_specific_item(conn, degree + ' ' + strength, kind, roller)
+    return generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
 
 
-def generate_specific_item(conn, strength, kind, roller):
+def generate_specific_item(conn, strength, kind, roller, listener):
     # Create an object.
     item = create_item(kind)
 
     # Finish generating the item
-    return item.generate(conn, strength, roller)
+    return item.generate(conn, strength, roller, listener)
 
 
 def create_item(kind):
@@ -257,25 +274,33 @@ def get_item_type(conn, strength, roll):
     return cursor.fetchone()["Item"]
 
 
+def item_str(x):
+    # Convert the item to a string (it has a __str__ method).
+    s = str(x)
+    # Some characters cause problems in Windows' command prompt (sigh).
+    # Replace problem characters with their equivalents.
+    s = s.replace('\u2019', "'")
+    return s
+
+
 def print_item(x):
     '''Prints an item to standard out.  Parameter 'x' is already a string,
     but this function catches Unicode-related exceptions, which occur when
     standard out happens to be the Windows console, which is not Unicode .'''
-
-    retry = False
+    s = item_str(x)
     try:
-        print(x)
-    except UnicodeEncodeError as ex:
-        retry = True
+        print(s)
+    except:
+        print('Error: Unable to print item ({0}).'.format(x.type()))
 
-    if retry:
-        s = str(x)
-        s = s.replace('\u2019', "'")
-        try:
-            print(s)
-        except:
-            print('Error: Unable to print item ({0}).'.format(x.type()))
 
+def rolls_str(x):
+    return '[' + ','.join([str(t[1]) for t in x.rolls])  + ']'
+
+
+def print_rolls(x):
+    '''Prints an item's roll history.'''
+    print(rolls_str(x), sep='', end='')
 
 #
 # Classes
@@ -367,18 +392,58 @@ class Table(object):
 
     def __init__(self, table):
         self.table = table
+        self.cache = {}
+        self.cache_style = CACHE_TYPE
+        self.query_nostrength = '''SELECT * FROM {0} WHERE (? >= Roll_low) AND
+            (? <= Roll_high);'''.format(self.table)
+        self.query_strength = '''SELECT * FROM {0} WHERE (? >= Roll_low) AND
+            (? <= Roll_high) AND (? = Strength);'''.format(self.table)
+        
 
-    def find_roll(self, conn, roll, strength):
+    def find_roll(self, conn, roll, strength, purpose, listener):
+        # If caching is enabled, go for it
+        if ENABLE_CACHE:
+            if self.cache_style == 1:
+                if strength not in self.cache:
+                    self.cache[strength] = []
+                for line in self.cache[strength]:
+                    if roll >= line['low'] and roll <= line['high']:
+                        return line['result']
+            elif self.cache_style == 2:
+                if strength not in self.cache:
+                    self.cache[strength] = {}
+                if strength in self.cache:
+                    a = self.cache[strength]
+                    if roll in a:
+                        return a[roll]
+        
         cursor = conn.cursor()
         if strength == None:
-            cursor.execute('''SELECT * FROM {0} WHERE (? >= Roll_low) AND
-                    (? <= Roll_high);'''.format(self.table),
-                    (roll, roll) )
+            cursor.execute(self.query_nostrength, (roll, roll))
         else:
-            cursor.execute('''SELECT * FROM {0} WHERE (? >= Roll_low) AND
-                    (? <= Roll_high) AND (? = Strength);'''.format(
-                        self.table), (roll, roll, strength) )
+            cursor.execute(self.query_strength, (roll, roll, strength))
         result = cursor.fetchone()
+        if result:
+            try:
+                roll_low = result['Roll_low']
+                roll_high = result['Roll_high']
+                listener.item_rolled(purpose, result['Roll_low'], result['Roll_high'], strength)
+            except IndexError as ex:
+                return None
+        else:
+            #print('No result for roll', roll)
+            return None
+
+        if ENABLE_CACHE:
+            if self.cache_style == 1:
+                line = {}
+                line['low'] = result['Roll_low']
+                line['high'] = result['Roll_high']
+                line['result'] = result
+                self.cache[strength].append(line)
+            elif self.cache_style == 2:
+                for i in range(int(result['Roll_low']), int(result['Roll_high']) + 1):
+                    self.cache[strength][i] = result
         return result
 
 
@@ -484,18 +549,20 @@ class Item(object):
         self.subtype = ''
         # Situational parameters
         self.parameters = []
+        # Validity flag (used in enumeration mode)
+        self.bad_item = False
 
 
     # Generates the item, referring to the subclass, following the Template
     # Method design pattern.
-    def generate(self, conn, strength, roller):
+    def generate(self, conn, strength, roller, listener):
         # Initialize generation parameters.
         self.strength = strength
         self.roller = roller
         # Call the subclass generation initializer.
         self.generate_init()
 
-        self.lookup(conn)
+        self.lookup(conn, listener)
         return self
 
 
@@ -504,6 +571,12 @@ class Item(object):
         roll = self.roller.roll(roll_expr, purpose)
         self.rolls.append((roll_expr, roll))
         return roll
+
+
+    # Removes the last roll from the log.
+    def unroll(self):
+        if len(self.rolls) > 0:
+            self.rolls.pop()
 
 
     #
@@ -521,7 +594,17 @@ class Item(object):
 
     # The standard __str__ method
     def __str__(self):
+        custom = self.get_string()
+        if len(custom) > 0:
+            if self.bad_item:
+                custom += " [invalid]"
+            return custom
         return 'generic item'
+
+
+    # Subclasses will override this.
+    def get_string(self):
+        return ''
 
 
     # Type of item
@@ -551,8 +634,6 @@ class Armor(Item):
         self.t_specials_armor  = TABLE_SPECIAL_ABILITIES_ARMOR
         self.t_specific_shield = TABLE_SPECIFIC_SHIELDS
         self.t_specials_shield = TABLE_SPECIAL_ABILITIES_SHIELD
-        #self.armor_threshold = self.t_random.total_rolls('Type', 'armor')
-        self.armor_trheshold = 10 # TODO
         self.re_enhancement = re.compile('\+(\d+) armor or shield')
         self.re_specials = re.compile('with (\w+) \+(\d+) special')
         # Armor details
@@ -580,7 +661,7 @@ class Armor(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         result = ''
         # Armor or Shield
         if self.armor_type == 'armor':
@@ -627,32 +708,34 @@ class Armor(Item):
             return Price(self.specific_price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
-        roll = self.roll('1d100', 'armor type')
+        purpose = 'armor type'
+        roll = self.roll('1d100', purpose)
         # Look up the roll.
-        rolled_armor = self.t_random.find_roll(conn, roll, None)
+        rolled_armor = self.t_random.find_roll(conn, roll, None, purpose, listener)
         self.armor_base = rolled_armor['Result']
         self.armor_type = rolled_armor['Type']
         self.armor_price = rolled_armor['Price']
         self.enhancement = 0
 
         # Roll for the magic property.
-        roll = self.roll('1d100', 'armor magic property')
-        rolled_magic = self.t_magic.find_roll(conn, roll, self.strength)
+        purpose = 'armor magic property'
+        roll = self.roll('1d100', purpose)
+        rolled_magic = self.t_magic.find_roll(conn, roll, self.strength, purpose, listener)
         magic_type = rolled_magic['Result']
 
         # Handle it
         if magic_type.endswith('specific armor or shield'):
-            self.make_specific(conn)
+            self.make_specific(conn, listener)
         else:
-            self.make_generic(conn, magic_type)
+            self.make_generic(conn, magic_type, listener)
 
 
-    def make_generic(self, conn, specification):
+    def make_generic(self, conn, specification, listener):
         self.is_generic = True
         # "Regular" magic item, with an assortment of bonuses.  We already
         # know what we need in the specification param.
@@ -669,38 +752,63 @@ class Armor(Item):
             special_strength = '+' + match.group(2)
         # Add specials!
         while special_count > 0:
-            # Roll for a special
-            roll = self.roll('1d100', 'armor special ability ' + str(
-                len(self.specials.keys()) + 1)  )
-            # Look it up.
-            result = None
-            if self.armor_type == 'armor':
-                result = self.t_specials_armor.find_roll(conn, roll,
-                        special_strength)
-            else:
-                result = self.t_specials_shield.find_roll(conn, roll,
-                        special_strength)
+            # Generate a special.
+            result = self.generate_special(conn, special_strength, listener)
+            if result == None:
+                # Mark as bad item.
+                self.bad_item = True
+                return
             special = result['Result']
             price = result['Price']
-            # If we don't already have the special, add it.
-            if special not in self.specials.keys():
+            # If in enumeration.
+            if ENUMERATION_MODE:
+                # If we already have this special, just note it as a bad item.
+                if special in self.specials.keys():
+                    self.bad_item = True
+                # In enumeration mode, always accept specials.
                 self.specials[special] = price
                 special_count -= 1
+            else:
+                # If we don't already have the special, add it.
+                if special not in self.specials.keys():
+                    self.specials[special] = price
+                    special_count -= 1
+                else:
+                    # Do not note that we made this roll.
+                    self.unroll()
 
 
-    def make_specific(self, conn):
-        # Specific
-        self.is_generic = False
-        # Roll for the specific armor.
-        roll = self.roll('1d100', 'specific magic armor')
+    def generate_special(self, conn, special_strength, listener):
+        # Roll for a special.
+        purpose = 'armor special ability ' + str(len(self.specials.keys()) + 1)
+        roll = self.roll('1d100', purpose)
         # Look it up.
         result = None
         if self.armor_type == 'armor':
-            result = self.t_specific_armor.find_roll(conn, 
-                    roll, self.strength)
+            result = self.t_specials_armor.find_roll(conn, roll,
+                    special_strength, purpose, listener)
+        else:
+            result = self.t_specials_shield.find_roll(conn, roll,
+                    special_strength, purpose, listener)
+        special = result['Result']
+        price = result['Price']
+        return result
+
+
+    def make_specific(self, conn, listener):
+        # Specific
+        self.is_generic = False
+        # Roll for the specific armor.
+        purpose = 'specific magic armor'
+        roll = self.roll('1d100', purpose)
+        # Look it up.
+        result = None
+        if self.armor_type == 'armor':
+            result = self.t_specific_armor.find_roll(conn, roll,
+                    self.strength, purpose, listener)
         else:
             result = self.t_specific_shield.find_roll(conn, roll,
-                    self.strength)
+                    self.strength, purpose, listener)
         self.specific_name = result['Result']
         self.specific_price = result['Price']
 
@@ -744,7 +852,7 @@ class Weapon(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         result = 'Weapon: '
         if self.is_generic:
             result += self.weapon_base
@@ -785,14 +893,15 @@ class Weapon(Item):
             return Price(self.specific_price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
-        roll = self.roll('1d100', 'weapon type')
+        purpose = 'weapon type'
+        roll = self.roll('1d100', purpose)
         # Look up the roll.
-        rolled_weapon = self.t_random.find_roll(conn, roll, None)
+        rolled_weapon = self.t_random.find_roll(conn, roll, None, purpose, listener)
         self.weapon_base = rolled_weapon['Result']
         self.weapon_type = rolled_weapon['Type']
         self.damage_type = rolled_weapon['Damage Type']
@@ -801,18 +910,19 @@ class Weapon(Item):
         self.enhancement = 0
 
         # Roll for the magic property.
-        roll = self.roll('1d100', 'weapon magic property')
-        rolled_magic = self.t_magic.find_roll(conn, roll, self.strength)
+        purpose = 'weapon magic property'
+        roll = self.roll('1d100', purpose)
+        rolled_magic = self.t_magic.find_roll(conn, roll, self.strength, purpose, listener)
         magic_type = rolled_magic['Result']
 
         # Handle it
         if magic_type.endswith('specific weapon'):
-            self.make_specific(conn)
+            self.make_specific(conn, purpose, listener)
         else:
-            self.make_generic(conn, magic_type)
+            self.make_generic(conn, magic_type, purpose, listener)
 
 
-    def make_generic(self, conn, specification):
+    def make_generic(self, conn, specification, purpose, listener):
         self.is_generic = True
         # The weapon properties determine what kinds of enchantments can be
         # applied.  We don't do this in 'lookup' because it becomes invalid if
@@ -835,42 +945,45 @@ class Weapon(Item):
             special_count = {'one': 1, 'two': 2}[part[0]]
             special_strength = '+' + str(part[1])
         # Add specials!
-        retries = 0
         while special_count > 0:
             # Generate a special.
-            result = self.generate_special(conn, special_strength, properties)
+            result = self.generate_special(conn, special_strength, properties, purpose, listener)
             if result == None:
-                # Retry
-                retries += 1
-                if retries > 100:
-                    # TODO find something better
-                    raise Exception('too many retries')
-                continue
+                # Mark as bad item.
+                self.bad_item = True
+                return
             special = result['Result']
             price = result['Price']
-            # If we don't already have the special, add it.
-            if special and special not in self.specials.keys():
+            # If in enumeration.
+            if ENUMERATION_MODE:
+                # If we already have this special, just note it as a bad item.
+                if special in self.specials.keys():
+                    self.bad_item = True
+                # In enumeration mode, always accept specials.
                 self.specials[special] = price
                 special_count -= 1
-        # This tracks the number of retries for the sake of information.
-        #if retries > 0:
-        #    rf = open('retries.txt', 'a')
-        #    rf.write(str(retries))
-        #    rf.close()
+            else:
+                # If we don't already have the special, add it.
+                if special not in self.specials.keys():
+                    self.specials[special] = price
+                    special_count -= 1
+                else:
+                    # Do not note that we made this roll.
+                    self.unroll()
 
 
-    def generate_special(self, conn, special_strength, properties):
-        # Roll for a special.
-        roll = self.roll('1d100', 'weapon special ability ' + str(
-            len(self.specials.keys()) + 1)  )
+    def generate_special(self, conn, special_strength, properties, purpose, listener):
         # Look it up.
         result = None
+        # Roll for a special.
+        purpose = 'weapon special ability ' + str(len(self.specials.keys()) + 1)
+        roll = self.roll('1d100', purpose)
         if self.weapon_type == 'melee':
             result = self.t_specials_melee.find_roll(conn, roll,
-                    special_strength)
+                    special_strength, purpose, listener)
         else:
             result = self.t_specials_ranged.find_roll(conn, roll,
-                    special_strength)
+                    special_strength, purpose, listener)
         special = result['Result']
         price = result['Price']
         qualifiers = [x for x in set(result['Qualifiers'].split(','))
@@ -878,8 +991,11 @@ class Weapon(Item):
         disqualifiers = [x for x in set(result['Disqualifiers'].split('.'))
                 if len(x) > 0]
         # Check qualifications.
-        if self.check_qualifiers(set(properties),
-                set(qualifiers), set(disqualifiers)) == False:
+        qualifies = self.check_qualifiers(set(properties),
+                set(qualifiers), set(disqualifiers))
+        if ENUMERATION_MODE:
+            self.bad_item = (not qualifies)
+        if qualifiers == False:
             return None
         return result
 
@@ -895,13 +1011,14 @@ class Weapon(Item):
         return True
 
 
-    def make_specific(self, conn):
+    def make_specific(self, conn, purpose, listener):
         # Specific
         self.is_generic = False
         # Roll for the specific weapon.
-        roll = self.roll('1d100', 'specific magic weapon')
+        purpose = 'specific magic weapon'
+        roll = self.roll('1d100', purpose)
         # Look it up.
-        result = self.t_specific_weapon.find_roll(conn, roll, self.strength)
+        result = self.t_specific_weapon.find_roll(conn, roll, self.strength, purpose, listener)
         self.specific_name = result['Result']
         self.specific_price = result['Price']
 
@@ -930,7 +1047,7 @@ class Potion(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         result = 'Potion: ' + self.spell
         result += ' (' + self.spell_level + ' Level'
         result += ', CL ' + self.caster_level + ')'
@@ -946,33 +1063,36 @@ class Potion(Item):
         return Price(self.price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the potion level.
-        roll = self.roll('1d100', 'potion level')
-        result = self.t_random.find_roll(conn, roll, self.strength)
+        purpose = 'potion level'
+        roll = self.roll('1d100', purpose)
+        result = self.t_random.find_roll(conn, roll, self.strength, purpose, listener)
         self.spell_level = result['Spell Level']
         self.caster_level = result['Caster Level']
         # Determine common or uncommon
         commonness = 'Common' # default
         if self.spell_level != '0':
             # Roll for common/uncomon
-            roll = self.roll('1d100', 'potion rarity')
-            commonness = self.t_type.find_roll(conn, roll, None)['Result']
+            purpose = 'potion rarity'
+            roll = self.roll('1d100', purpose)
+            commonness = self.t_type.find_roll(conn, roll, None, purpose, listener)['Result']
         commonness = commonness.lower()
         # Now roll for and look up the spell.
-        roll = self.roll('1d100', 'potion spell')
         result = None
+        purpose = 'potion spell'
+        roll = self.roll('1d100', purpose)
         if self.spell_level == '0':
-            result = self.t_potions_0.find_roll(conn, roll, commonness)
+            result = self.t_potions_0.find_roll(conn, roll, commonness, purpose, listener)
         elif self.spell_level == '1st':
-            result = self.t_potions_1.find_roll(conn, roll, commonness)
+            result = self.t_potions_1.find_roll(conn, roll, commonness, purpose, listener)
         elif self.spell_level == '2nd':
-            result = self.t_potions_2.find_roll(conn, roll, commonness)
+            result = self.t_potions_2.find_roll(conn, roll, commonness, purpose, listener)
         elif self.spell_level == '3rd':
-            result = self.t_potions_3.find_roll(conn, roll, commonness)
+            result = self.t_potions_3.find_roll(conn, roll, commonness, purpose, listener)
         self.spell = result['Result']
         self.price = result['Price']
 
@@ -994,7 +1114,7 @@ class Ring(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         return 'Ring: ' + self.ring + '; ' + self.price
 
 
@@ -1006,14 +1126,15 @@ class Ring(Item):
         return Price(self.price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the ring.
-        roll = self.roll('1d100', 'specific ring')
+        purpose = 'specific ring'
+        roll = self.roll('1d100', purpose)
         # Look it up.
-        ring = self.t_rings.find_roll(conn, roll, self.strength)
+        ring = self.t_rings.find_roll(conn, roll, self.strength, purpose, listener)
         self.ring = ring['Result']
         self.price = ring['Price']
 
@@ -1035,7 +1156,7 @@ class Rod(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         return 'Rod: ' + self.rod + '; ' + self.price
 
 
@@ -1047,14 +1168,15 @@ class Rod(Item):
         return Price(self.price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the rod.
-        roll = self.roll('1d100', 'specific rod')
+        purpose = 'specific rod'
+        roll = self.roll('1d100', purpose)
         # Look it up.
-        rod = self.t_rods.find_roll(conn, roll, self.strength)
+        rod = self.t_rods.find_roll(conn, roll, self.strength, purpose, listener)
         self.rod = rod['Result']
         self.price = rod['Price']
 
@@ -1100,7 +1222,7 @@ class Scroll(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         result = 'Scroll: ' + self.spell
         result += ' (' + self.arcaneness
         result += ', ' + self.spell_level + ' Level'
@@ -1117,68 +1239,71 @@ class Scroll(Item):
         return Price(self.price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll a random scroll level
-        roll = self.roll('1d100', 'scroll level')
-        random_scroll = self.t_random.find_roll(conn, roll, self.strength)
+        purpose = 'scroll level'
+        roll = self.roll('1d100', purpose)
+        random_scroll = self.t_random.find_roll(conn, roll, self.strength, purpose, listener)
         self.spell_level = random_scroll['Spell Level']
         self.caster_level = random_scroll['Caster Level']
         # Roll for the scroll type.
-        roll = self.roll('1d100', 'scroll type')
-        scroll_type = self.t_type.find_roll(conn, roll, None)['Result']
-        # Roll for the spell.
-        roll = self.roll('1d100', 'scroll spell')
+        purpose = 'scroll type'
+        roll = self.roll('1d100', purpose)
+        scroll_type = self.t_type.find_roll(conn, roll, None, purpose, listener)['Result']
         # Now get the exact scroll.
         words = scroll_type.split(' ')
         commonness = words[0].lower()
         self.arcaneness = words[1].lower()
+        # Roll for the spell.
+        purpose = 'scroll spell'
+        roll = self.roll('1d100', purpose)
         # Note that unlike potions, there are uncommon level 0 scrolls.
         result = None
         if self.arcaneness == 'arcane':
             if self.spell_level == '0':
-                result = self.t_arcane_level_0.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_0.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '1st':
-                result = self.t_arcane_level_1.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_1.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '2nd':
-                result = self.t_arcane_level_2.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_2.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '3rd':
-                result = self.t_arcane_level_3.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_3.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '4th':
-                result = self.t_arcane_level_4.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_4.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '5th':
-                result = self.t_arcane_level_5.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_5.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '6th':
-                result = self.t_arcane_level_6.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_6.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '7th':
-                result = self.t_arcane_level_7.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_7.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '8th':
-                result = self.t_arcane_level_8.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_8.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '9th':
-                result = self.t_arcane_level_9.find_roll(conn, roll, commonness)
+                result = self.t_arcane_level_9.find_roll(conn, roll, commonness, purpose, listener)
         elif self.arcaneness == 'divine':
             if self.spell_level == '0':
-                result = self.t_divine_level_0.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_0.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '1st':
-                result = self.t_divine_level_1.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_1.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '2nd':
-                result = self.t_divine_level_2.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_2.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '3rd':
-                result = self.t_divine_level_3.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_3.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '4th':
-                result = self.t_divine_level_4.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_4.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '5th':
-                result = self.t_divine_level_5.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_5.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '6th':
-                result = self.t_divine_level_6.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_6.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '7th':
-                result = self.t_divine_level_7.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_7.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '8th':
-                result = self.t_divine_level_8.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_8.find_roll(conn, roll, commonness, purpose, listener)
             elif self.spell_level == '9th':
-                result = self.t_divine_level_9.find_roll(conn, roll, commonness)
+                result = self.t_divine_level_9.find_roll(conn, roll, commonness, purpose, listener)
         self.spell = result['Result']
         self.price = result['Price']
 
@@ -1200,7 +1325,7 @@ class Staff(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         return 'Staff: ' + self.staff + '; ' + self.price
 
 
@@ -1212,13 +1337,14 @@ class Staff(Item):
         return Price(self.price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for a staff.
-        roll = self.roll('1d100', 'specific staff')
-        staff = self.t_staves.find_roll(conn, roll, self.strength)
+        purpose = 'specific staff'
+        roll = self.roll('1d100', purpose)
+        staff = self.t_staves.find_roll(conn, roll, self.strength, purpose, listener)
         self.staff = staff['Result']
         self.price = staff['Price']
 
@@ -1248,7 +1374,7 @@ class Wand(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         result = 'Wand: ' + self.spell
         result += ' (' + self.spell_level + ' Level'
         result += ', CL ' + self.caster_level + ')'
@@ -1264,32 +1390,35 @@ class Wand(Item):
         return Price(self.price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for spell level.
-        roll = self.roll('1d100', 'wand level')
-        wand_spell = self.t_random.find_roll(conn, roll, self.strength)
+        purpose = 'wand level'
+        roll = self.roll('1d100', purpose)
+        wand_spell = self.t_random.find_roll(conn, roll, self.strength, purpose, listener)
         self.spell_level = wand_spell['Spell Level']
         self.caster_level = wand_spell['Caster Level']
         # Roll for type.
-        roll = self.roll('1d100', 'wand type')
-        wand_type = self.t_type.find_roll(conn, roll, None)
+        purpose = 'wand type'
+        roll = self.roll('1d100', purpose)
+        wand_type = self.t_type.find_roll(conn, roll, None, purpose, listener)
         commonness = wand_type['Result'].lower()
         # Roll for the actual wand.
-        roll = self.roll('1d100', 'wand spell')
+        purpose = 'wand spell'
+        roll = self.roll('1d100', purpose)
         result = None
         if self.spell_level == '0':
-            result = self.t_wands_0.find_roll(conn, roll, commonness)
+            result = self.t_wands_0.find_roll(conn, roll, commonness, purpose, listener)
         elif self.spell_level == '1st':
-            result = self.t_wands_1.find_roll(conn, roll, commonness)
+            result = self.t_wands_1.find_roll(conn, roll, commonness, purpose, listener)
         elif self.spell_level == '2nd':
-            result = self.t_wands_2.find_roll(conn, roll, commonness)
+            result = self.t_wands_2.find_roll(conn, roll, commonness, purpose, listener)
         elif self.spell_level == '3rd':
-            result = self.t_wands_3.find_roll(conn, roll, commonness)
+            result = self.t_wands_3.find_roll(conn, roll, commonness, purpose, listener)
         elif self.spell_level == '4th':
-            result = self.t_wands_4.find_roll(conn, roll, commonness)
+            result = self.t_wands_4.find_roll(conn, roll, commonness, purpose, listener)
         self.spell = result['Result']
         self.price = result['Price']
         
@@ -1326,7 +1455,7 @@ class WondrousItem(Item):
         return result
 
 
-    def __str__(self):
+    def get_string(self):
         result = 'Wondrous Item: '
         result += self.item
         result += ' (' + self.slot + ')'
@@ -1342,50 +1471,53 @@ class WondrousItem(Item):
         return Price(self.price)
 
 
-    def lookup(self, conn):
+    def lookup(self, conn, listener):
         # If we have a subtype, we won't need to roll for a slot.
         if self.subtype not in [None, '']:
             self.slot = self.subtype 
         else:
             # Roll for slot.
-            roll = self.roll('1d100', 'wondrous item slot')
-            self.slot = self.t_random.find_roll(conn, roll, None)['Result']
+            purpose = 'wondrous item slot'
+            roll = self.roll('1d100', purpose)
+            self.slot = self.t_random.find_roll(conn, roll, None, purpose, listener)['Result']
         # Note that 'least minor' is only valid for slotless.
         if self.slot != 'Slotless' and self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
-        roll = self.roll('1d100', 'specific wondrous item')
+        purpose = 'specific wondrous item'
+        roll = self.roll('1d100', purpose)
         result = None
         if self.slot == 'Belts':
-            result = self.t_belt.find_roll(conn, roll, self.strength)
+            result = self.t_belt.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Body':
-            result = self.t_body.find_roll(conn, roll, self.strength)
+            result = self.t_body.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Chest':
-            result = self.t_chest.find_roll(conn, roll, self.strength)
+            result = self.t_chest.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Eyes':
-            result = self.t_eyes.find_roll(conn, roll, self.strength)
+            result = self.t_eyes.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Feet':
-            result = self.t_feet.find_roll(conn, roll, self.strength)
+            result = self.t_feet.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Hands':
-            result = self.t_hands.find_roll(conn, roll, self.strength)
+            result = self.t_hands.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Head':
-            result = self.t_head.find_roll(conn, roll, self.strength)
+            result = self.t_head.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Headband':
-            result = self.t_headband.find_roll(conn, roll, self.strength)
+            result = self.t_headband.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Neck':
-            result = self.t_neck.find_roll(conn, roll, self.strength)
+            result = self.t_neck.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Shoulders':
-            result = self.t_shoulders.find_roll(conn, roll, self.strength)
+            result = self.t_shoulders.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Wrists':
-            result = self.t_wrists.find_roll(conn, roll, self.strength)
+            result = self.t_wrists.find_roll(conn, roll, self.strength, purpose, listener)
         elif self.slot == 'Slotless':
-            result = self.t_slotless.find_roll(conn, roll, self.strength)
+            result = self.t_slotless.find_roll(conn, roll, self.strength, purpose, listener)
         # The table might be directing us to roll on another table.
         if result != None and result['Result'] == ROLL_LEAST_MINOR:
-            roll = self.roll('1d100', 'least minor wondrous item')
+            purpose = 'least minor wondrous item'
+            roll = self.roll('1d100', purpose)
             result = None
             # This special result only happens on the slotless table.
-            result = self.t_slotless.find_roll(conn, roll, 'least minor')
+            result = self.t_slotless.find_roll(conn, roll, 'least minor', purpose, listener)
         # Perform a final check on the rolled item.
         if result != None:
             self.item = result['Result']
