@@ -578,6 +578,9 @@ class Item(object):
         if len(self.rolls) > 0:
             self.rolls.pop()
 
+    # Is the item invalid?
+    def is_bad(self):
+        return self.bad_item
 
     #
     # Methods that are meant to be overridden
@@ -612,6 +615,7 @@ class Item(object):
         return 'unspecified item'
 
 
+    # Item cost (as a Price object)
     def get_cost(self):
         return Price('0 gp')
 

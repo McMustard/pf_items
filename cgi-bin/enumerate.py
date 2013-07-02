@@ -125,7 +125,7 @@ EXPANDED_STRENGTHS = ['least minor', 'lesser minor', 'greater minor',
 
 ENABLE_SKIPPING = False
 PRINT_ROLLS = False
-DIR_PREFIX = 'enum'
+OUTPUT_PREFIX = 'enum'
 
 #
 # Classes
@@ -277,22 +277,30 @@ class EnumeratingRoller(rollers.Roller):
 #
 # Functions
 
-def enumerate_item(conn_in, strengths, item_key, file_prefix):
+def prep_table(cursor, table):
+    # Create the table.
+    sql = 'CREATE TABLE {0} (Count, Result);'.format(table)
+    cursor.execute(sql)
+
+
+def enumerate_item(conn_in, conn_out, strengths, item_key, file_prefix):
 
     # Roll up items
     for strength in strengths:
         print('Analyzing', strength, item_key)
-        # Set up the output file.
-        outfile = DIR_PREFIX + '/' + file_prefix + '_' + strength
-        outfile = outfile.replace(' ', '_')
-        f = open(outfile + '.txt', 'w')
-        rollfile = open(outfile + '.rolls', 'w')
         roller = EnumeratingRoller()
+
+        # Set up the output file or table name.
+        filename = file_prefix + '_' + strength
+        filename = filename.replace(' ', '_')
+        filepath = OUTPUT_PREFIX + '/' + filename
+        f_rollfile = None
+
+        if conn_out == None:
+            f_rollfile = open(filepath + '.rolls', 'w')
 
         # Collect items to count.
         items = {}
-        # Note the last roll so we can filter out duplicates.
-        #last_roll = None
         # Roll items
         while True:
             try:
@@ -307,114 +315,146 @@ def enumerate_item(conn_in, strengths, item_key, file_prefix):
                 # Get the rolls.
                 roll = item.rolls_str(x)
                 if PRINT_ROLLS:
-                    print(roll + '        \n', end='', file=rollfile)
-                    print(' ' + roll + '        \r', end='')
-                #if roll == last_roll:
-                #    print('Repeat roll!')
-                #last_roll = roll
+                    if f_rollfile:
+                        print(      roll + '           \n', end='', file=f_rollfile)
+                    print(' ' + roll + '           \r', end='')
+                # Store the item
                 item_str = item.item_str(x)
                 if item_str in items.keys():
                     items[item_str] += count
                 else:
-                    #print('New item', item_str)
                     items[item_str] = count
             except EnumerationsComplete:
+                # Done!
                 break
+
+        cursor = None
+        f_out = None
+        if conn_out:
+            cursor = conn_out.cursor()
+            # The filename serves as a table name.
+            prep_table(cursor, filename)
+        else:
+            f_out = open(filepath + '.txt', 'w')
+
+        # Output the results.
         total = 0
         for item_str in items.keys():
             count = items[item_str]
             total += count
-            print(items[item_str], item_str, sep='\t', file=f)
-        f.close();
-        rollfile.close()
+
+            if cursor:
+                sql = 'INSERT INTO {0} VALUES (?,?)'.format(filename)
+                cursor.execute(sql, (count, item_str))
+            else:
+                print(items[item_str], item_str, sep='\t', file=f_out)
+
         print('    contained', total, 'items')
 
+        # Close files.
+        if f_out:
+            f_out.close();
+        if f_rollfile:
+            f_rollfile.close()
+        if conn_out:
+            conn_out.commit()
 
-def build_enum_table(conn_in, cursor_out):
 
+def build_enum_table(conn_in, conn_out):
+
+    # Create the output directory.
     try:
-        os.mkdir(DIR_PREFIX)
+        os.mkdir(OUTPUT_PREFIX)
     except FileExistsError:
         pass
     
-    ## Temporarily limit the choices to test optimizations.
-    #global STANDARD_STRENGTHS
-    #STANDARD_STRENGTHS = ["lesser minor"]
-    #global EXPANDED_STRENGTHS
-    #EXPANDED_STRENGTHS = ["lesser minor"]
+    # Enumerate items for each class.
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'armor/shield', 'armor')
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'weapon', 'weapon')
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'potion', 'potion')
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'ring', 'ring')
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'rod', 'rod')
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'scroll', 'scroll')
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'staff', 'staff')
+    enumerate_item(conn_in, conn_out,
+            STANDARD_STRENGTHS, 'wand', 'wand')
+    enumerate_item(conn_in, conn_out,
+            EXPANDED_STRENGTHS, 'wondrous', 'wondrous')
 
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'armor/shield', 'armor')
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'weapon', 'weapon')
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'potion', 'potion')
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'ring', 'ring')
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'rod', 'rod')
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'scroll', 'scroll')
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'staff', 'staff')
-    enumerate_item(conn_in, STANDARD_STRENGTHS, 'wand', 'wand')
-    enumerate_item(conn_in, EXPANDED_STRENGTHS, 'wondrous', 'wondrous')
+    # If database, commit.
+    if conn_out:
+        conn_out.commit()
 
 
-#def initialize_database(database_in, database_out):
-def initialize_database(database_in):
-    con_in = None
-    con_out = None
+def initialize_database(database_file):
+    conn = None
+    successful = False
     try:
-        # We're starting over, so erase the file.
-        #if os.path.isfile(database_out):
-        #    os.remove(database_out)
-
-        # Open the database files.
-        con_in = sqlite.connect(database_in)
-        con_in.row_factory = sqlite.Row
-
-        #con_out = sqlite.connect(database_out)
-
-        # Build the enumeration table!
-        #build_enum_table(con_in, con_out.cursor())
-        build_enum_table(con_in, None)
-
-        # Commit
-        #con_out.commit()
-
+        # Open the database file.
+        conn = sqlite.connect(database_file)
+        conn.row_factory = sqlite.Row
+        successful = True
     except sqlite.Error as e:
+        # Print an error and exit.
         print('Error: %s' % e.message)
         sys.exit(1)
     finally:
-        if con_in:
-            con_in.close()
-        if con_out:
-            con_out.close()
+        if not successful and conn: conn.close()
+    return conn
+
 
 def run_program(args):
+    '''Does the "real" work of __main__.'''
+
+    # Put the item generator in enumeration mode.
+    item.set_enumeration()
+
+    # Flags for the file/directory string.
     n_cache = 0
     n_skip = 0
     n_print_rolls = 0
 
-    item.set_enumeration()
-
-    # Set the caching options.
+    # Set the options.
     if args.cache:
         item.enable_caching(args.cache)
         n_cache = args.cache
     if args.skip:
-        print("skip enabled")
         global ENABLE_SKIPPING
         ENABLE_SKIPPING = True
         n_skip = 1
     if args.print_rolls:
-        print("printing rolls")
         global PRINT_ROLLS
         PRINT_ROLLS = True
         n_print_rolls = 1
-    if args.dir:
-        global DIR_PREFIX
-        DIR_PREFIX = args.dir
 
-    global DIR_PREFIX
-    DIR_PREFIX = DIR_PREFIX + '_c{0}_s{1}_r{2}'.format(n_cache, n_skip, n_print_rolls)
+    # Set the prefix.
+    global OUTPUT_PREFIX
+    if args.prefix:
+        OUTPUT_PREFIX = args.prefix
+    OUTPUT_PREFIX = OUTPUT_PREFIX + '_c{0}_s{1}_r{2}'.format(n_cache, n_skip, n_print_rolls)
 
-    #initialize_database(args.database_in, args.database_out)
-    initialize_database(args.database_in)
+    # If the output is a database, set it up.
+    conn_out = None
+    if args.database:
+        # Remove the existing database file.
+        db_filename = OUTPUT_PREFIX + '.db'
+        if os.path.isfile(db_filename):
+            os.remove(db_filename)
+        conn_out = initialize_database(db_filename)
+
+    # Initialize the INPUT database.
+    conn_in = initialize_database(args.database_in)
+
+    # Build the enumeration table!
+    build_enum_table(conn_in, conn_out)
+
 
 #
 # Main
@@ -425,19 +465,35 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description='Initializes databases from text files')
 
-    # Positional arguments: database name
+    # Positional Arguments:
+    
+    # Item database name.
     parser.add_argument('database_in', metavar='INPUT_DATABASE',
             help='The database name')
-    #parser.add_argument('database_out', metavar='OUTPUT_DATABASE',
-    #        help='The database name')
+
+    # Optional Arguments:
+
+    # Specifies a different file or directory prefix, rather than 'enum'.
+    parser.add_argument('--prefix', '-p',
+            help='Output file or directory prefix (default "enum")')
+
+    # Specifies to output to a database file rather than a directory.
+    parser.add_argument('--database', '-d', action='store_true',
+            help='Output to a database file instead of a directory')
+
+    # Whether to use a cache, and the type (a number).
+    # The number is meaningful in item.py.
     parser.add_argument('--cache', type=int,
             help='The type of cache to use')
+
+    # Whether to save time by skipping rolls according to a heuristic.
     parser.add_argument('--skip', action='store_true',
             help='Skip rolls that would repeat previous return')
-    parser.add_argument('--print-rolls', action='store_true',
+
+    # Whether to print the rolls as items are generated (as a kind of progress
+    # report.
+    parser.add_argument('--print-rolls', '-r', action='store_true',
             help='Prints rolls')
-    parser.add_argument('--dir', '-d',
-            help='Output directory override')
 
     # Go.
     args = parser.parse_args()
