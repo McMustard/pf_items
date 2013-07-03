@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -94,6 +94,25 @@ def run_generate_item(conn, args):
     item.print_item(str(x))
 
 
+def run_generate_fast(conn, args):
+    '''Runs the fast individual item generator.'''
+    # No "roller" required.
+    # Generate an item.
+    count = 1
+    if args.count:
+        count = args.count
+    print('Fast-generating', count, 'items')
+    for i in range(count):
+        try:
+            result = item.fast_generate(conn, args.strength, 
+                    args.kind, args.gold)
+            print('Item:',result[0], str(item.Price(result[1])))
+        except:
+            print('No eligible items')
+            # If none for one run, none for any
+            return
+
+
 def run_test(conn, args):
     '''Runs a test that exhaustively tests the item generation code.'''
     print("run_test")
@@ -129,7 +148,7 @@ if __name__ == '__main__':
     #        'tables')
 
     # Subcommands: type of generation
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(dest='subparser_name')
 
     # Subcommand: settlement
 
@@ -153,6 +172,23 @@ if __name__ == '__main__':
             help='A specification of the item paramters (better description' +
             'coming in a future version)')
     parser_item.set_defaults(func=run_generate_item)
+
+    # Subcommand: individual item, fast
+
+    parser_fast = subparsers.add_parser('fastitem',
+            help='Generate a random magic item using precompiled tables')
+    
+    parser_fast.add_argument('strength', metavar='STRENGTH',
+            help='Item strength')
+    parser_fast.add_argument('kind', metavar='KIND',
+            help='Kind of item')
+    parser_fast.add_argument('gold', metavar='MIN_GOLD',
+            help='Minimum cost, in gold pieces')
+
+    parser_fast.add_argument('--count', '-n', type=int,
+            help='Number of items to generate')
+
+    parser_fast.set_defaults(func=run_generate_fast)
 
     # Subcommand: simple die roll
 
@@ -182,7 +218,10 @@ if __name__ == '__main__':
     # Open the database.
     conn = None
     try:
-        conn = sqlite.connect('data/data.db')
+        if args.subparser_name == 'fastitem':
+            conn = sqlite.connect('data/freq.db')
+        else:
+            conn = sqlite.connect('data/data.db')
         conn.row_factory = sqlite.Row
         args.func(conn, args)
     except sqlite.Error as e:

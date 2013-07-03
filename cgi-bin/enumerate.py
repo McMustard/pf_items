@@ -279,7 +279,7 @@ class EnumeratingRoller(rollers.Roller):
 
 def prep_table(cursor, table):
     # Create the table.
-    sql = 'CREATE TABLE {0} (Count, Result);'.format(table)
+    sql = 'CREATE TABLE {0} (Count INTEGER, Kind TEXT, Item TEXT, Price REAL);'.format(table)
     cursor.execute(sql)
 
 
@@ -307,7 +307,8 @@ def enumerate_item(conn_in, conn_out, strengths, item_key, file_prefix):
                 # Notify the roller it's about to roll a single item.
                 roller.begin_item()
                 # Roll the item.
-                x = item.generate_specific_item(conn_in, strength, item_key, roller, roller)
+                x = item.generate_specific_item(conn_in, strength, item_key,
+                        roller, roller)
                 # Done rolling an item.
                 roller.end_item()
                 # Allow the roller to increment based on its saved values.
@@ -318,12 +319,12 @@ def enumerate_item(conn_in, conn_out, strengths, item_key, file_prefix):
                     if f_rollfile:
                         print(      roll + '           \n', end='', file=f_rollfile)
                     print(' ' + roll + '           \r', end='')
-                # Store the item
+                # Store the item quantity.
                 item_str = item.item_str(x)
                 if item_str in items.keys():
-                    items[item_str] += count
+                    items[item_str]['count'] += count
                 else:
-                    items[item_str] = count
+                    items[item_str] = {'count': count, 'item': x}
             except EnumerationsComplete:
                 # Done!
                 break
@@ -339,15 +340,24 @@ def enumerate_item(conn_in, conn_out, strengths, item_key, file_prefix):
 
         # Output the results.
         total = 0
+        sql = 'INSERT INTO {0} VALUES (?,?,?,?)'.format(filename)
         for item_str in items.keys():
-            count = items[item_str]
+            xdict = items[item_str]
+            count = xdict['count']
+            x = xdict['item']
             total += count
 
             if cursor:
-                sql = 'INSERT INTO {0} VALUES (?,?)'.format(filename)
-                cursor.execute(sql, (count, item_str))
+                if not x.is_bad():
+                    # count, kind, label, cost
+                    cursor.execute(sql, (count, x.kind, x.label, \
+                        x.price.as_float()) )
             else:
-                print(items[item_str], item_str, sep='\t', file=f_out)
+                # Text mode is for inspection, so include bad items.
+                if x.is_bad:
+                    print(items[item_str], item_str, 'invalid', sep='\t', file=f_out)
+                else:
+                    print(items[item_str], item_str, 'valid', sep='\t', file=f_out)
 
         print('    contained', total, 'items')
 
@@ -406,7 +416,8 @@ def initialize_database(database_file):
         print('Error: %s' % e.message)
         sys.exit(1)
     finally:
-        if not successful and conn: conn.close()
+        if not successful and conn:
+            conn.close()
     return conn
 
 
@@ -448,6 +459,9 @@ def run_program(args):
         if os.path.isfile(db_filename):
             os.remove(db_filename)
         conn_out = initialize_database(db_filename)
+        if not conn_out:
+            print("Unable to initialize output database!")
+            sys.exit(1)
 
     # Initialize the INPUT database.
     conn_in = initialize_database(args.database_in)

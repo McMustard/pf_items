@@ -25,6 +25,8 @@ from __future__ import print_function
 import random
 from sys import stdin, stdout
 
+random.seed()
+
 #
 # Utility Functions
 

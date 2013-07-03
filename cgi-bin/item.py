@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -129,6 +129,7 @@ ITEM_SUBTYPE_MAP = {
         'wrists'           : ('Wondrous Item', 'Wrists')
         }
 
+
 #
 # Variables
 
@@ -191,7 +192,7 @@ def generate_generic(conn, strength, roller, base_value, listener):
 
         x = generate_specific_item(conn, full_strength, kind, roller, listener)
         try:
-            value = x.get_cost()
+            value = x.price
         except BadPrice as ex:
             value = Price('')
         count += 1
@@ -238,9 +239,52 @@ def generate_item(conn, description, roller, listener):
 def generate_specific_item(conn, strength, kind, roller, listener):
     # Create an object.
     item = create_item(kind)
-
     # Finish generating the item
-    return item.generate(conn, strength, roller, listener)
+    item.generate(conn, strength, roller, listener)
+    return item
+
+
+def fast_generate(conn, strength, kind, base_value):
+    # Quickly get an item from a table.
+    table = (kind + '_' + strength).replace(' ', '_').lower()
+
+    # Gather up the possible candidates.
+    # Note: Use the syntactic sugar offered by sqlite that uses a temporary
+    # cursor, otherwise, the results seem short by 1 row. Perhaps it has to do
+    # with using a cursor twice? Not quite sure.
+    # Anyway, just use the conn directly.
+
+    sql_a1 = 'SELECT SUM(Count) '
+    sql_a2 = 'SELECT * '
+    sql_b = 'FROM {0} WHERE Price >= (?);'.format(table)
+
+    try:
+        result_sum = conn.execute(sql_a1 + sql_b, (base_value,))
+        candidates = conn.execute(sql_a2 + sql_b, (base_value,))
+
+        if candidates == None:
+            return None
+
+        # The number of items.
+        total = result_sum.fetchone()[0]
+
+        # Roll a random number in the total range.
+        roll = random.randrange(total)
+        #print('Rolled', roll)
+
+        # Go through the candidates until an item is found.
+        accum = 0
+        for c in candidates:
+            count = c['Count']
+            accum += count
+            #print('Checking', accum, c['Item'])
+            if roll < accum:
+                #odds = (count / total) * 100
+                #print('Got it!')
+                return [c['Item'], c['Price']]
+        return None
+    except:
+        return None
 
 
 def create_item(kind):
@@ -291,7 +335,7 @@ def print_item(x):
     try:
         print(s)
     except:
-        print('Error: Unable to print item ({0}).'.format(x.type()))
+        print('Error: Unable to print item ({0}).'.format(x.kind()))
 
 
 def rolls_str(x):
@@ -334,6 +378,10 @@ class Price(object):
 
     def __str__(self):
         return self.compute()
+
+
+    def as_float(self):
+        return self.gold
 
 
     def add(self, price_str):
@@ -529,14 +577,11 @@ class Item(object):
 
     # Initializes object variables
     def __init__(self, kind):
-        #print('Item.__init__')
         # The kind of item, stored mainly so a subclass doesn't need to know
         # its own name.
         self.kind = kind
         # All the rolls that led to the selection of the item
         self.rolls = []
-        # The base cost of an item, if any
-        self.base_cost = 0
         # The item label, before any additions, which subclasses track on
         # their own.
         self.label = ''
@@ -547,10 +592,10 @@ class Item(object):
         self.roller = None
         # Subtype (when Wondrous)
         self.subtype = ''
-        # Situational parameters
-        self.parameters = []
         # Validity flag (used in enumeration mode)
         self.bad_item = False
+        # Price
+        self.price = None
 
 
     # Generates the item, referring to the subclass, following the Template
@@ -559,11 +604,33 @@ class Item(object):
         # Initialize generation parameters.
         self.strength = strength
         self.roller = roller
-        # Call the subclass generation initializer.
-        self.generate_init()
-
+        # Look up the item
         self.lookup(conn, listener)
-        return self
+
+
+    # The standard __str__ method
+    def __str__(self):
+        #s = self.subtype + ': ' + self.label
+        s = self.label
+        try:
+            s += '; ' + str(self.price)
+        except BadPrice as ex:
+            s += '; pricing error'
+        if self.bad_item:
+            s += " [invalid]"
+        return s
+
+
+    #
+    # Information on the finished item
+
+
+    def is_bad(self):
+        return self.bad_item
+
+
+    #
+    # Consider these "private"
 
 
     # Rolls and keeps a log of the rolled values.
@@ -578,53 +645,18 @@ class Item(object):
         if len(self.rolls) > 0:
             self.rolls.pop()
 
-    # Is the item invalid?
-    def is_bad(self):
-        return self.bad_item
 
     #
     # Methods that are meant to be overridden
+
 
     # The standard __repr__ method
     def __repr__(self):
         result = '<Item '
         result += 'rolls:{} '.format(self.rolls)
-        result += 'base_cost:{} '.format(self.base_cost)
         result += 'label:{}'.format(self.label)
         result += '>'
         return result
-
-
-    # The standard __str__ method
-    def __str__(self):
-        custom = self.get_string()
-        if len(custom) > 0:
-            if self.bad_item:
-                custom += " [invalid]"
-            return custom
-        return 'generic item'
-
-
-    # Subclasses will override this.
-    def get_string(self):
-        return ''
-
-
-    # Type of item
-    def type(self):
-        return 'unspecified item'
-
-
-    # Item cost (as a Price object)
-    def get_cost(self):
-        return Price('0 gp')
-
-
-    # Default implementation of the generation initializer.
-    # A generation initializer is necessary in case an item needs to be
-    # rerolled using the same parameters.
-    def generate_init(self):
-        pass
 
 
 class Armor(Item):
@@ -665,53 +697,6 @@ class Armor(Item):
         return result
 
 
-    def get_string(self):
-        result = ''
-        # Armor or Shield
-        if self.armor_type == 'armor':
-            result += 'Armor: '
-        else:
-            result += 'Shield: '
-        # Item specifics
-        if self.is_generic:
-            result += self.armor_base
-            if self.enhancement > 0:
-                result += ' +' + str(self.enhancement)
-                for spec in self.specials.keys():
-                    result += '/' + spec
-        else:
-            result += self.specific_name
-        # Cost
-        try:
-            result += '; ' + str(self.get_cost())
-        except BadPrice as ex:
-            result += '; pricing error'
-        return result
-
-
-    def type(self):
-        return 'armor or shield'
-
-
-    def get_cost(self):
-        if self.is_generic:
-            # Compose a price.
-            # Start with the base cost.
-            price = Price(self.armor_price, self.armor_type)
-            # Add magic costs.
-            if self.enhancement:
-                # Masterwork component
-                price.add(150)
-                # Initial enhancement bonus
-                price.add_enhancement(self.enhancement)
-                # Special costs
-                for spec in self.specials.keys():
-                    price.add(self.specials[spec])
-            return price
-        else:
-            return Price(self.specific_price)
-
-
     def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -737,6 +722,38 @@ class Armor(Item):
             self.make_specific(conn, listener)
         else:
             self.make_generic(conn, magic_type, listener)
+
+        # Subtype
+        self.subtype = ''
+        if self.armor_type == 'armor':
+            self.subtype = 'Armor'
+        elif self.subtype == 'shield':
+            self.subtype = 'Shield'
+
+        # Item specifics
+        if self.is_generic:
+            # Compose the label.
+            self.label = self.armor_base
+            if self.enhancement > 0:
+                self.label += ' +' + str(self.enhancement)
+                for spec in sorted(self.specials.keys()):
+                    self.label += '/' + spec
+            # Compose a price.
+            # Start with the base cost.
+            self.price = Price(self.armor_price, self.armor_type)
+            # Add magic costs.
+            if self.enhancement:
+                # Masterwork component
+                self.price.add(150)
+                # Initial enhancement bonus
+                self.price.add_enhancement(self.enhancement)
+                # Special costs
+                for spec in self.specials.keys():
+                    self.price.add(self.specials[spec])
+        else:
+            # Specific magic armor. Just copy the details.
+            self.label += self.specific_name
+            self.price = Price(self.specific_price)
 
 
     def make_generic(self, conn, specification, listener):
@@ -856,47 +873,6 @@ class Weapon(Item):
         return result
 
 
-    def get_string(self):
-        result = 'Weapon: '
-        if self.is_generic:
-            result += self.weapon_base
-            if self.enhancement > 0:
-                result += ' +' + str(self.enhancement)
-                for spec in self.specials.keys():
-                    result += '/' + spec
-        else:
-            result += self.specific_name
-        # Cost
-        try:
-            result += '; ' + str(self.get_cost())
-        except BadPrice as ex:
-            result += '; pricing error'
-        return result
-
-
-    def type(self):
-        return 'weapon'
-
-
-    def get_cost(self):
-        if self.is_generic:
-            # Compose a price.
-            # Start with the base cost.
-            price = Price(self.weapon_price, 'weapon')
-            # Add magic costs.
-            if self.enhancement:
-                # Masterwork component
-                price.add(300)
-                # Initial enhancement bonus
-                price.add_enhancement(self.enhancement)
-                # Special costs
-                for spec in self.specials.keys():
-                    price.add(self.specials[spec])
-            return price
-        else:
-            return Price(self.specific_price)
-
-
     def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -924,6 +900,38 @@ class Weapon(Item):
             self.make_specific(conn, purpose, listener)
         else:
             self.make_generic(conn, magic_type, purpose, listener)
+
+        # Subtype
+        self.subtype = ''
+        if self.weapon_type == 'melee':
+            self.subtype = 'Melee'
+        elif self.weapon_type == 'ranged':
+            self.subtype = 'Ranged'
+
+        # Item specifics
+        if self.is_generic:
+            # Compose the label.
+            self.label = self.weapon_base
+            if self.enhancement > 0:
+                self.label += ' +' + str(self.enhancement)
+                for spec in self.specials.keys():
+                    self.label += '/' + spec
+            # Compose a price.
+            # Start with the base cost.
+            self.price = Price(self.weapon_price, 'weapon')
+            # Add magic costs.
+            if self.enhancement:
+                # Masterwork component
+                self.price.add(300)
+                # Initial enhancement bonus
+                self.price.add_enhancement(self.enhancement)
+                # Special costs
+                for spec in self.specials.keys():
+                    self.price.add(self.specials[spec])
+        else:
+            # Specific magic weapon. Just copy the details.
+            self.label = self.specific_name
+            self.price = Price(self.specific_price)
 
 
     def make_generic(self, conn, specification, purpose, listener):
@@ -1051,22 +1059,6 @@ class Potion(Item):
         return result
 
 
-    def get_string(self):
-        result = 'Potion: ' + self.spell
-        result += ' (' + self.spell_level + ' Level'
-        result += ', CL ' + self.caster_level + ')'
-        result += '; ' + self.price
-        return result
-
-
-    def type(self):
-        return 'potion'
-
-
-    def get_cost(self):
-        return Price(self.price)
-
-
     def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -1100,6 +1092,16 @@ class Potion(Item):
         self.spell = result['Result']
         self.price = result['Price']
 
+        # Subtype
+        self.subtype = 'Potion'
+
+        # Item specifics
+        self.label = 'Potion of ' + self.spell
+        self.label += ' (' + self.spell_level + ' Level'
+        self.label += ', CL ' + self.caster_level + ')'
+        # Cost
+        self.price = Price(result['Price'])
+
 
 class Ring(Item):
 
@@ -1118,18 +1120,6 @@ class Ring(Item):
         return result
 
 
-    def get_string(self):
-        return 'Ring: ' + self.ring + '; ' + self.price
-
-
-    def type(self):
-        return 'ring'
-
-
-    def get_cost(self):
-        return Price(self.price)
-
-
     def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -1139,8 +1129,13 @@ class Ring(Item):
         roll = self.roll('1d100', purpose)
         # Look it up.
         ring = self.t_rings.find_roll(conn, roll, self.strength, purpose, listener)
-        self.ring = ring['Result']
-        self.price = ring['Price']
+        
+        # Subtype
+        self.subtype = 'Ring'
+
+        # Item specifics
+        self.label = ring['Result']
+        self.price = Price(ring['Price'])
 
 
 class Rod(Item):
@@ -1149,27 +1144,12 @@ class Rod(Item):
         Item.__init__(self, KEY_ROD)
         # Load tables.
         self.t_rods = TABLE_RODS
-        # Rod details.
-        self.rod = ''
-        self.price = ''
 
 
     def __repr__(self):
         result = '<Rod'
         result += '>'
         return result
-
-
-    def get_string(self):
-        return 'Rod: ' + self.rod + '; ' + self.price
-
-
-    def type(self):
-        return 'rod'
-
-
-    def get_cost(self):
-        return Price(self.price)
 
 
     def lookup(self, conn, listener):
@@ -1181,8 +1161,13 @@ class Rod(Item):
         roll = self.roll('1d100', purpose)
         # Look it up.
         rod = self.t_rods.find_roll(conn, roll, self.strength, purpose, listener)
-        self.rod = rod['Result']
-        self.price = rod['Price']
+
+        # Subtype
+        self.subtype = 'Rod'
+
+        # Item specifics
+        self.label = rod['Result']
+        self.price = Price(rod['Price'])
 
 
 class Scroll(Item):
@@ -1224,23 +1209,6 @@ class Scroll(Item):
         result = '<Scroll'
         result += '>'
         return result
-
-
-    def get_string(self):
-        result = 'Scroll: ' + self.spell
-        result += ' (' + self.arcaneness
-        result += ', ' + self.spell_level + ' Level'
-        result += ', CL ' + self.caster_level + ')'
-        result += '; ' + self.price
-        return result
-
-
-    def type(self):
-        return 'scroll'
-
-
-    def get_cost(self):
-        return Price(self.price)
 
 
     def lookup(self, conn, listener):
@@ -1309,7 +1277,16 @@ class Scroll(Item):
             elif self.spell_level == '9th':
                 result = self.t_divine_level_9.find_roll(conn, roll, commonness, purpose, listener)
         self.spell = result['Result']
-        self.price = result['Price']
+
+        # Subtype
+        self.subtype = 'Scroll'
+
+        # Item specifics
+        self.label = 'Scroll of ' + self.spell
+        self.label += ' (' + self.arcaneness
+        self.label += ', ' + self.spell_level + ' Level'
+        self.label += ', CL ' + self.caster_level + ')'
+        self.price = Price(result['Price'])
 
 
 class Staff(Item):
@@ -1329,18 +1306,6 @@ class Staff(Item):
         return result
 
 
-    def get_string(self):
-        return 'Staff: ' + self.staff + '; ' + self.price
-
-
-    def type(self):
-        return 'staff'
-
-
-    def get_cost(self):
-        return Price(self.price)
-
-
     def lookup(self, conn, listener):
         # We don't do 'least minor'
         if self.strength == 'least minor':
@@ -1349,8 +1314,13 @@ class Staff(Item):
         purpose = 'specific staff'
         roll = self.roll('1d100', purpose)
         staff = self.t_staves.find_roll(conn, roll, self.strength, purpose, listener)
-        self.staff = staff['Result']
-        self.price = staff['Price']
+
+        # Subtype
+        self.subtype = 'Staff'
+
+        # Item specifics
+        self.label = staff['Result']
+        self.price = Price(staff['Price'])
 
 
 class Wand(Item):
@@ -1376,22 +1346,6 @@ class Wand(Item):
         result = '<Wand'
         result += '>'
         return result
-
-
-    def get_string(self):
-        result = 'Wand: ' + self.spell
-        result += ' (' + self.spell_level + ' Level'
-        result += ', CL ' + self.caster_level + ')'
-        result += '; ' + self.price
-        return result
-
-
-    def type(self):
-        return 'wand'
-
-
-    def get_cost(self):
-        return Price(self.price)
 
 
     def lookup(self, conn, listener):
@@ -1424,7 +1378,15 @@ class Wand(Item):
         elif self.spell_level == '4th':
             result = self.t_wands_4.find_roll(conn, roll, commonness, purpose, listener)
         self.spell = result['Result']
-        self.price = result['Price']
+
+        # Subtype
+        self.subtype = 'Wand'
+
+        # Item specifics
+        self.label = 'Wand of ' + self.spell
+        self.label += ' (' + self.spell_level + ' Level'
+        self.label += ', CL ' + self.caster_level + ')'
+        self.price = Price(result['Price'])
         
 
 class WondrousItem(Item):
@@ -1459,61 +1421,43 @@ class WondrousItem(Item):
         return result
 
 
-    def get_string(self):
-        result = 'Wondrous Item: '
-        result += self.item
-        result += ' (' + self.slot + ')'
-        result += '; ' + self.price
-        return result
-
-
-    def type(self):
-        return 'wondrous item'
-
-
-    def get_cost(self):
-        return Price(self.price)
-
-
     def lookup(self, conn, listener):
-        # If we have a subtype, we won't need to roll for a slot.
-        if self.subtype not in [None, '']:
-            self.slot = self.subtype 
-        else:
-            # Roll for slot.
+        # If we don't have a subtype, roll for one.
+        if self.subtype in [None, '']:
+            # Roll for subtype.
             purpose = 'wondrous item slot'
             roll = self.roll('1d100', purpose)
-            self.slot = self.t_random.find_roll(conn, roll, None, purpose, listener)['Result']
+            self.subtype = self.t_random.find_roll(conn, roll, None, purpose, listener)['Result']
         # Note that 'least minor' is only valid for slotless.
-        if self.slot != 'Slotless' and self.strength == 'least minor':
+        if self.subtype != 'Slotless' and self.strength == 'least minor':
             self.strength = 'lesser minor'
         # Roll for the item.
         purpose = 'specific wondrous item'
         roll = self.roll('1d100', purpose)
         result = None
-        if self.slot == 'Belts':
+        if self.subtype == 'Belts':
             result = self.t_belt.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Body':
+        elif self.subtype == 'Body':
             result = self.t_body.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Chest':
+        elif self.subtype == 'Chest':
             result = self.t_chest.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Eyes':
+        elif self.subtype == 'Eyes':
             result = self.t_eyes.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Feet':
+        elif self.subtype == 'Feet':
             result = self.t_feet.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Hands':
+        elif self.subtype == 'Hands':
             result = self.t_hands.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Head':
+        elif self.subtype == 'Head':
             result = self.t_head.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Headband':
+        elif self.subtype == 'Headband':
             result = self.t_headband.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Neck':
+        elif self.subtype == 'Neck':
             result = self.t_neck.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Shoulders':
+        elif self.subtype == 'Shoulders':
             result = self.t_shoulders.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Wrists':
+        elif self.subtype == 'Wrists':
             result = self.t_wrists.find_roll(conn, roll, self.strength, purpose, listener)
-        elif self.slot == 'Slotless':
+        elif self.subtype == 'Slotless':
             result = self.t_slotless.find_roll(conn, roll, self.strength, purpose, listener)
         # The table might be directing us to roll on another table.
         if result != None and result['Result'] == ROLL_LEAST_MINOR:
@@ -1523,9 +1467,15 @@ class WondrousItem(Item):
             # This special result only happens on the slotless table.
             result = self.t_slotless.find_roll(conn, roll, 'least minor', purpose, listener)
         # Perform a final check on the rolled item.
-        if result != None:
-            self.item = result['Result']
-            self.price = result['Price']
+        if result == None:
+            return
+
+        # Subtype
+        # (already taken care of)
+
+        # Item specifics
+        self.label = result['Result']
+        self.price = Price(result['Price'])
 
     
 # A dictionary that maps from an item type string to an Item subclass
