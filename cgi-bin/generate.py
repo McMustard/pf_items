@@ -90,7 +90,7 @@ def run_generate_item(conn, args):
         roller = rollers.PseudorandomRoller()
     # Generate an item.
     keywords = (' '.join(args.item_args)).lower()
-    x = item.generate_item(conn, keywords, roller)
+    x = item.generate_item(conn, keywords, roller, None)
     item.print_item(str(x))
 
 
@@ -123,13 +123,13 @@ def run_test(conn, args):
             'lesser medium', 'greater medium', 'lesser major',
             'greater major']
     items = ['Armor/Shield', 'Weapon', 'Potion', 'Ring', 'Rod', 'Scroll',
-            'Staff', 'Wand', 'Wondrous Item']
+            'Staff', 'Wand', 'Wondrous']
     for s in strengths:
         for i in items:
             print(s + ' ' + i)
             print('-' * 78)
             for c in range(1000):
-                x = item.generate_item(conn, s + ' ' + i, roller)
+                x = item.generate_item(conn, s + ' ' + i.lower(), roller, None)
                 x = str(x).replace('\u2019', "'")
                 x = str(x).replace('\u2014', "-")
                 print(x, end=', ')
@@ -141,11 +141,6 @@ if __name__ == '__main__':
     # Set up a cushy argument parser.
     parser = argparse.ArgumentParser(
             description='Generates magic items for Pathfinder')
-
-    # Error-checking
-    #parser.add_argument('--check-errors', action='store_true',
-    #        help='Instructs the program to check for errors in the item ' +
-    #        'tables')
 
     # Subcommands: type of generation
     subparsers = parser.add_subparsers(dest='subparser_name')
@@ -225,8 +220,7 @@ if __name__ == '__main__':
         conn.row_factory = sqlite.Row
         args.func(conn, args)
     except sqlite.Error as e:
-        print(e)
-        #print('Error: %s' % e.message)
+        print('SQL Error: %s' % e.message)
     finally:
         if conn: conn.close()
 

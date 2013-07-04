@@ -29,6 +29,7 @@ import traceback
 # Local imports
 
 import item
+import rollers
 
 
 #
@@ -135,6 +136,37 @@ def generate_settlement_items(conn, settlement, roller):
         for i in range(count_major):
             x = get_random_item(conn, 'major', roller, settlement_base)
             result['major_items'].append(str(x))
+
+    # Return the resulting collection.
+    return result
+
+
+def generate_custom(conn, base_value, q_ls_min, q_gt_min, q_ls_med, q_gt_med, q_ls_maj, q_gt_maj):
+    # Easy peasy.
+    result = {}
+    result['minor_items'] = []
+    result['medium_items'] = []
+    result['major_items'] = []
+
+    # Note: 'x' is not an Item, but a string.
+    for i in range(rollers.roll_form(q_ls_min)):
+        x = item.fast_generate(conn, 'lesser minor', base_value)
+        result['minor_items'].append(x)
+    for i in range(rollers.roll_form(q_gt_min)):
+        x = item.fast_generate(conn, 'greater minor', base_value)
+        result['minor_items'].append(x)
+    for i in range(rollers.roll_form(q_ls_med)):
+        x = item.fast_generate(conn, 'lesser medium', base_value)
+        result['medium_items'].append(x)
+    for i in range(rollers.roll_form(q_gt_med)):
+        x = item.fast_generate(conn, 'greater medium', base_value)
+        result['medium_items'].append(x)
+    for i in range(rollers.roll_form(q_ls_maj)):
+        x = item.fast_generate(conn, 'lesser major', base_value)
+        result['major_items'].append(x)
+    for i in range(rollers.roll_form(q_gt_maj)):
+        x = item.fast_generate(conn, 'greater major', base_value)
+        result['major_items'].append(x)
 
     # Return the resulting collection.
     return result

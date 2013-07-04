@@ -27,6 +27,14 @@ from sys import stdin, stdout
 
 random.seed()
 
+# Maximum returnable from a form when entering an integer.
+MAX_FORM_COUNT = 12
+
+# Maximum number of dice that can be rolled from a form.
+MAX_FORM_DICE = 4
+# Maximum number of sides on a die on a form dice expression.
+MAX_FORM_SIDES = 6
+
 #
 # Utility Functions
 
@@ -37,12 +45,35 @@ def parseDiceExpression(dice_expression):
     return (int(number_str), int(sides_str))
 
 # Roll virtual dice
+def roll_dice_impl(number, sides):
+    rolls = [random.randrange(1, sides + 1) for x in range(number)]
+    return sum(rolls)
+
+# Roll virtual dice
 def rollDice(dice_expression):
     (number, sides) = parseDiceExpression(dice_expression)
-    #print('Rolling ' + str(number) + ' ' + str(sides) + '-sided dice.')
-    rolls = [random.randrange(1, sides + 1) for x in range(number)]
-    #print('Rolls:', rolls)
-    return sum(rolls)
+    return roll_dice_impl(number, sides)
+
+# Roll a dice expression, or return a straight-up value.
+def roll_form(expression):
+    # Try it as a straight integer.
+    try:
+        as_int = int(expression)
+        return min(as_int, MAX_FORM_COUNT)
+    except ValueError:
+        pass
+    # Try it as a dice expression.
+    try:
+        number, sides = parseDiceExpression(expression)
+        if number < 1: number = 1
+        if sides < 1: sides = 1
+        return roll_dice_impl(min(number, MAX_FORM_DICE),
+                min(sides, MAX_FORM_SIDES) )
+    except ValueError:
+        pass
+    # Invalid
+    return 0
+
 
 #
 # Dice Rollers

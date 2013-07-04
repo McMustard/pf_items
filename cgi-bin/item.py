@@ -80,6 +80,10 @@ TYPE_OPTIONS = ['armor/shield', 'armor', 'shield', 'weapon', 'potion',
         'body', 'chest', 'eyes', 'feet', 'hand', 'hands', 'head', 'headband',
         'neck', 'shoulders', 'slotless', 'wrist', 'wrists']
 
+# List of main types.
+TYPE_LIST = ['armor/shield', 'weapon', 'potion', 'ring', 'rod', 'scroll',
+        'staff', 'wand', 'wondrous']
+
 # Maps the parameter specification of an item type to its standardized value.
 # Use a key converted to lower case to perform the lookup.
 
@@ -163,7 +167,12 @@ def extract_keywords(sequence, keywords):
     return intersect
 
 
-def generate_generic(conn, strength, roller, base_value, listener):
+def generate_generic(conn, strength, roller, base_value, **kwargs):
+
+    listener = None
+    if 'listener' in kwargs:
+        listener = kwargs['listener']
+    
     # Here, strength is merely 'minor', 'medium', 'major', so we need to
     # further qualify it with 'lesser' or 'greater'.
     
@@ -244,7 +253,30 @@ def generate_specific_item(conn, strength, kind, roller, listener):
     return item
 
 
-def fast_generate(conn, strength, kind, base_value):
+def fast_generate(conn, strength, base_value):
+    # Select a type. It's possible to generate no results, so we'll try every
+    # type until there are no more to try.
+    types = TYPE_LIST[:]
+
+    # Interestingly, the Python documentation states something about shuffling
+    # not being able to cover every permutation, even when len(x) is small, due
+    # to the number of permutations being larger than the period. However,
+    # earlier in the document, it lists the period as 2**19937 - 1, which is
+    # very large. Whatever the case, it's good enough for 9! = 362880
+    # permutations..
+    random.shuffle(types)
+
+    # Go through the types.
+    for kind in types:
+        x = fast_generate_full(conn, strength, kind, base_value)
+        if x is not None:
+            return x
+
+    # We did not find a single thing.
+    return None
+
+
+def fast_generate_full(conn, strength, kind, base_value):
     # Quickly get an item from a table.
     table = (kind + '_' + strength).replace(' ', '_').lower()
 
@@ -270,18 +302,15 @@ def fast_generate(conn, strength, kind, base_value):
 
         # Roll a random number in the total range.
         roll = random.randrange(total)
-        #print('Rolled', roll)
 
         # Go through the candidates until an item is found.
         accum = 0
         for c in candidates:
             count = c['Count']
             accum += count
-            #print('Checking', accum, c['Item'])
             if roll < accum:
-                #odds = (count / total) * 100
-                #print('Got it!')
-                return [c['Item'], c['Price']]
+                return '{0}: {1}; {2}'.format(c['Subtype'], c['Item'],
+                        str(Price(c['Price'])) )
         return None
     except:
         return None
@@ -473,9 +502,10 @@ class Table(object):
         result = cursor.fetchone()
         if result:
             try:
-                roll_low = result['Roll_low']
-                roll_high = result['Roll_high']
-                listener.item_rolled(purpose, result['Roll_low'], result['Roll_high'], strength)
+                if listener:
+                    low = result['Roll_low']
+                    high = result['Roll_high']
+                    listener.item_rolled(purpose, low, high, strength)
             except IndexError as ex:
                 return None
         else:

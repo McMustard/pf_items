@@ -41,91 +41,19 @@ import rollers
 #
 # Constants
 
-# Ultimate Equipment Tables
-
-TABLE_MAGIC_ARMOR_AND_SHIELDS         = 'Magic_Armor_and_Shields'
-TABLE_MAGIC_WEAPONS                   = 'Magic_Weapons'
-TABLE_METAMAGIC_RODS_1                = 'Metamagic_Rods_1'
-TABLE_METAMAGIC_RODS_2                = 'Metamagic_Rods_2'
-TABLE_METAMAGIC_RODS_3                = 'Metamagic_Rods_3'
-TABLE_POTION_OR_OIL_LEVEL_0           = 'Potion_or_Oil_Level_0'
-TABLE_POTION_OR_OIL_LEVEL_1           = 'Potion_or_Oil_Level_1'
-TABLE_POTION_OR_OIL_LEVEL_2           = 'Potion_or_Oil_Level_2'
-TABLE_POTION_OR_OIL_LEVEL_3           = 'Potion_or_Oil_Level_3'
-TABLE_POTION_OR_OIL_TYPE              = 'Potion_or_Oil_Type'
-TABLE_RANDOM_ARMOR_OR_SHIELD          = 'Random_Armor_or_Shield'
-TABLE_RANDOM_ART_OBJECTS              = 'Random_Art_Objects'
-TABLE_RANDOM_GEMS                     = 'Random_Gems'
-TABLE_RANDOM_POTIONS_AND_OILS         = 'Random_Potions_and_Oils'
-TABLE_RANDOM_SCROLLS                  = 'Random_Scrolls'
-TABLE_RANDOM_WANDS                    = 'Random_Wands'
-TABLE_RANDOM_WEAPON                   = 'Random_Weapon'
-TABLE_RINGS                           = 'Rings'
-TABLE_RODS                            = 'Rods'
-TABLE_SCROLLS_ARCANE_LEVEL_0          = 'Scrolls_Arcane_Level_0'
-TABLE_SCROLLS_ARCANE_LEVEL_1          = 'Scrolls_Arcane_Level_1'
-TABLE_SCROLLS_ARCANE_LEVEL_2          = 'Scrolls_Arcane_Level_2'
-TABLE_SCROLLS_ARCANE_LEVEL_3          = 'Scrolls_Arcane_Level_3'
-TABLE_SCROLLS_ARCANE_LEVEL_4          = 'Scrolls_Arcane_Level_4'
-TABLE_SCROLLS_ARCANE_LEVEL_5          = 'Scrolls_Arcane_Level_5'
-TABLE_SCROLLS_ARCANE_LEVEL_6          = 'Scrolls_Arcane_Level_6'
-TABLE_SCROLLS_ARCANE_LEVEL_7          = 'Scrolls_Arcane_Level_7'
-TABLE_SCROLLS_ARCANE_LEVEL_8          = 'Scrolls_Arcane_Level_8'
-TABLE_SCROLLS_ARCANE_LEVEL_9          = 'Scrolls_Arcane_Level_9'
-TABLE_SCROLLS_DIVINE_LEVEL_0          = 'Scrolls_Divine_Level_0'
-TABLE_SCROLLS_DIVINE_LEVEL_1          = 'Scrolls_Divine_Level_1'
-TABLE_SCROLLS_DIVINE_LEVEL_2          = 'Scrolls_Divine_Level_2'
-TABLE_SCROLLS_DIVINE_LEVEL_3          = 'Scrolls_Divine_Level_3'
-TABLE_SCROLLS_DIVINE_LEVEL_4          = 'Scrolls_Divine_Level_4'
-TABLE_SCROLLS_DIVINE_LEVEL_5          = 'Scrolls_Divine_Level_5'
-TABLE_SCROLLS_DIVINE_LEVEL_6          = 'Scrolls_Divine_Level_6'
-TABLE_SCROLLS_DIVINE_LEVEL_7          = 'Scrolls_Divine_Level_7'
-TABLE_SCROLLS_DIVINE_LEVEL_8          = 'Scrolls_Divine_Level_8'
-TABLE_SCROLLS_DIVINE_LEVEL_9          = 'Scrolls_Divine_Level_9'
-TABLE_SCROLL_TYPE                     = 'Scroll_Type'
-TABLE_SPECIAL_ABILITIES_AMMUNITION    = 'Special_Abilities_Ammunition'
-TABLE_SPECIAL_ABILITIES_ARMOR         = 'Special_Abilities_Armor'
-TABLE_SPECIAL_ABILITIES_MELEE_WEAPON  = 'Special_Abilities_Melee_Weapon'
-TABLE_SPECIAL_ABILITIES_RANGED_WEAPON = 'Special_Abilities_Ranged_Weapon'
-TABLE_SPECIAL_ABILITIES_SHIELD        = 'Special_Abilities_Shield'
-TABLE_SPECIAL_BANE                    = 'Special_Bane'
-TABLE_SPECIAL_SLAYING_ARROW           = 'Special_Slaying_Arrow'
-TABLE_SPECIFIC_ARMOR                  = 'Specific_Armor'
-TABLE_SPECIFIC_CURSED_ITEMS           = 'Specific_Cursed_Items'
-TABLE_SPECIFIC_SHIELDS                = 'Specific_Shields'
-TABLE_SPECIFIC_WEAPONS                = 'Specific_Weapons'
-TABLE_STAVES                          = 'Staves'
-TABLE_WAND_LEVEL_0                    = 'Wand_Level_0'
-TABLE_WAND_LEVEL_1                    = 'Wand_Level_1'
-TABLE_WAND_LEVEL_2                    = 'Wand_Level_2'
-TABLE_WAND_LEVEL_3                    = 'Wand_Level_3'
-TABLE_WAND_LEVEL_4                    = 'Wand_Level_4'
-TABLE_WAND_TYPE                       = 'Wand_Type'
-TABLE_WONDROUS_ITEMS                  = 'Wondrous_Items'
-TABLE_WONDROUS_ITEMS_BELT             = 'Wondrous_Items_Belt'
-TABLE_WONDROUS_ITEMS_BODY             = 'Wondrous_Items_Body'
-TABLE_WONDROUS_ITEMS_CHEST            = 'Wondrous_Items_Chest'
-TABLE_WONDROUS_ITEMS_EYES             = 'Wondrous_Items_Eyes'
-TABLE_WONDROUS_ITEMS_FEET             = 'Wondrous_Items_Feet'
-TABLE_WONDROUS_ITEMS_HANDS            = 'Wondrous_Items_Hands'
-TABLE_WONDROUS_ITEMS_HEAD             = 'Wondrous_Items_Head'
-TABLE_WONDROUS_ITEMS_HEADBAND         = 'Wondrous_Items_Headband'
-TABLE_WONDROUS_ITEMS_NECK             = 'Wondrous_Items_Neck'
-TABLE_WONDROUS_ITEMS_SHOULDERS        = 'Wondrous_Items_Shoulders'
-TABLE_WONDROUS_ITEMS_SLOTLESS         = 'Wondrous_Items_Slotless'
-TABLE_WONDROUS_ITEMS_WRISTS           = 'Wondrous_Items_Wrists'
-
 STANDARD_STRENGTHS = ['lesser minor', 'greater minor', 'lesser medium',
         'greater medium', 'lesser major', 'greater major']
 EXPANDED_STRENGTHS = ['least minor', 'lesser minor', 'greater minor',
         'lesser medium', 'greater medium', 'lesser major', 'greater major']
 
+
 #
-# Variables
+# Global Variables
 
 ENABLE_SKIPPING = False
 PRINT_ROLLS = False
 OUTPUT_PREFIX = 'enum'
+
 
 #
 # Classes
@@ -147,7 +75,6 @@ class EnumeratingRoller(rollers.Roller):
         self.rolls = {}
 
     def begin_item(self):
-        #print(80*'-')
         self.rolls = {}
 
     def end_item(self):
@@ -156,34 +83,27 @@ class EnumeratingRoller(rollers.Roller):
     def item_rolled(self, purpose, range_low, range_high, strength):
         if purpose not in self.rolls or range_high > self.rolls[purpose][1]:
             self.rolls[purpose] = (range_low, range_high, strength)
-            #print('roll', purpose, range_low, range_high, strength)
 
     def do_skip(self):
         if not ENABLE_SKIPPING:
             return 1
         multiplier = 1
-        #print(self.rolls)
         for purpose in self.purposes1:
             try:
-                (low, high, strength) = self.rolls[purpose]
-                #print(purpose, low, high)
+                low, high, strength = self.rolls[purpose]
                 span = high - low + 1
                 multiplier = multiplier * span
                 self.current[purpose]['value'] = high
             except KeyError as ex:
                 # Simply omit it from the calculation. If there was no value,
                 # it's not important.
-                #print('### ERROR!!! ', ex, self.purposes1, self.purposes2, self.rolls)
                 pass
-        #print(self.rolls)
         self.rolls = {}
         return multiplier
 
     def roll(self, dice_expression, purpose):
-        #print('roll requested for', purpose, end='')
         # If this purpose has not been used yet, set it up.
         if purpose not in self.current.keys():
-            #print('New purpose', purpose)
             # Determine the maximum on the die.
             # If there is more than one die, probability-wise, the resulting
             # sequence won't generate a list of items in the probability they
@@ -228,14 +148,7 @@ class EnumeratingRoller(rollers.Roller):
             # This is the first pass.
             if purpose not in self.purposes1:
                 self.purposes1.append(purpose)
-            #elif self.stage == 2:
-            #    #print('@2', end='')
-            #    # This is the second pass.
-            #    if purpose not in self.purposes2:
-            #        self.purposes2.append(purpose)
-            #elif self.stage == 3:
         elif self.stage >= 2 and purpose == self.last_purpose:
-            #print('@3', end='')
             # Increment
             if self.increment():
                 raise EnumerationsComplete
@@ -251,15 +164,11 @@ class EnumeratingRoller(rollers.Roller):
             self.purposes1.append(purpose)
             self.stage = 1
             self.last_purpose = None
-        #print('[' + purpose + ':' + str(self.current[purpose]['value']) + ']', end='')
-        #print('[' + str(self.current[purpose]['value']) + ']', end='')
         return self.current[purpose]['value']
 
     def increment(self):
-        #print('Increment:', self.purposes1)
         # Increment according to the reverse of the purpose lists.
         for digit in reversed(self.purposes1):
-            #print('incr', digit)
             # Increment the purpose current value.
             self.current[digit]['value'] += 1
             value = self.current[digit]['value']
@@ -279,12 +188,11 @@ class EnumeratingRoller(rollers.Roller):
 
 def prep_table(cursor, table):
     # Create the table.
-    sql = 'CREATE TABLE {0} (Count INTEGER, Kind TEXT, Item TEXT, Price REAL);'.format(table)
+    sql = 'CREATE TABLE {0} (Count INTEGER, Kind TEXT, Subtype TEXT, Item TEXT, Price REAL);'.format(table)
     cursor.execute(sql)
 
 
 def enumerate_item(conn_in, conn_out, strengths, item_key, file_prefix):
-
     # Roll up items
     for strength in strengths:
         print('Analyzing', strength, item_key)
@@ -340,7 +248,7 @@ def enumerate_item(conn_in, conn_out, strengths, item_key, file_prefix):
 
         # Output the results.
         total = 0
-        sql = 'INSERT INTO {0} VALUES (?,?,?,?)'.format(filename)
+        sql = 'INSERT INTO {0} VALUES (?,?,?,?,?)'.format(filename)
         for item_str in items.keys():
             xdict = items[item_str]
             count = xdict['count']
@@ -348,9 +256,10 @@ def enumerate_item(conn_in, conn_out, strengths, item_key, file_prefix):
             total += count
 
             if cursor:
+                # Do not include bad items in the database file.
                 if not x.is_bad():
-                    # count, kind, label, cost
-                    cursor.execute(sql, (count, x.kind, x.label, \
+                    # count, kind, subtype, label, cost
+                    cursor.execute(sql, (count, x.kind, x.subtype, x.label, \
                         x.price.as_float()) )
             else:
                 # Text mode is for inspection, so include bad items.

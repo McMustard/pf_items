@@ -38,6 +38,13 @@
             |
             <span class="pager">
                 <span class="page_label"
+                    id="page_custom_unsel">Custom Settlement</span>
+                <a href="#" class="page_link"
+                    id="page_custom_sel">Custom Settlement</a>
+            </span>
+            |
+            <span class="pager">
+                <span class="page_label"
                     id="page_individual_unsel">Individual</span>
                 <a href="#" class="page_link"
                     id="page_individual_sel">Individual</a>
@@ -69,6 +76,42 @@
             <h3>Results</h3>
             <fieldset>
                 <div id="settlement_results"><br/></div>
+            </fieldset>
+        </div>
+
+        <!-- Form for custom settlements. -->
+        <div class="page" id="page_custom">
+            <p>This feature is currently in development!
+            So it should work better and look nicer "soon".</p>
+            <p>For Base Value, enter the amount, in gold, but do not include
+            "gp". If omitted, it's treated as 0 gp</p>
+            <p>Numbers or dice expressions (e.g. 2d4) can be used in the
+            quantity fields, but they are limited. If omitted, default is 1.</p>
+            <form id="form_custom" action="">
+                <fieldset>
+                    <label for="base_value">Base Value:</label>
+                    <input type="text" name="base_value" /> <br/>
+                    <label for="q_ls_min">Lesser Minor Items:</label>
+                    <input type="text" name="q_ls_min" /> <br/>
+                    <label for="q_gt_min">Greater Minor Items:</label>
+                    <input type="text" name="q_gt_min" /> <br/>
+                    <label for="q_ls_med">Lesser Medium Items:</label>
+                    <input type="text" name="q_ls_med" /> <br/>
+                    <label for="q_gt_med">Greater Medium Items:</label>
+                    <input type="text" name="q_gt_med" /> <br/>
+                    <label for="q_ls_maj">Lesser Major Items:</label>
+                    <input type="text" name="q_ls_maj" /> <br/>
+                    <label for="q_gt_maj">Greater Major Items:</label>
+                    <input type="text" name="q_gt_maj" /> <br/>
+                    <input type="button" name="generate" value="Generate"
+                        id="btn_custom_generate" />
+                </fieldset>
+            </form>
+
+            <!-- The results will go here -->
+            <h3>Results</h3>
+            <fieldset>
+                <div id="custom_results"><br/></div>
             </fieldset>
         </div>
 
@@ -132,7 +175,7 @@
         <ul>
             <li>May generate weapons and armor with overlapping special
             abilities, such as Fortification (light) and Fortification
-            (moderate).
+            (moderate). This will be fixed in a future version.
             </li>
             <li>Due to base value, the only minor items that can be generated
             from a large city are weapons with a modified enhancement bonus of
@@ -152,7 +195,7 @@
     <span class="legal footer_text">
         <br/><!-- Kind of a sloppy fix, but I'll figure someting out later-->
         <p>
-        This software is Copyright 2012-2013 Steven Clark.<br/>
+        This software is Copyright 2012-2014 Steven Clark.<br/>
         It is intended for use with the Pathfinder Roleplaying Game, published
         by Paizo Publishing, LLC.
         </p>
@@ -185,6 +228,32 @@
         <p>
         This software includes and/or references Open Game Content
         (see the <a href="OGL.txt">Open Game License</a> for details).
+        </p>
+
+        <h4>Software License</h4>
+        <p>
+        Permission is hereby granted, free of charge, to any person obtaining a
+        copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
+        </p>
+
+        <p>
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
+        </p>
+
+        <p>
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+        IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+        CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+        TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+        SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         </p>
     </small>
 </html>
