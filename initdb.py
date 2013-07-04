@@ -3,7 +3,7 @@
 
 # Pathfinder Item Generator
 #
-# Copyright 2012, Steven Clark.
+# Copyright 2012-2013, Steven Clark.
 #
 # This program is free software, and is provided "as is", without warranty of
 # any kind, express or implied, to the extent permitted by applicable law.
@@ -292,25 +292,16 @@ def build_tables(cursor):
         build_table(cursor, table_name, table_file)
 
 
-def initialize_database(hostname, user_name, database):
+def initialize_database(database):
     try:
         # Open a connection
         con = None
-        # A blank user name means a file-based database.
-        if user_name == '':
-            # We're starting over, so erase the file.
-            if os.path.isfile(database):
-                os.remove(database)
-            # Open the database file.
-            con = sqlite.connect(database)
-        else:
-            ## A non-blank username means a daemon-style database, which we may
-            ## support in the future.
-            ## It'll need a password.
-            #password = getpass.getpass()
-            #con = db.connect(hostname, user_name, password, database)
-            print('Only sqlite3 databases are supported at the moment')
-            return
+
+        # We're starting over, so erase the file.
+        if os.path.isfile(database):
+            os.remove(database)
+        # Open the database file.
+        con = sqlite.connect(database)
 
         # Build the tables!
         build_tables(con.cursor())
@@ -334,11 +325,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description='Initializes databases from text files')
 
-    # Positional arguments: hostname, user name, database name
-    parser.add_argument('hostname', metavar='HOSTNAME',
-            help='IP address or name of host')
-    parser.add_argument('user_name', metavar='USERNAME',
-            help='Username for the database')
+    # Positional arguments: database name
     parser.add_argument('database', metavar='DATABASE',
             help='The database name')
 
@@ -346,4 +333,4 @@ if __name__ == '__main__':
 
     # Go.
     args = parser.parse_args()
-    initialize_database(args.hostname, args.user_name, args.database)
+    initialize_database(args.database)

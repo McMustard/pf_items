@@ -3,7 +3,7 @@
 
 # Pathfinder Item Generator
 #
-# Copyright 2012, Steven Clark.
+# Copyright 2012-2013, Steven Clark.
 #
 # This program is free software, and is provided "as is", without warranty of
 # any kind, express or implied, to the extent permitted by applicable law.
@@ -20,8 +20,20 @@ expressions for generating random rolls for the Pathfinder Item Generator.
 #
 # Standard Imports
 
+from __future__ import print_function
+
 import random
 from sys import stdin, stdout
+
+random.seed()
+
+# Maximum returnable from a form when entering an integer.
+MAX_FORM_COUNT = 12
+
+# Maximum number of dice that can be rolled from a form.
+MAX_FORM_DICE = 4
+# Maximum number of sides on a die on a form dice expression.
+MAX_FORM_SIDES = 6
 
 #
 # Utility Functions
@@ -33,12 +45,35 @@ def parseDiceExpression(dice_expression):
     return (int(number_str), int(sides_str))
 
 # Roll virtual dice
+def roll_dice_impl(number, sides):
+    rolls = [random.randrange(1, sides + 1) for x in range(number)]
+    return sum(rolls)
+
+# Roll virtual dice
 def rollDice(dice_expression):
     (number, sides) = parseDiceExpression(dice_expression)
-    #print('Rolling ' + str(number) + ' ' + str(sides) + '-sided dice.')
-    rolls = [random.randrange(1, sides + 1) for x in range(number)]
-    #print('Rolls:', rolls)
-    return sum(rolls)
+    return roll_dice_impl(number, sides)
+
+# Roll a dice expression, or return a straight-up value.
+def roll_form(expression):
+    # Try it as a straight integer.
+    try:
+        as_int = int(expression)
+        return min(as_int, MAX_FORM_COUNT)
+    except ValueError:
+        pass
+    # Try it as a dice expression.
+    try:
+        number, sides = parseDiceExpression(expression)
+        if number < 1: number = 1
+        if sides < 1: sides = 1
+        return roll_dice_impl(min(number, MAX_FORM_DICE),
+                min(sides, MAX_FORM_SIDES) )
+    except ValueError:
+        pass
+    # Invalid
+    return 0
+
 
 #
 # Dice Rollers
@@ -47,13 +82,13 @@ def rollDice(dice_expression):
 class Roller(object):
     # Roll a random number according to the specified dice expression.
     # Return integers only.
-    def roll(self, dice_expression):
+    def roll(self, dice_expression, purpose):
         # 0 is an invalid value.
         return 0
 
 class PseudorandomRoller(Roller):
     # Roll a random number using the handy-dandy function we have here.
-    def roll(self, dice_expression):
+    def roll(self, dice_expression, purpose):
         # Simply return flat numbers.
         try:
             return int(dice_expression)
@@ -65,14 +100,15 @@ class PseudorandomRoller(Roller):
 # Instructs the user via the command line to roll dice and input the results
 # to return.
 class ManualDiceRoller(Roller):
-    def roll(self, dice_expression):
+    def roll(self, dice_expression, purpose):
         # Simply return flat numbers.
         try:
             return int(dice_expression)
         except:
             pass
         # Print instructions for the user.
-        print('Roll ' + dice_expression + ' (enter 0 to roll via software):',
+        print('Roll ' + dice_expression + ' for ' + purpose + \
+                ' (enter 0 to roll via software):',
                 end='')
         # Set up values in preparation for an indefinite loop.
         result = None
