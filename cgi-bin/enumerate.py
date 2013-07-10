@@ -136,7 +136,6 @@ class EnumeratingRoller(rollers.Roller):
         # If we're repeating the last request, increment it.
         if purpose == self.last_purpose:
             if self.increment():
-                #print('increment 1 end')
                 raise EnumerationsComplete
 
         # Note the last purpose.
@@ -144,7 +143,6 @@ class EnumeratingRoller(rollers.Roller):
 
         # Handle the state.
         if self.stage == 1:
-            #print('@1', end='')
             # This is the first pass.
             if purpose not in self.purposes1:
                 self.purposes1.append(purpose)

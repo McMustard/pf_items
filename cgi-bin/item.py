@@ -177,11 +177,11 @@ def generate_generic(conn, strength, roller, base_value, **kwargs):
     # further qualify it with 'lesser' or 'greater'.
     
     # This will account for specified and unspecified base values.
-    min_price = Price(base_value)
-    value = Price('0 gp')
+    min_value = float(base_value)
+    value = 0.0
     x = None
     count = 0
-    while value < min_price:
+    while value < min_value:
         # We may decide to change this later, but at least for now, the choice
         # between them will be 50/50.  Because slotless wondrous item can also
         # be 'least minor', use least if the roll is less than 25.  Item types
@@ -201,9 +201,9 @@ def generate_generic(conn, strength, roller, base_value, **kwargs):
 
         x = generate_specific_item(conn, full_strength, kind, roller, listener)
         try:
-            value = x.price
+            value = x.price.as_float()
         except BadPrice as ex:
-            value = Price('')
+            value = 0
         count += 1
         if count > 1000:
             return 'Error: gave up after 1000 tries; <error> gp'
@@ -375,6 +375,49 @@ def print_rolls(x):
     '''Prints an item's roll history.'''
     print(rolls_str(x), sep='', end='')
 
+SPECIAL_FAMILIES = [
+        ['Designating, lesser', 'Designating, greater'],
+        ['Energy resistance', 'Energy resistance, improved', 'Energy resistance, greater'],
+        ['Fortification (light)', 'Fortification (moderate)', 'Fortification (heavy)'],
+        ['Lucky', 'Lucky, greater'],
+        ['Reliable', 'Reliable, greater'],
+        ['Shadow', 'Shadow, improved', 'Shadow, greater'],
+        ['Slick', 'Slick, improved', 'Slick, greater'],
+        ['Spell resistance (13)', 'Spell resistance (15)', 'Spell resistance (17)', 'Spell resistance (19)']
+        ]
+
+# Note on overlapping possibilities:
+# The only time a weapon can do this is with:
+#     This is in greater major.
+#     A +4 and a +1: ammo-no, melee-no, ranged-LUCKY,RELIABLE,DESIGNATING
+#     A +3 and a +2: ammo-no, melee-no, ranged-
+# and armor:
+#     Can't happen
+
+def filter_specials(specials):
+    '''Removes weaker versions of special abilities.'''
+    del_keys = set()
+    # Iterate over the keys.
+    for special in specials.keys():
+        # Search families of specials.
+        for family in SPECIAL_FAMILIES:
+            # If we got the right family,
+            if special in family:
+                # Look for "overlaps".
+                special_i = family.index(special)
+                for i in range(len(family)):
+                    test = family[i]
+                    # See if this is in the specials dict.
+                    if test in specials.keys() and i > special_i:
+                        # There is a better entry
+                        del_keys.add(special)
+                        #print ('Eliminating redundant', special, 'since', test, 'is also present in', specials)
+    # Now, delete all the keys we have picked out.
+    for k in del_keys:
+        del specials[k]
+
+
+
 #
 # Classes
 #
@@ -406,26 +449,33 @@ class Price(object):
 
 
     def __str__(self):
-        return self.compute()
-
+        f = self.as_float()
+        if math.isnan(f):
+            return '<error> gp'
+        return locale.format_string('%.2f', f, grouping=True) + ' gp'
 
     def as_float(self):
-        return self.gold
+        cost = self.gold
+        if self.enhancement > 0:
+             temp = (self.enhancement ** 2) * 1000
+             if self.enhancement_type == 'weapon':
+                 temp *= 2
+             cost += temp
+        return cost
 
-
-    def add(self, price_str):
+    def add(self, price_piece):
         # If the value provided is int or float, add it directly.
-        if type(price_str) == int or type(price_str) == float:
-            self.gold += float(price_str)
+        if type(price_piece) == int or type(price_piece) == float:
+            self.gold += float(price_piece)
         # If it's a bonus, the price depends on the sum, so it defers.
-        elif price_str.endswith(' bonus'):
-            self.add_enhancement(price_str)
+        elif price_piece.endswith(' bonus'):
+            self.add_enhancement(price_piece)
         # Empty string is non-value.
-        elif price_str == None or price_str == '':
+        elif price_piece == None or price_piece == '':
             self.gold = float('nan')
         # Otherwise, it might be a pp/gp/sp/cp string.
         else:
-            self.add_expression(price_str)
+            self.add_expression(price_piece)
 
 
     def add_expression(self, expr):
@@ -451,19 +501,7 @@ class Price(object):
         else:
             raise BadPrice('cannot extract enhancement bonus from ' +
                     price_str)
-
  
-    def compute(self):
-        if math.isnan(self.gold):
-            return '<error> gp'
-        cost = self.gold
-        if self.enhancement > 0:
-             temp = (self.enhancement ** 2) * 1000
-             if self.enhancement_type == 'weapon':
-                 temp *= 2
-             cost += temp
-        return locale.format_string('%.2f', cost, grouping=True) + ' gp'
-
 
 class Table(object):
 
@@ -640,8 +678,11 @@ class Item(object):
 
     # The standard __str__ method
     def __str__(self):
-        #s = self.subtype + ': ' + self.label
-        s = self.label
+        # If the subtype is already in the name, skip it.
+        if self.label.startswith(self.subtype):
+            s = self.label
+        else:
+            s = self.subtype + ': ' + self.label
         try:
             s += '; ' + str(self.price)
         except BadPrice as ex:
@@ -710,7 +751,7 @@ class Armor(Item):
         # Armor or shield
         self.armor_type = ''
         # Mundane item price
-        self.armor_price = '0 gp'
+        self.armor_price = Price('0 gp')
         # Raw enhancement bonus
         self.enhancement = 0
         # Dict of specials to costs
@@ -718,7 +759,7 @@ class Armor(Item):
         # Specific item name
         self.specific_name = ''
         # Specific item cost
-        self.specific_price = 'error looking up price'
+        self.specific_price = ''
 
 
     def __repr__(self):
@@ -757,8 +798,10 @@ class Armor(Item):
         self.subtype = ''
         if self.armor_type == 'armor':
             self.subtype = 'Armor'
-        elif self.subtype == 'shield':
+        elif self.armor_type == 'shield':
             self.subtype = 'Shield'
+        else:
+            self.subtype = 'Armor/Shield'
 
         # Item specifics
         if self.is_generic:
@@ -802,31 +845,20 @@ class Armor(Item):
             special_count = {'one': 1, 'two': 2}[match.group(1)]
             special_strength = '+' + match.group(2)
         # Add specials!
-        while special_count > 0:
+        for i in range(special_count):
             # Generate a special.
             result = self.generate_special(conn, special_strength, listener)
             if result == None:
                 # Mark as bad item.
                 self.bad_item = True
                 return
+            # At this point, the special is good. It may be a repeat, which
+            # should be ignored, according to CRB.
             special = result['Result']
             price = result['Price']
-            # If in enumeration.
-            if ENUMERATION_MODE:
-                # If we already have this special, just note it as a bad item.
-                if special in self.specials.keys():
-                    self.bad_item = True
-                # In enumeration mode, always accept specials.
-                self.specials[special] = price
-                special_count -= 1
-            else:
-                # If we don't already have the special, add it.
-                if special not in self.specials.keys():
-                    self.specials[special] = price
-                    special_count -= 1
-                else:
-                    # Do not note that we made this roll.
-                    self.unroll()
+            self.specials[special] = price
+        # Filter out weaker versions of other specials.
+        filter_specials(self.specials)
 
 
     def generate_special(self, conn, special_strength, listener):
@@ -875,7 +907,10 @@ class Weapon(Item):
         self.t_specials_melee  = TABLE_SPECIAL_ABILITIES_MELEE_WEAPON
         self.t_specials_ranged = TABLE_SPECIAL_ABILITIES_RANGED_WEAPON
         self.re_enhancement = re.compile('\+(\d+) weapon')
-        self.re_specials = re.compile('with (\w+) \+(\d+) special')
+        # Expression for:
+        # with one +X special ability
+        # with two +X special abilities
+        self.re_specials = re.compile(' (\w+) \+(\d+) special')
         # Weapon details
         # Generic item or specific
         self.is_generic = True
@@ -902,6 +937,9 @@ class Weapon(Item):
         result += '>'
         return result
 
+    # TODO weapon and armor are not priced right in enum mode
+    # works in lookup mode, and regular mode. -- maybe not in reg mode, actually...
+    # Waitaminute.... no custom weapons in regular mode (but yes in individual)
 
     def lookup(self, conn, listener):
         # We don't do 'least minor'
@@ -975,8 +1013,6 @@ class Weapon(Item):
         if 'S' in self.damage_type: properties.append('slashing')
         properties.extend(
                 [x for x in self.wield_type.split(',') if len(x) > 0])
-        special_count = 0
-        special_strength = 0
         # This part is always at the beginning.
         match = self.re_enhancement.match(specification)
         if match:
@@ -986,32 +1022,26 @@ class Weapon(Item):
         for part in match:
             special_count = {'one': 1, 'two': 2}[part[0]]
             special_strength = '+' + str(part[1])
-        # Add specials!
-        while special_count > 0:
-            # Generate a special.
-            result = self.generate_special(conn, special_strength, properties, purpose, listener)
-            if result == None:
-                # Mark as bad item.
-                self.bad_item = True
-                return
-            special = result['Result']
-            price = result['Price']
-            # If in enumeration.
-            if ENUMERATION_MODE:
-                # If we already have this special, just note it as a bad item.
-                if special in self.specials.keys():
-                    self.bad_item = True
-                # In enumeration mode, always accept specials.
+            # Add specials!
+            while special_count > 0:
+                # Generate a special.
+                result = self.generate_special(conn, special_strength, properties, purpose, listener)
+                if result == None:
+                    # If this is enumeration mode, just mark it as a bad item.
+                    # Otherwise, get a new one.
+                    if ENUMERATION_MODE:
+                        self.bad_item = True
+                    else:
+                        continue
+                # At this point, the special is good. It may be a repeat, which
+                # should be ignored, according to CRB.
+                special = result['Result']
+                price = result['Price']
                 self.specials[special] = price
+                # One less special to generate
                 special_count -= 1
-            else:
-                # If we don't already have the special, add it.
-                if special not in self.specials.keys():
-                    self.specials[special] = price
-                    special_count -= 1
-                else:
-                    # Do not note that we made this roll.
-                    self.unroll()
+        # Filter out weaker versions of other specials.
+        filter_specials(self.specials)
 
 
     def generate_special(self, conn, special_strength, properties, purpose, listener):
@@ -1035,10 +1065,14 @@ class Weapon(Item):
         # Check qualifications.
         qualifies = self.check_qualifiers(set(properties),
                 set(qualifiers), set(disqualifiers))
-        if ENUMERATION_MODE:
-            self.bad_item = (not qualifies)
-        if qualifiers == False:
-            return None
+        if qualifies == False:
+            # If this is enumeration mode, set the item as bad if the special
+            # does not qualify. Don't do this in regular mode, since it will
+            # be rerolled. Instead, return None.
+            if ENUMERATION_MODE:
+                self.bad_item = True
+            else:
+                return None
         return result
 
 
@@ -1528,7 +1562,7 @@ if __name__ == '__main__':
     def test(price, expected_str):
         p = Price(price)
         print('Test: "', price, '" --> ', p, ' = ', expected_str, sep='')
-        assert(p.compute() == expected_str)
+        assert(p.as_float() == expected_str)
 
     # These tests don't work in European locales, but I'm not too concerned
     # at the moment.

@@ -1,8 +1,3 @@
-* Reroll items that fall below a settlement's base value.
-  * This is practically impossible, due to the existence of potions, as they are cheap.
-    The best solution (subjective, but there are good reasons) is not to follow that rule.
-    Potions generated are simply guaranteed to be there.
-
 * Weapon and armor special abilities
   * More powerful specials override less powerful ones.
     Perhaps can use string comparisons to determine when this occurs.

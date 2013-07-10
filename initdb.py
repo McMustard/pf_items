@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator

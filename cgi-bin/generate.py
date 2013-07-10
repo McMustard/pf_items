@@ -112,6 +112,26 @@ def run_generate_fast(conn, args):
             # If none for one run, none for any
             return
 
+class NotEnoughRolls(BaseException):
+    pass
+
+def run_lookup(conn, args):
+    '''Runs the lookup generator.'''
+
+    class SerialRoller(rollers.Roller):
+        def __init__(self, rolls):
+            self.rolls = rolls
+            self.rolls.reverse()
+        def roll(self, dice_expression, purpose):
+            if len(self.rolls) > 0:
+                return self.rolls.pop()
+            raise NotEnoughRolls
+
+    roller = SerialRoller(args.rolls)
+    x = item.generate_item(conn, args.strength + ' ' + args.kind.lower(),
+            roller, None)
+    item.print_item(x)
+
 
 def run_test(conn, args):
     '''Runs a test that exhaustively tests the item generation code.'''
@@ -191,6 +211,20 @@ if __name__ == '__main__':
     #        help='Performs a die roll according to a simple die expression,' +
     #        ' e.g. 2d4.')
 
+    # Subcommand: look up via list of roll values
+
+    parser_lookup = subparsers.add_parser('lookup',
+            help='Look up an item with a type and list of rolls')
+
+    parser_lookup.add_argument('strength', metavar='STRENGTH',
+            help='Item strength')
+    parser_lookup.add_argument('kind', metavar='KIND',
+            help='Kind of item')
+    parser_lookup.add_argument('rolls', metavar='R', nargs='+',
+            help='Rolls')
+
+    parser_lookup.set_defaults(func=run_lookup)
+
     # Options common to several subparsers
 
     for sub in [parser_settlement, parser_item]:
@@ -221,6 +255,8 @@ if __name__ == '__main__':
         args.func(conn, args)
     except sqlite.Error as e:
         print('SQL Error: %s' % e.message)
+    except NotEnoughRolls:
+        print('Not enough rolls provided')
     finally:
         if conn: conn.close()
 
