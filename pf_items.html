@@ -49,6 +49,13 @@
                 <a href="#" class="page_link"
                     id="page_individual_sel">Individual</a>
             </span>
+            |
+            <span class="pager">
+                <span class="page_label"
+                    id="page_hoard_unsel">Treasure Hoard</span>
+                <a href="#" class="page_link"
+                    id="page_hoard_sel">Treasure Hoard</a>
+            </span>
         </div>
         <br/>
 
@@ -56,8 +63,8 @@
         <div class="page" id="page_settlement">
             <form id="form_settlement" action="">
                 <fieldset>
-                    <label for="size">Settlement Size:</label>
-                    <select name="size">
+                    <legend>Settlement</legend>
+                    <label>Settlement Size:<select name="size">
                         <option>Thorp</option>
                         <option>Hamlet</option>
                         <option>Village</option>
@@ -66,43 +73,36 @@
                         <option>Small City</option>
                         <option>Large City</option>
                         <option selected="selected">Metropolis</option>
-                    </select>
+                    </select></label>
                     <input type="button" name="generate" value="Generate"
                         id="btn_settlement_generate" />
                 </fieldset>
             </form>
 
             <!-- The results will go here -->
-            <h3>Results</h3>
             <fieldset>
+                <legend>Results</legend>
                 <div id="settlement_results"><br/></div>
             </fieldset>
         </div>
 
         <!-- Form for custom settlements. -->
         <div class="page" id="page_custom">
-            <p>This feature is currently in development!
-            So it should work better and look nicer "soon".</p>
             <p>For Base Value, enter the amount, in gold, but do not include
             "gp". If left blank, it's treated as 0 gp</p>
             <p>Numbers or dice expressions (e.g. 2d4) can be used in the
-            quantity fields, but they are limited. If left blank, default is 1.</p>
+            quantity fields, but they are limited. If left blank, default is
+            1.</p>
             <form id="form_custom" action="">
                 <fieldset>
-                    <label for="base_value">Base Value:</label>
-                    <input type="text" name="base_value" /> <br/>
-                    <label for="q_ls_min">Lesser Minor Items:</label>
-                    <input type="text" name="q_ls_min" /> <br/>
-                    <label for="q_gt_min">Greater Minor Items:</label>
-                    <input type="text" name="q_gt_min" /> <br/>
-                    <label for="q_ls_med">Lesser Medium Items:</label>
-                    <input type="text" name="q_ls_med" /> <br/>
-                    <label for="q_gt_med">Greater Medium Items:</label>
-                    <input type="text" name="q_gt_med" /> <br/>
-                    <label for="q_ls_maj">Lesser Major Items:</label>
-                    <input type="text" name="q_ls_maj" /> <br/>
-                    <label for="q_gt_maj">Greater Major Items:</label>
-                    <input type="text" name="q_gt_maj" /> <br/>
+                    <legend>Custom settlement</legend>
+                    <label>Base Value:<input type="text" name="base_value" /></label><br/>
+                    <label>Lesser Minor Items:<input type="text" name="q_ls_min" /></label><br/>
+                    <label>Greater Minor Items:<input type="text" name="q_gt_min" /></label><br/>
+                    <label>Lesser Medium Items:<input type="text" name="q_ls_med" /></label><br/>
+                    <label>Greater Medium Items:<input type="text" name="q_gt_med" /></label><br/>
+                    <label>Lesser Major Items:<input type="text" name="q_ls_maj" /></label><br/>
+                    <label>Greater Major Items:<input type="text" name="q_gt_maj" /></label><br/>
                     <input type="button" name="generate" value="Generate"
                         id="btn_custom_generate" />
                 </fieldset>
@@ -119,8 +119,8 @@
         <div class="page" id="page_individual">
             <form id="form_individual" action="">
                 <fieldset>
-                    <label for="strength">Strength:</label>
-                    <select name="strength">
+                    <legend>Individual item</legend>
+                    <label>Strength:<select name="strength">
                         <option>least minor</option>
                         <option>lesser minor</option>
                         <option>greater minor</option>
@@ -128,9 +128,8 @@
                         <option>greater medium</option>
                         <option>lesser major</option>
                         <option>greater major</option>
-                    </select>
-                    <label for="type">Type:</label>
-                    <select name="type">
+                    </select></label>
+                    <label>Type: <select name="type">
                         <option>armor/shield</option>
                         <option>weapon</option>
                         <option>potion</option>
@@ -152,16 +151,136 @@
                         <option>shoulders</option>
                         <option>slotless</option>
                         <option>wrists</option>
-                    </select>
+                    </select></input>
                     <input type="button" name="generate" value="Generate"
                         id="btn_individual_generate" />
                 </fieldset>
             </form>
 
             <!-- The results will go here -->
-            <h3>Results</h3>
             <fieldset>
+                <legend>Results</legend>
                 <div id="individual_results"><br/></div>
+            </fieldSet>
+        </div>
+
+        <!-- Form for generating treasure hoard items. -->
+        <!-- Well, there will be multiple sub-forms. -->
+        <div class="page" id="page_hoard">
+            <p>First, select a budget by entering a specific value, or
+            selecting options to help calculate a budget based on an encounter.
+            </p>
+            <p>Click <b>Next step</b> to begin selecting item types based on
+            a creature type, or by manually selecting treasure types</p>
+            <p>The form's layout is a work in progress!</p>
+            <form id="form_hoard_budget" action="">
+                <fieldset>
+                    <legend>Budget</legend>
+                    <label><input type="radio" name="type" value="custom"/>Custom</label>
+                    <p>
+                    <label>GP value:<input type="number" name="custom_gp"/></label>
+                    </p>
+                    <label><input type="radio" name="type" value="encounter">Encounter</input>
+                    <p>
+                    <label>Average party level:<input type="number" name="apl"/></label>
+                    <br/>
+                    <label>Rate:</label>
+                    <label><input type="radio" name="rate" value="slow"/>Slow</label>
+                    <label><input type="radio" name="rate" value="medium"/>Medium</label>
+                    <label><input type="radio" name="rate" value="fast"/>Fast</label>
+                    <br/>
+                    <label for="magnitude">Magnitude:</label>
+                    <label><input type="radio" name="magnitude" value="incidental"/>Incidental</label>
+                    <label><input type="radio" name="magnitude" value="standard"/>Standard</label>
+                    <label><input type="radio" name="magnitude" value="double"/>Double</label>
+                    <label><input type="radio" name="magnitude" value="triple"/>Triple</label>
+                    </p>
+                    <label><input type="radio" name="type" value="npc_gear"/>NPC gear</label>
+                    <p>
+                    <label>NPC level:<input type="number" name="npc_level"/></label><br/>
+                    <label><input type="checkbox" name="heroic" value="heroic"/>Heroic</label>
+                    </p>
+                    <input type="button" name="clear" value="Clear"/>
+                    <input type="submit" name="next" value="Next step"/>
+                </fieldset>
+            </form>
+            <form id="form_hoard_types" hidden>
+                <!-- Budget text field -->
+                <fieldset>
+                    <legend>Treasure Type</legend>
+                    <p>Click treasure type check boxes or select a creature type</p>
+                    <label>Creature type:
+                    <select name="creaturetype">
+                        <option value="none">None (custom)</option>
+                        <option value="aberration">Aberration</option>
+                        <option value="aberration_cunning">Aberration (cunning)</option>
+                        <option value="animal">Animal</option>
+                        <option value="construct">Construct</option>
+                        <option value="construct_guardian">Construct (guarding treasure)</option>
+                        <option value="dragon">Dragon</option>
+                        <option value="fey">Fey</option>
+                        <option value="humanoid">Humanoid</option>
+                        <option value="humanoid_community">Humanoid (community)</option>
+                        <option value="magicalbeast">Magical beast</option>
+                        <option value="monstrous humanoid">Monstrous humanoid</option>
+                        <option value="ooze">Ooze</option>
+                        <option value="outsider">Outsider</option>
+                        <option value="plant">Plant</option>
+                        <option value="undead">Undead (non-intelligent)</option>
+                        <option value="undead_intelligent">Undead (intelligent)</option>
+                        <option value="vermin">Vermin</option>
+                    </select></label><br/>
+                    <label><input type="checkbox" name="treasuretype_a" value="a">Type A: Coins</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_b" value="b">Type B: Coins and gems</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_c" value="c">Type C: Art objects</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_d" value="d">Type D: Coins and small objects</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_e" value="e">Type E: Armor and weapons</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_f" value="f">Type F: Combatant gear</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_g" value="g">Type G: Spellcaster gear</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_h" value="h">Type H: Lair treasure</input></label><br/>
+                    <label><input type="checkbox" name="treasuretype_i" value="i">Type I: Treasure hoard</input></label><br/>
+
+                    <input type="button" name="clear" value="Clear"/>
+                    <input type="submit" name="next" value="Next step"/>
+                </fieldset>
+            </form>
+            <form id="form_hoard_alloc" hidden>
+                <fieldset>
+                    <legend>Item allocation</legend>
+                    <h4>Treasure Type A: Coins</h4>
+                    <div id="hoard_tt_a_select"><br/>
+                        <output name="tta_total_0">0</output>
+                        <input type="button" name="tta_0_0" value="0"></input>
+                        <input type="button" name="tta_plus_0" value="+"></input>
+                        <input type="button" name="tta_minus_0" value="-"></input>
+                        Description of TTA:0
+                        <br/>
+                    </div>
+                    <h4>Treasure Type B: Coins and gems</h4>
+                    <div id="hoard_tt_b_select"><br/></div>
+                    <h4>Treasure Type C: Art objects</h4>
+                    <div id="hoard_tt_c_select"><br/></div>
+                    <h4>Treasure Type D: Coins and small objects</h4>
+                    <div id="hoard_tt_d_select"><br/></div>
+                    <h4>Treasure Type E: Armor and weapons</h4>
+                    <div id="hoard_tt_e_select"><br/></div>
+                    <h4>Treasure Type F: Combatant gear</h4>
+                    <div id="hoard_tt_f_select"><br/></div>
+                    <h4>Treasure Type G: Spellcaster gear</h4>
+                    <div id="hoard_tt_h_select"><br/></div>
+                    <h4>Treasure Type H: Lair treasure</h4>
+                    <div id="hoard_tt_h_select"><br/></div>
+                    <h4>Treasure Type I: Treasure hoard</h4>
+                    <div id="hoard_tt_i_select"><br/></div>
+                    <input type="button" name="clear" value="Clear"/>
+                    <input type="submit" name="generate" value="Generate items"/>
+                </fieldset>
+            </form>
+
+            <!-- The final results will go here -->
+            <fieldset hidden>
+                <legend>Results</legend>
+                <div id="hoard_results"><br/></div>
             </fieldSet>
         </div>
 

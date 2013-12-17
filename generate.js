@@ -23,10 +23,6 @@
 // Initializer
 $(document).ready(function(){
 
-    // Set the page variables.
-    var settlement_page = $("#div_settlement");
-    var individual_page = $("#div_individual");
-    
     // Set up the page handlers.
     $("#page_settlement_sel").click(function(event){
         select_page("settlement");
@@ -37,6 +33,9 @@ $(document).ready(function(){
     $("#page_individual_sel").click(function(event){
         select_page("individual");
     });
+    $("#page_hoard_sel").click(function(event){
+        select_page("hoard");
+    });
 
     // Default page
     select_page("settlement");
@@ -44,6 +43,10 @@ $(document).ready(function(){
     setup_generator("settlement", process_settlement_response, true)
     setup_generator("custom", process_custom_response, true)
     setup_generator("individual", process_individual_response, true)
+    // The Hoard generator has sub-pages.
+    setup_generator("hoard_budget", process_hoard_budget_response, true)
+    setup_generator("hoard_types",  process_hoard_types_response,  true)
+    setup_generator("hoard_alloc",  process_hoard_alloc_response,  true)
 });
 
 // Sets up a button to "submit" a form.
@@ -217,6 +220,45 @@ function process_custom_response(response, textStatus, jqXHR) {
 function process_individual_response(response, textStatus, jqXHR) {
     //console.log("Individual Results: %o", response);
     var results = $("#individual_results");
+    results.html("");
+    if (response == "") {
+        results.append("An error has occurred.");
+        return;
+    }
+    results.append("<ul><li>" + response + "</li></ul>");
+}
+
+// Accept the data back from webgen.py and populate the hoard budget result
+// area with it.
+function process_hoard_budget_response(response, textStatus, jqXHR) {
+    //console.log("Hoard Budget Results: %o", response);
+    var results = $("#hoard_budget_results");
+    results.html("");
+    if (response == "") {
+        results.append("An error has occurred.");
+        return;
+    }
+    results.append("<ul><li>" + response + "</li></ul>");
+}
+
+// Accept the data back from webgen.py and populate the hoard types result
+// area with it.
+function process_hoard_types_response(response, textStatus, jqXHR) {
+    //console.log("Hoard Types Results: %o", response);
+    var results = $("#hoard_types_results");
+    results.html("");
+    if (response == "") {
+        results.append("An error has occurred.");
+        return;
+    }
+    results.append("<ul><li>" + response + "</li></ul>");
+}
+
+// Accept the data back from webgen.py and populate the hoard alloc result
+// area with it.
+function process_hoard_alloc_response(response, textStatus, jqXHR) {
+    //console.log("Hoard Alloc Results: %o", response);
+    var results = $("#hoard_alloc_results");
     results.html("");
     if (response == "") {
         results.append("An error has occurred.");
