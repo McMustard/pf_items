@@ -36,6 +36,7 @@ import traceback
 #
 # Local Imports
 
+import hoard
 import item
 import rollers
 import settlements
@@ -57,31 +58,19 @@ def output_json(result, f):
     print(json.dumps(result))
 
 
-# Main Function
-if __name__ == '__main__':
-
-    # Just some temporary test code.
-    if sys.stdin.isatty():
-        #sample = '{"medium_items": ["Wand of Dimension door (4th Level, CL 7th); 21,000.00 gp", "Dryad sandals; 24,000.00 gp", "Ring of wizardry I; 20,000.00 gp", "Headband of arcane energy; 20,000.00 gp", "Belt of mighty constitution +4; 16,000.00 gp", "Jellyfish cape; 19,200.00 gp", "Carpet of flying (5 ft. by 5 ft.); 20,000.00 gp", "Golem manual (stone); 22,000.00 gp", "Ring of energy shroud; 19,500.00 gp", "Rainbow lenses; 21,000.00 gp", "Spectral shroud; 26,000.00 gp", "Robe of arcane heritage; 16,000.00 gp"], "minor_items": ["This metropolis has virtually every minor magic item."], "major_items": ["Ring of djinni calling; 125,000.00 gp", "Ring of protection +5; 50,000.00 gp", "Rod of steadfast resolve; 38,305.00 gp", "Staff of toxins; 34,200.00 gp", "Cloak of etherealness; 55,000.00 gp", "Staff of divination; 82,000.00 gp", "Staff of acid; 28,600.00 gp"], "base_value": 16000}'
-        sample = '{"minor_items": ["No data"], "medium_items": ["No data"], "major_items": ["No data"]}'
-        print('Content-Type: application/json')
-        print('')
-        print(sample)
-        sys.exit(1)
+def run_webgen(params):
 
     ##raise Exception(str(data))
     #print('Content-Type: text\n')
     #print('Data:', sys.stdin.read())
     #sys.exit(0)
 
+
     # Options.
     DEBUG = False
 
     # Set output file descriptor.
     out = sys.stdout
-
-    # Access the CGI form.
-    params = json.load(sys.stdin)
 
     conn = None
     try:
@@ -96,7 +85,11 @@ if __name__ == '__main__':
 
         mode = params['mode']
 
-        if mode == 'settlement':
+        if mode == 'echo_test':
+            # Echo back the input.
+            output_json(params, out)
+
+        elif mode == 'settlement':
             # Open the database.
             conn = sqlite.connect('data/data.db')
             conn.row_factory = sqlite.Row
@@ -135,11 +128,68 @@ if __name__ == '__main__':
             # In this case, item is an Item object.
             output_json(str(result), out)
 
+        elif mode == 'hoard_budget':
+            if params['type'] == 'custom':
+                result = hoard.calculate_budget_custom(params['custom_gp'])
+                output_json(result, out)
+            elif params['type'] == 'encounter':
+                apl = params['apl']
+                rate = params['rate']
+                magnitude = params['magnitude']
+                result = hoard.calculate_budget_encounter(apl, rate, magnitude)
+                output_json(result, out)
+            elif params['type'] == 'npc_gear':
+                npc_level = params['npc_level']
+                is_heroic = params['heroic']
+                result = hoard.calculate_budget_npc_gear(npc_level, is_heroic)
+                output_json(result, out)
+            else:
+                result = {}
+                output_json(result, out)
+        
+        elif mode == 'hoard_treasuretype':
+            types = ''
+            if default_get(params, 'type_a', 'false') == 'true': types += 'a'
+            if default_get(params, 'type_b', 'false') == 'true': types += 'b'
+            if default_get(params, 'type_c', 'false') == 'true': types += 'c'
+            if default_get(params, 'type_d', 'false') == 'true': types += 'd'
+            if default_get(params, 'type_e', 'false') == 'true': types += 'e'
+            if default_get(params, 'type_f', 'false') == 'true': types += 'f'
+            if default_get(params, 'type_g', 'false') == 'true': types += 'g'
+            if default_get(params, 'type_h', 'false') == 'true': types += 'h'
+            if default_get(params, 'type_i', 'false') == 'true': types += 'i'
+            result = hoard.get_treasure_list(types)
+            output_json(result, out)
+
+        elif mode == 'hoard_generate':
+            # Future
+            pass
+
+        else:
+            result = {}
+            output_json(result, out)
+
     except sqlite.Error as e:
-        print('Error: ', e, file=sys.stderr)
+        #print('Error: ', e, file=sys.stderr)
         if DEBUG:
             traceback.print_exc(file=sys.stderr)
     finally:
         if conn:
             conn.close()
+
+
+# Main Function
+if __name__ == '__main__':
+
+    ## Just some temporary test code.
+    #if sys.stdin.isatty():
+    #    print('Content-Type: application/json')
+    #    print('')
+    #    print('{["no data"]}'
+    #    sys.exit(1)
+
+    # Access the CGI form.
+
+    params = json.load(sys.stdin)
+    run_webgen(params)
 
