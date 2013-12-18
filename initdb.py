@@ -286,7 +286,19 @@ def build_tables(cursor):
             ('Wondrous_Items_Neck',             'data/ue/Wondrous_Items_Neck'),
             ('Wondrous_Items_Shoulders',        'data/ue/Wondrous_Items_Shoulders'),
             ('Wondrous_Items_Slotless',         'data/ue/Wondrous_Items_Slotless'),
-            ('Wondrous_Items_Wrists',           'data/ue/Wondrous_Items_Wrists') ]
+            ('Wondrous_Items_Wrists',           'data/ue/Wondrous_Items_Wrists'),
+            ('Treasure_Values_Per_Encounter',   'data/ue/Treasure_Values_Per_Encounter'),
+            ('NPC_Gear',                        'data/ue/NPC_Gear'),
+            ('Type_A_Treasure',                 'data/ue/Type_A_Treasure'),
+            ('Type_B_Treasure',                 'data/ue/Type_B_Treasure'),
+            ('Type_C_Treasure',                 'data/ue/Type_C_Treasure'),
+            ('Type_D_Treasure',                 'data/ue/Type_D_Treasure'),
+            ('Type_E_Treasure',                 'data/ue/Type_E_Treasure'),
+            ('Type_F_Treasure',                 'data/ue/Type_F_Treasure'),
+            ('Type_G_Treasure',                 'data/ue/Type_G_Treasure'),
+            ('Type_H_Treasure',                 'data/ue/Type_H_Treasure'),
+            ('Type_I_Treasure',                 'data/ue/Type_I_Treasure'),
+            ]
 
     for (table_name, table_file) in tables:
         build_table(cursor, table_name, table_file)
