@@ -129,6 +129,10 @@ def run_webgen(params):
             output_json(str(result), out)
 
         elif mode == 'hoard_budget':
+            # Open the database.
+            conn = sqlite.connect('data/data.db')
+            conn.row_factory = sqlite.Row
+
             if params['type'] == 'custom':
                 result = hoard.calculate_budget_custom(params['custom_gp'])
                 output_json(result, out)
@@ -148,6 +152,10 @@ def run_webgen(params):
                 output_json(result, out)
         
         elif mode == 'hoard_treasuretype':
+            # Open the database.
+            conn = sqlite.connect('data/data.db')
+            conn.row_factory = sqlite.Row
+
             types = ''
             if default_get(params, 'type_a', 'false') == 'true': types += 'a'
             if default_get(params, 'type_b', 'false') == 'true': types += 'b'

@@ -51,10 +51,24 @@ else:
 #
 # Constants
 
+# Lowest APL, inclusive, involved in UE formulas.
 APL_LOW = 1
+
+# Highest APL, inclusive, involved in UI formulas.
 APL_HIGH = 20
+
+# Rate of XP/treasure progression
 RATES = ['slow', 'medium', 'fast']
-MAGNITUDES = ['incidental', 'standard', 'double', 'triple']
+
+# Some monsters have more treasure than others. "None" is not in this list
+# because the generator wouldn't be used if there was no treasure, and "NPC
+# gear" isn't a simple multiplier, so it needs special treatment.
+MAGNITUDES = {
+        'incidental': 0.5,
+        'standard': 1.0,
+        'double': 2.0,
+        'triple': 3.0,
+        }
 
 
 #
