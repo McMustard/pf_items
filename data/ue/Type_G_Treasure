@@ -1,0 +1,32 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Type G Treasure: Spellcaster Gear	Ultimate Equipment
+Price	Result
+text	text
+50 gp	2d4 × 10 sp, 2d4 gp, lesser minor potion
+75 gp	2d4 gp, lesser minor potion, lesser minor scroll
+100 gp	Lesser minor potion, two lesser minor scrolls
+150 gp	Lesser minor scroll, greater minor scroll
+200 gp	Two lesser minor potions, greater minor scroll
+250 gp	Two greater minor scrolls
+500 gp	Three lesser minor potions, three greater minor scrolls
+750 gp	Greater minor potion, lesser minor wand
+1,000 gp	7d6 gp, three greater minor scrolls, lesser minor wand
+1,500 gp	3d6 × 10 gp, Lesser medium potion, lesser medium scroll, lesser minor wand
+2,000 gp	2d4 × 10 gp, masterwork weapon, two lesser medium scrolls, lesser minor wand
+2,500 gp	Two greater medium potions, greater minor wand
+3,000 gp	Greater medium potion, two lesser medium scrolls, greater minor wand
+4,000 gp	Lesser minor wondrous item, greater medium potion, greater minor wand
+5,000 gp	Lesser minor ring, lesser minor wondrous item, two lesser medium scrolls
+6,000 gp	Lesser minor ring, lesser minor wondrous item, greater medium potion, greater minor wand
+7,500 gp	Two greater medium potions, lesser minor scroll, lesser medium wand
+10,000 gp	Lesser minor ring, lesser minor wondrous item, lesser medium wand
+12,500 gp	Lesser minor ring, greater minor wondrous item, two greater medium scrolls, two greater minor wands
+15,000 gp	Lesser minor ring, lesser medium rod, lesser medium wand
+20,000 gp	Greater minor ring, greater minor wondrous item, greater medium potion, two greater medium scrolls, lesser medium wand
+25,000 gp	Lesser minor ring, lesser medium wand, greater medium wand, greater minor wondrous item
+30,000 gp	Greater minor ring, lesser medium wondrous item, lesser major scroll, greater medium wand
+40,000 gp	Lesser minor weapon, lesser medium staff, greater medium rod, two lesser minor wondrous items, lesser medium wand
+50,000 gp	Greater minor ring, two lesser medium wondrous items, lesser major potion, three greater medium scrolls, lesser major wand
+60,000 gp	Lesser medium staff, greater medium rod, greater medium wondrous item, greater medium potion, two lesser major scrolls, lesser medium wand
+75,000 gp	Lesser minor weapon, greater medium staff, greater medium wondrous item, three greater major scrolls, greater major wand
+100,000 gp	Lesser major ring, greater medium rod, lesser major staff, lesser major scroll, greater medium wand

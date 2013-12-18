@@ -1,6 +1,6 @@
 # Contains Open Game Content.  See file 'OGC' for more information.
 Random Art Objects	Ultimate Equipment
-Strength, Roll, Result	Price
+Strength	Roll	Result	Price
 text	range	text	text
 grade 1	01–05	Bronze statuette of a warrior	15 gp
 grade 1	06	Elaborate copper wind chimes	20 gp

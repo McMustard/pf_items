@@ -1,6 +1,6 @@
 # Contains Open Game Content.  See file 'OGC' for more information.
 2nd Level Potions and Oils	Ultimate Equipment
-Roll	Result	Price	Source
+Strength	Roll	Result	Price	Source
 text	range	text	text	text
 common	01–04	Aid	300 gp	CR
 common	05–07	Align weapon	300 gp	CR
