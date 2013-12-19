@@ -1,6 +1,6 @@
 PFRPG Item Generator
 Version 0.3
-17 February 2013
+19 December 2013
 -------------------------------------------------------------------------------
 
 1. Identification
@@ -13,6 +13,10 @@ generation, it follows the rules laid out in the Core Rulebook and Game Mastery
 Guide, with some exceptions.  For other loot generation, it follows the rules
 laid out in Ultimate Equipment.  The items it generates are specified in
 Ultimate Equipment.
+
+This document primarily concerns the use of this software from the command
+line.  The software also has a web interface, and is currently hosted at:
+http://www.mcmustard.com/pf_items.html
 
 2. Prerequisites
 
@@ -113,3 +117,7 @@ for a copy of the Open Game License and list of Open Game Content used by this
 software.
 
 All trademarks referenced herein are property of their respective holders.
+
+The source code and accompanying data files contains Open Game Content. See
+OGL.txt for more information.
+
