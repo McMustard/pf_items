@@ -113,6 +113,7 @@ ITEM_SUBTYPE_MAP = {
         'rod'              : ('Rod', ''),
         'scroll'           : ('Scroll', ''),
         'staff'            : ('Staff', ''),
+        'staves'           : ('Staff', ''),
         'wand'             : ('Wand', ''),
         'wondrous item'    : ('Wondrous Item', ''),
         'wondrous'         : ('Wondrous Item', ''),
@@ -133,6 +134,26 @@ ITEM_SUBTYPE_MAP = {
         'wrists'           : ('Wondrous Item', 'Wrists')
         }
 
+# Treasure expression
+
+# Sub-expressions that can be found in multiple treasure expressions.
+RE_SUB_NUMBER = '((one|two|three|four|five|six|seven|eight|nine|ten) )?'
+RE_SUB_GRADE = 'grade (\d+) '
+RE_SUB_PRETTY = '(gemstone|art object)s?'
+RE_SUB_DEGREE = '(least|lesser|greater) '
+RE_SUB_STRENGTH = '(minor|medium|major) '
+RE_SUB_ITEM = '(armor|weapon|potion|ring|scroll|staff|staves|wand|wondrous item)s?'
+RE_SUB_MUNDANE = '(light armor|medium armor|heavy armor|shield|weapon)'
+
+RE_TREASURE_COINS = re.compile('\d+d\d+ (\xd7 \d+)? (cp|sp|gp)')
+RE_TREASURE_PRETTIES = re.compile(RE_SUB_NUMBER + RE_SUB_GRADE + RE_SUB_PRETTY)
+RE_TREASURE_MAGIC = re.compile(RE_SUB_NUMBER + RE_SUB_DEGREE + RE_SUB_STRENGTH + RE_SUB_ITEM)
+RE_TREASURE_MASTERWORK = re.compile('masterwork ' + RE_SUB_MUNDANE + '( or ' + RE_SUB_MUNDANE + ')?')
+
+MAP_NUMBER_WORD_DECIMAL = {
+        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+        }
 
 #
 # Variables
@@ -245,6 +266,27 @@ def generate_item(conn, description, roller, listener):
     return generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
 
 
+def generate_item_alt(conn, description, roller, listener):
+    # This function will replace the other generate_item, eventually.
+
+    # These are the types of strings we can expect:
+    match = RE_TREASURE_COINS.match(description)
+    if match:
+        return ['coins']
+    match = RE_TREASURE_PRETTIES.match(description)
+    if match:
+        return ['pretties']
+    match = RE_TREASURE_MAGIC.match(description)
+    if match:
+        return ['magic']
+    match = RE_TREASURE_MASTERWORK.match(description)
+    if match:
+        return ['masterwork']
+
+    # TEMPORARY TODO REMOVE
+    return ['NO MATCH']
+
+
 def generate_specific_item(conn, strength, kind, roller, listener):
     # Create an object.
     item = create_item(kind)
@@ -311,9 +353,9 @@ def fast_generate_full(conn, strength, kind, base_value):
             if roll < accum:
                 return '{0}: {1}; {2}'.format(c['Subtype'], c['Item'],
                         str(Price(c['Price'])) )
-        return None
+        return "No possible items"
     except:
-        return None
+        return "No possible items"
 
 
 def create_item(kind):
@@ -435,7 +477,7 @@ class Price(object):
         self.enhancement_type = enhancement_type
         self.gold = 0.0
         self.enhancement = 0
-        self.piece_expr = re.compile('(((\d{1,3},)*\d+) *(pp|gp|sp|cp)[, ]*)', re.I)
+        self.piece_expr = re.compile('(((\d{1,3},)*\d+) *(pp|gp|sp|cp)?[, ]*)', re.I)
         # Initialize with the provided string
         self.add(initial_value)
 
@@ -477,6 +519,8 @@ class Price(object):
         else:
             self.add_expression(price_piece)
 
+    def multiply(self, factor):
+        self.gold *= (float(factor))
 
     def add_expression(self, expr):
         for piece in self.piece_expr.finditer(expr):
@@ -484,10 +528,11 @@ class Price(object):
             scale = 0.0
             count = float(piece.group(2).replace(',',''))
             coin_type = piece.group(4)
-            if   coin_type == 'pp': scale = 10.0
-            elif coin_type == 'gp': scale =  1.0
-            elif coin_type == 'sp': scale = 0.10
-            elif coin_type == 'cp': scale = 0.01
+            if   coin_type == 'pp': scale = 10.00
+            elif coin_type == 'gp': scale =  1.00
+            elif coin_type == 'sp': scale =  0.10
+            elif coin_type == 'cp': scale =  0.01
+            elif coin_type == None: scale =  1.00
             self.gold += (count * scale)
 
 

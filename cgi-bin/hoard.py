@@ -26,6 +26,7 @@ import os
 import random
 import re
 import sys
+import traceback
 
 #
 # Local imports
@@ -58,7 +59,11 @@ APL_LOW = 1
 APL_HIGH = 20
 
 # Rate of XP/treasure progression
-RATES = ['slow', 'medium', 'fast']
+RATES = {
+        'slow': 'Slow',
+        'medium': 'Medium',
+        'fast': 'Fast'}
+
 
 # Some monsters have more treasure than others. "None" is not in this list
 # because the generator wouldn't be used if there was no treasure, and "NPC
@@ -78,27 +83,33 @@ MAGNITUDES = {
 #
 # Functions
 
-def calculate_budget_custom(gp_in):
+def calculate_budget_custom(conn, gp_in):
     # A simple reflection
     price = Price(gp_in)
     return {'budget': str(price), 'as_int': int(price.as_float())}
 
-def calculate_budget_encounter(apl, rate, magnitude):
+
+def calculate_budget_encounter(conn, apl, rate, magnitude):
+    # Convert the parameters to usable values.
     try:
-        apl = int(apl)
-        if not(apl >= APL_LOW and apl <= APL_HIGH):
-            raise AttributeError()
-        if rate not in RATES:
-            raise AttributeError()
-        if magnitude not in MAGNITUDES:
-            raise AttributeError()
+        rate = RATES[rate]
+        magnitude = MAGNITUDES[magnitude]
     except:
         # Return an empty dict
         return {}
 
-    return {'budget': '0 gp', 'as_int': 0}
+    # Look up the encounter.
+    sql = 'SELECT {0} FROM {1} WHERE ("Average Party Level" = ?)'.format(
+            rate, 'Treasure_Values_Per_Encounter')
+    result = conn.execute(sql, (apl,))
+    budget = result.fetchone()[0]
+    price = Price(budget)
+    price.multiply(magnitude)
 
-def calculate_budget_npc_gear(npc_level, is_heroic):
+    return {'budget': str(price), 'as_int': int(price.as_float())}
+
+
+def calculate_budget_npc_gear(conn, npc_level, is_heroic):
     level = 0
     try:
         level = int(npc_level)
@@ -107,16 +118,26 @@ def calculate_budget_npc_gear(npc_level, is_heroic):
         # Return an empty dict
         return {}
 
-    return {'budget': 'for npc', 'as_int': 0}
+    # Look up the NPC info.
+    sql = 'SELECT {0} FROM {1} WHERE ("Level" = ?)'.format(
+            '"Treasure Value"', 'NPC_Gear')
+    result = conn.execute(sql, (level,))
+    budget = result.fetchone()[0]
+    price = Price(budget)
 
-def lookup_treasure_type(type_code, result):
+    return {'budget': str(price), 'as_int': int(price.as_float())}
+
+
+def lookup_treasure_type(conn, type_code, result):
     result['type_' + type_code] = 'going to add this'
 
-def get_treasure_list(types):
+
+def get_treasure_list(conn, types):
     result = {}
     for t in types:
-        lookup_treasure_type(t, result)
+        lookup_treasure_type(conn, t, result)
     return result
+
 
 #
 # Main Function

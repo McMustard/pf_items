@@ -27,11 +27,14 @@ This module is the web interface for item generation.
 # Standard Imports
 
 import json
+import os
+import os.path
 import select
 import sqlite3 as sqlite
 import sys
 import time
 import traceback
+
 
 #
 # Local Imports
@@ -40,6 +43,15 @@ import hoard
 import item
 import rollers
 import settlements
+
+
+#
+# Variables
+
+# Options.
+# This *must* be set when running local.
+DEBUG = True
+
 
 #
 # Execution
@@ -55,39 +67,24 @@ def default_get(d, k, val):
 
 def output_json(result, f):
     print('Content-Type: application/json\n', file=f)
-    print(json.dumps(result))
+    print(json.dumps(result), file=f)
 
 
 def run_webgen(params):
 
-    ##raise Exception(str(data))
-    #print('Content-Type: text\n')
-    #print('Data:', sys.stdin.read())
-    #sys.exit(0)
-
-
-    # Options.
-    DEBUG = False
 
     # Set output file descriptor.
     out = sys.stdout
 
     conn = None
+    result = "Error: unspecified program error"
     try:
         # Mode of operation:
-        # Settlement:
-        #     List of items based on a formula.
-        # Custom Settlement:
-        #     Basically, a series of individual items.
-        # Single Item:
-        #     Generate a single item, perhaps as a reroll.
-        # More to come: treature hoards, monster loot, etc.
-
         mode = params['mode']
 
         if mode == 'echo_test':
             # Echo back the input.
-            output_json(params, out)
+            result = params
 
         elif mode == 'settlement':
             # Open the database.
@@ -97,7 +94,6 @@ def run_webgen(params):
             settlement_size = params['size']
             result = settlements.generate_settlement_items(conn,
                     settlement_size, rollers.PseudorandomRoller())
-            output_json(result, out)
 
         elif mode == 'custom':
             # Open the database.
@@ -114,7 +110,6 @@ def run_webgen(params):
             result = settlements.generate_custom(conn,
                     base_value, q_ls_min, q_gt_min, q_ls_med, q_gt_med,
                     q_ls_maj, q_gt_maj)
-            output_json(result, out)
 
         elif mode == 'individual':
             # Open the database.
@@ -126,7 +121,7 @@ def run_webgen(params):
             result = item.generate_item(conn, strength + ' ' + kind,
                     rollers.PseudorandomRoller(), None)
             # In this case, item is an Item object.
-            output_json(str(result), out)
+            result = str(result)
 
         elif mode == 'hoard_budget':
             # Open the database.
@@ -134,22 +129,18 @@ def run_webgen(params):
             conn.row_factory = sqlite.Row
 
             if params['type'] == 'custom':
-                result = hoard.calculate_budget_custom(params['custom_gp'])
-                output_json(result, out)
+                result = hoard.calculate_budget_custom(conn, params['custom_gp'])
             elif params['type'] == 'encounter':
                 apl = params['apl']
                 rate = params['rate']
                 magnitude = params['magnitude']
-                result = hoard.calculate_budget_encounter(apl, rate, magnitude)
-                output_json(result, out)
+                result = hoard.calculate_budget_encounter(conn, apl, rate, magnitude)
             elif params['type'] == 'npc_gear':
                 npc_level = params['npc_level']
-                is_heroic = params['heroic']
-                result = hoard.calculate_budget_npc_gear(npc_level, is_heroic)
-                output_json(result, out)
+                is_heroic = default_get(params, 'heroic', "false") == "true"
+                result = hoard.calculate_budget_npc_gear(conn, npc_level, is_heroic)
             else:
                 result = {}
-                output_json(result, out)
         
         elif mode == 'hoard_treasuretype':
             # Open the database.
@@ -166,24 +157,40 @@ def run_webgen(params):
             if default_get(params, 'type_g', 'false') == 'true': types += 'g'
             if default_get(params, 'type_h', 'false') == 'true': types += 'h'
             if default_get(params, 'type_i', 'false') == 'true': types += 'i'
-            result = hoard.get_treasure_list(types)
-            output_json(result, out)
+            result = hoard.get_treasure_list(conn, types)
 
         elif mode == 'hoard_generate':
+            # Open the database.
+            conn = sqlite.connect('data/data.db')
+            conn.row_factory = sqlite.Row
+
             # Future
             pass
 
         else:
-            result = {}
-            output_json(result, out)
+            result = "Error: invalid mode value"
 
     except sqlite.Error as e:
-        #print('Error: ', e, file=sys.stderr)
         if DEBUG:
             traceback.print_exc(file=sys.stderr)
+
+    except:
+        if DEBUG:
+            traceback.print_exc(file=sys.stderr)
+
     finally:
         if conn:
             conn.close()
+
+    #log = open('log.txt', 'a')
+    #print('Input: ', file=log)
+    #print(params, file=log)
+    #print('Output:', file=log)
+    #output_json(result, log)
+    #log.close()
+
+    # "Return" the result, even with exceptions in place.
+    output_json(result, out)
 
 
 # Main Function
@@ -196,8 +203,20 @@ if __name__ == '__main__':
     #    print('{["no data"]}'
     #    sys.exit(1)
 
-    # Access the CGI form.
+    # If we're not in the CGI-BIN directory, change to it.
+    if DEBUG:
+        # This is necessary because the simple web server I use for testing
+        # runs from the HTML file's directory, and that's the context for
+        # scripts it tries to run, whereas on a real deployment, scripts are
+        # already run from the cgi-bin directory.
+        cwd = os.getcwd()
+        if os.path.basename(cwd).lower() != 'cgi-bin':
+            os.chdir(cwd + os.sep + 'cgi-bin')
 
+    # Access the CGI form.
     params = json.load(sys.stdin)
+    #log = open('log.txt', 'w+')
+    #print(params, file=log)
+    #log.close()
     run_webgen(params)
 

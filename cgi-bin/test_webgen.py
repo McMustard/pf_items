@@ -1,5 +1,7 @@
 #!/usr/bin/env python3.3
 
+import os
+
 import json
 import webgen
 
@@ -209,12 +211,18 @@ DATA = [
         ]
 
 OVERRIDE_DATA = [
-        '{"mode": "faiiiil"}',
-        '{"mode": "hoard_budget", "type": "custom", "custom_gp":"3000 gp"}',
-        '{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "slow", "magnitude": "incidental"}',
-        '{"mode": "hoard_budget", "type": "npc_gear", "npc_level": 1, "heroic": "false"}',
-        '{"mode": "hoard_treasuretype", "type_a": "true", "type_b": "true"}',
+        #'{"mode": "faiiiil"}',
+        '{"mode": "hoard_budget", "type": "custom", "custom_gp":"3000"}',
+        #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "slow", "magnitude": "standard"}',
+        #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "standard"}',
+        #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "fast", "magnitude": "standard"}',
+        #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "incidental"}',
+        #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "double"}',
+        #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "triple"}',
+        #'{"mode": "hoard_budget", "type": "npc_gear", "npc_level": 1, "heroic": "false"}',
+        #'{"mode": "hoard_treasuretype", "type_a": "true", "type_b": "true"}',
         ]
+
 
 if len(OVERRIDE_DATA) == 0:
     for test_item in DATA:

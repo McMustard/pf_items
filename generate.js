@@ -40,13 +40,30 @@ $(document).ready(function(){
     // Default page
     select_page("settlement");
 
-    setup_generator("settlement", process_settlement_response, true)
-    setup_generator("custom", process_custom_response, true)
-    setup_generator("individual", process_individual_response, true)
-    // The Hoard generator has sub-pages.
-    setup_generator("hoard_budget", process_hoard_budget_response, true)
-    setup_generator("hoard_types",  process_hoard_types_response,  true)
-    setup_generator("hoard_alloc",  process_hoard_alloc_response,  true)
+    setup_generator("settlement", process_settlement_response, true);
+    setup_generator("custom", process_custom_response, true);
+    setup_generator("individual", process_individual_response, true);
+    // The Hoard generator has sub-forms.
+    setup_generator("hoard_budget", process_hoard_budget_response, true);
+    setup_generator("hoard_types",  process_hoard_types_response,  true);
+    setup_generator("hoard_alloc",  process_hoard_alloc_response,  true);
+
+    // Additional handlers
+    $("#form_hoard_budget_calc_openclose").click(function(event){
+        anchor = $("#form_hoard_budget_calc_openclose");
+        panel = $("#form_hoard_budget_calc");
+        if (panel.is(":visible")) {
+            panel.hide();
+            anchor.text("Open calculator");
+        }
+        else {
+            panel.show();
+            anchor.text("Close calculator");
+        }
+    });
+
+    // list_creatures, cb_tt_<a..i>
+    $("#list_creatures").change(on_click_creatures);
 });
 
 // Sets up a button to "submit" a form.
@@ -55,7 +72,7 @@ function setup_generator(page, handler, clear) {
     $("#btn_" + page + "_generate").click(function(event){
         // Get the form data.
         var data = get_form_data("form_" + page, page);
-        //// Debug
+        // Debug
         //console.log("Sending request: ", data);
         //// Debug: Clear the current results.
         //if (clear) {
@@ -106,7 +123,7 @@ function get_form_data(form_id, mode) {
 
 // Send an AJAX request.  Well, AJAJ, really.
 function send_request(json_string, handler) {
-    //console.log("send: %s", json_string)
+    console.log("send: %s", json_string);
     $.ajax({
         type: "POST",
         url: "cgi-bin/webgen.py",
@@ -127,7 +144,7 @@ function process_settlement_response(response, textStatus, jqXHR) {
         results.append("An error has occurred.");
         return;
     }
-    results.append("<strong>Base Value:</strong> ")
+    results.append("<strong>Base Value:</strong> ");
     if (response.base_value != null) {+
         results.append(response.base_value + "gp<br/>");
     }
@@ -228,6 +245,79 @@ function process_individual_response(response, textStatus, jqXHR) {
     results.append("<ul><li>" + response + "</li></ul>");
 }
 
+
+// Handle selection of a creature type.
+function on_click_creatures() {
+    selector = $("#list_creatures");
+    val = selector.val();
+    types = ""
+    if (val == "none") {
+        types = ""
+    }
+    else if (val == "aberration") {
+        types = "abde";
+    }
+    else if (val == "aberration_cunning") {
+        types = "abdefgh";
+    }
+    else if (val == "animal") {
+        types = "abde";
+    }
+    else if (val == "construct") {
+        types = "ef";
+    }
+    else if (val == "construct_guardian") {
+        types = "efbch";
+    }
+    else if (val == "dragon") {
+        types = "abchi";
+    }
+    else if (val == "fey") {
+        types = "bcdg";
+    }
+    else if (val == "humanoid") {
+        types = "abdefg";
+    }
+    else if (val == "humanoid_community") {
+        types = "abdefgh";
+    }
+    else if (val == "magicalbeast") {
+        types = "abde";
+    }
+    else if (val == "monstroushumanoid") {
+        types = "abcdeh";
+    }
+    else if (val == "ooze") {
+        types = "abd";
+    }
+    else if (val == "outsider") {
+        // Outsiders can have any type. TODO put a note indicating such.
+        types = "";
+    }
+    else if (val == "plant") {
+        types = "abde";
+    }
+    else if (val == "undead") {
+        types = "abde";
+    }
+    else if (val == "undead_intelligent") {
+        types = "abdefg";
+    }
+    else if (val == "vermin") {
+        types = "abd";
+    }
+    // Select checkboxes
+    $("#cb_tt_a").prop("checked", jQuery.inArray("a", types) >= 0);
+    $("#cb_tt_b").prop("checked", jQuery.inArray("b", types) >= 0);
+    $("#cb_tt_c").prop("checked", jQuery.inArray("c", types) >= 0);
+    $("#cb_tt_d").prop("checked", jQuery.inArray("d", types) >= 0);
+    $("#cb_tt_e").prop("checked", jQuery.inArray("e", types) >= 0);
+    $("#cb_tt_f").prop("checked", jQuery.inArray("f", types) >= 0);
+    $("#cb_tt_g").prop("checked", jQuery.inArray("g", types) >= 0);
+    $("#cb_tt_h").prop("checked", jQuery.inArray("h", types) >= 0);
+    $("#cb_tt_i").prop("checked", jQuery.inArray("i", types) >= 0);
+}
+
 // Accept the data back from webgen.py and populate the hoard budget result
 // area with it.
 function process_hoard_budget_response(response, textStatus, jqXHR) {
@@ -238,7 +328,9 @@ function process_hoard_budget_response(response, textStatus, jqXHR) {
         results.append("An error has occurred.");
         return;
     }
-    results.append("<ul><li>" + response + "</li></ul>");
+    //console.log("Budget: %o", response.budget);
+    $("#form_hoard_types_budget").val(response.budget);
+    $("#form_hoard_alloc_budget").val(response.budget);
 }
 
 // Accept the data back from webgen.py and populate the hoard types result
