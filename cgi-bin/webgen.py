@@ -142,7 +142,7 @@ def run_webgen(params):
             else:
                 result = {}
         
-        elif mode == 'hoard_treasuretype':
+        elif mode == 'hoard_types':
             # Open the database.
             conn = sqlite.connect('data/data.db')
             conn.row_factory = sqlite.Row

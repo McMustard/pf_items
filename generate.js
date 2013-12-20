@@ -20,8 +20,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// These are globals; I need to determine if this is typically "okay" in
+// JavaScript, or if I should start using classes, or what. Fine for now.
+var g_TreasureTablesLoaded = false;
+var g_TreasureTables = {};
+
 // Initializer
 $(document).ready(function(){
+
+    // Just in case
+    g_TreasureTablesLoaded = false;
 
     // Set up the page handlers.
     $("#page_settlement_sel").click(function(event){
@@ -35,6 +43,14 @@ $(document).ready(function(){
     });
     $("#page_hoard_sel").click(function(event){
         select_page("hoard");
+        if (g_TreasureTablesLoaded == false) {
+            // Immediately request treasure types.
+            send_request(JSON.stringify({'mode': 'hoard_types',
+                'type_a': 'true', 'type_b': 'true', 'type_c': 'true', 'type_d': 'true',
+                'type_e': 'true', 'type_f': 'true', 'type_g': 'true', 'type_h': 'true',
+                'type_i': 'true'}), process_hoard_types_response);
+            g_TreasureTablesLoaded = true;
+        }
     });
 
     // Default page
@@ -45,31 +61,38 @@ $(document).ready(function(){
     setup_generator("individual", process_individual_response, true);
     // The Hoard generator has sub-forms.
     setup_generator("hoard_budget", process_hoard_budget_response, true);
-    setup_generator("hoard_types",  process_hoard_types_response,  true);
+    //setup_generator("hoard_types",  process_hoard_types_response,  true);
     setup_generator("hoard_alloc",  process_hoard_alloc_response,  true);
 
     // Additional handlers
-    $("#form_hoard_budget_calc_openclose").click(function(event){
-        anchor = $("#form_hoard_budget_calc_openclose");
-        panel = $("#form_hoard_budget_calc");
-        if (panel.is(":visible")) {
-            panel.hide();
-            anchor.text("Open calculator");
-        }
-        else {
-            panel.show();
-            anchor.text("Close calculator");
-        }
+    $("ul#p_hoard_custom :input").focus(function(){
+        $("#rb_hoard_custom").prop("checked", true);
+    });
+
+    $("ul#p_hoard_encounter :input").focus(function(){
+        $("#rb_hoard_encounter").prop("checked", true);
+    });
+
+    $("ul#p_hoard_npc :input").focus(function(){
+        $("#rb_hoard_npc").prop("checked", true);
+    });
+
+    $(".ttcb").change(function(){
+        // This invariably means custom creature, reset the list.
+        $("#list_creatures").val('');
+        // Also show/hide treasure lists based on this setting.
+        update_treasure_list_visibilities();
     });
 
     // list_creatures, cb_tt_<a..i>
     $("#list_creatures").change(on_click_creatures);
+
 });
 
 // Sets up a button to "submit" a form.
 function setup_generator(page, handler, clear) {
     // Set up the form's Generate button handler.
-    $("#btn_" + page + "_generate").click(function(event){
+    $("#btn_" + page + "_execute").click(function(event){
         // Get the form data.
         var data = get_form_data("form_" + page, page);
         // Debug
@@ -123,7 +146,7 @@ function get_form_data(form_id, mode) {
 
 // Send an AJAX request.  Well, AJAJ, really.
 function send_request(json_string, handler) {
-    console.log("send: %s", json_string);
+    //console.log("send: %s", json_string);
     $.ajax({
         type: "POST",
         url: "cgi-bin/webgen.py",
@@ -250,7 +273,9 @@ function process_individual_response(response, textStatus, jqXHR) {
 function on_click_creatures() {
     selector = $("#list_creatures");
     val = selector.val();
-    types = ""
+    types = "";
+
+    $("#l_creatures_note").text("");
     if (val == "none") {
         types = ""
     }
@@ -291,8 +316,8 @@ function on_click_creatures() {
         types = "abd";
     }
     else if (val == "outsider") {
-        // Outsiders can have any type. TODO put a note indicating such.
-        types = "";
+        types = "abdefg";
+        $("#l_creatures_note").text("Outsiders can carry any kind of gear. The treasure types for \"Humanoid\" have been selected for you as a starting point. Customize the selections as you see fit.");
     }
     else if (val == "plant") {
         types = "abde";
@@ -316,6 +341,40 @@ function on_click_creatures() {
     $("#cb_tt_g").prop("checked", jQuery.inArray("g", types) >= 0);
     $("#cb_tt_h").prop("checked", jQuery.inArray("h", types) >= 0);
     $("#cb_tt_i").prop("checked", jQuery.inArray("i", types) >= 0);
+
+    update_treasure_list_visibilities();
+}
+
+function check_visibility(type) {
+    cb = $("#cb_tt_"+type);
+    div = $("#hoard_tt_"+type);
+    if (cb.prop("checked")) {
+        div.show();
+        return 1;
+    }
+    else {
+        div.hide();
+        return 0;
+    }
+}
+
+function update_treasure_list_visibilities() {
+    var total = 0;
+    total += check_visibility("a");
+    total += check_visibility("b");
+    total += check_visibility("c");
+    total += check_visibility("d");
+    total += check_visibility("e");
+    total += check_visibility("f");
+    total += check_visibility("g");
+    total += check_visibility("h");
+    total += check_visibility("i");
+    if (total == 0) {
+        $("#hoard_tt_0").show();
+    }
+    else {
+        $("#hoard_tt_0").hide();
+    }
 }
 
 // Accept the data back from webgen.py and populate the hoard budget result
@@ -329,8 +388,7 @@ function process_hoard_budget_response(response, textStatus, jqXHR) {
         return;
     }
     //console.log("Budget: %o", response.budget);
-    $("#form_hoard_types_budget").val(response.budget);
-    $("#form_hoard_alloc_budget").val(response.budget);
+    $("#tb_treasure_budget").val(response.budget);
 }
 
 // Accept the data back from webgen.py and populate the hoard types result
@@ -343,7 +401,49 @@ function process_hoard_types_response(response, textStatus, jqXHR) {
         results.append("An error has occurred.");
         return;
     }
-    results.append("<ul><li>" + response + "</li></ul>");
+
+    g_TreasureTables = response;
+
+    //console.log(response);
+    for (var tt in response) {
+        div = $("#hoard_tt_"+tt+"_select");
+        div.html("");
+        var html = "";
+        arr = response[tt];
+        html += '<ul>';
+        for (var i = 0; i < arr.length; i++) {
+            item = arr[i];
+            html += '<li>';
+            html += '<output name="tta_0_'+i+'">0</output>';
+            html += '<input type="button" class="tt_adjust" id="tt'+tt+'_0_'+i+'" value="0" />';
+            html += '<input type="button" class="tt_adjust" id="tt'+tt+'_p_'+i+'" value="+" />';
+            html += '<input type="button" class="tt_adjust" id="tt'+tt+'_m_'+i+'" value="-" />';
+            html += ' - ' + item.item;
+            html += ' - ' + item.description;
+            html += '</li>';
+        }
+        html += '</ul>';
+        div.html(html);
+    }
+
+    $(".tt_adjust").click(function() {
+        handle_adjustment(this.id);
+    });
+}
+
+function handle_adjustment(id) {
+    // IDs are of the form ttX_Y_I
+    // where X is the treasure type a..i
+    // where Y is the operation: 0, p, m (clear/zero, plus, minus)
+    // where I is the item index, 0-based, as many digits as necessary
+
+    tt = id[2];
+    op = id[4];
+    index = parseInt(id.slice(6, id.length));
+
+    console.log("Clicked TT %s, Op %s, Index %d", tt, op, index);
+
+    // TODO
 }
 
 // Accept the data back from webgen.py and populate the hoard alloc result

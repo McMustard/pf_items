@@ -129,7 +129,17 @@ def calculate_budget_npc_gear(conn, npc_level, is_heroic):
 
 
 def lookup_treasure_type(conn, type_code, result):
-    result['type_' + type_code] = 'going to add this'
+    result[type_code] = []
+    # Draft the entire table.
+    sql = 'SELECT * FROM {0}'.format('Type_' + type_code.upper() + '_Treasure')
+    i = 0
+    for row in conn.execute(sql):
+        cost = Price(row[0])
+        result[type_code].append({
+            'index': i, 'cost': int(cost.as_float()),
+            'item': row[0], 'description': row[1],
+            'count': 0})
+        i += 1
 
 
 def get_treasure_list(conn, types):

@@ -212,7 +212,7 @@ DATA = [
 
 OVERRIDE_DATA = [
         #'{"mode": "faiiiil"}',
-        '{"mode": "hoard_budget", "type": "custom", "custom_gp":"3000"}',
+        #'{"mode": "hoard_budget", "type": "custom", "custom_gp":"3000"}',
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "slow", "magnitude": "standard"}',
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "standard"}',
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "fast", "magnitude": "standard"}',
@@ -220,7 +220,8 @@ OVERRIDE_DATA = [
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "double"}',
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "triple"}',
         #'{"mode": "hoard_budget", "type": "npc_gear", "npc_level": 1, "heroic": "false"}',
-        #'{"mode": "hoard_treasuretype", "type_a": "true", "type_b": "true"}',
+        '{"mode": "hoard_types", "type_a": "true"}',
+        '{"mode": "hoard_types", "type_a": "true", "type_b": "true"}',
         ]
 
 
