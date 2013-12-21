@@ -388,7 +388,7 @@ function process_hoard_budget_response(response, textStatus, jqXHR) {
         return;
     }
     //console.log("Budget: %o", response.budget);
-    $("#tb_treasure_budget").val(response.budget);
+    $(".budget_out").val(response.budget);
 }
 
 // Accept the data back from webgen.py and populate the hoard types result
@@ -414,7 +414,7 @@ function process_hoard_types_response(response, textStatus, jqXHR) {
         for (var i = 0; i < arr.length; i++) {
             item = arr[i];
             html += '<li>';
-            html += '<output name="tta_0_'+i+'">0</output>';
+            html += '<output                                id="tt'+tt+'_o_'+i+'">0</output>';
             html += '<input type="button" class="tt_adjust" id="tt'+tt+'_0_'+i+'" value="0" />';
             html += '<input type="button" class="tt_adjust" id="tt'+tt+'_p_'+i+'" value="+" />';
             html += '<input type="button" class="tt_adjust" id="tt'+tt+'_m_'+i+'" value="-" />';
@@ -434,16 +434,45 @@ function process_hoard_types_response(response, textStatus, jqXHR) {
 function handle_adjustment(id) {
     // IDs are of the form ttX_Y_I
     // where X is the treasure type a..i
-    // where Y is the operation: 0, p, m (clear/zero, plus, minus)
-    // where I is the item index, 0-based, as many digits as necessary
+    // where Y is the operation: 0, p, m
+    // where I is the item index, 0-based
 
-    tt = id[2];
-    op = id[4];
-    index = parseInt(id.slice(6, id.length));
+    var type = id[2];
+    var operation = id[4];
+    var index = parseInt(id.slice(6, id.length));
 
-    console.log("Clicked TT %s, Op %s, Index %d", tt, op, index);
+    // Reference to the entry for easy repeat usage.
+    var entry = g_TreasureTables[type][index];
 
-    // TODO
+    var pre = entry.count * entry.cost;
+
+    // Handle the operation type.
+    if (operation == "0") {
+        // Zero-out
+        entry.count = 0;
+    }
+    else if (operation == "p") {
+        // Plus
+        entry.count += 1;
+    }
+    else if (operation == "m") {
+        // Minus
+        if (entry.count > 0) {
+            entry.count -= 1;
+        }
+    }
+    else {
+        return;
+    }
+
+    var post = entry.count * entry.cost;
+    var difference = post - pre;
+    var total = $("#total_allocated");
+    total.val(parseInt(total.val()) + parseInt(difference));
+
+    // Update the output indicator to show the quantity.
+    var outid = "tt"+type+"_o_"+index;
+    $("#"+outid).val(entry.count);
 }
 
 // Accept the data back from webgen.py and populate the hoard alloc result

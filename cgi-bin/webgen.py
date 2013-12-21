@@ -69,12 +69,24 @@ def output_json(result, f):
     print('Content-Type: application/json\n', file=f)
     print(json.dumps(result), file=f)
 
-
 def run_webgen(params):
-
-
     # Set output file descriptor.
     out = sys.stdout
+
+    # Obtain the result.
+    result = run_webgen_internal(params);
+
+    #log = open('log.txt', 'a')
+    #print('Input: ', file=log)
+    #print(params, file=log)
+    #print('Output:', file=log)
+    #output_json(result, log)
+    #log.close()
+
+    output_json(result, out)
+
+def run_webgen_internal(params):
+
 
     conn = None
     result = "Error: unspecified program error"
@@ -164,8 +176,11 @@ def run_webgen(params):
             conn = sqlite.connect('data/data.db')
             conn.row_factory = sqlite.Row
 
-            # Future
-            pass
+            # This one is so complex, it only operates via a map. It'll ignore
+            # the transmission-related keys in the dict, e.g. "mode". So we
+            # can simple pass the param dict to the function.
+            result = hoard.generate_treasure(conn, params,
+                    rollers.PseudorandomRoller(), None)
 
         else:
             result = "Error: invalid mode value"
@@ -182,15 +197,7 @@ def run_webgen(params):
         if conn:
             conn.close()
 
-    #log = open('log.txt', 'a')
-    #print('Input: ', file=log)
-    #print(params, file=log)
-    #print('Output:', file=log)
-    #output_json(result, log)
-    #log.close()
-
-    # "Return" the result, even with exceptions in place.
-    output_json(result, out)
+    return result
 
 
 # Main Function

@@ -31,7 +31,7 @@ import traceback
 #
 # Local imports
 
-from item import Price
+import item
 import rollers
 
 #
@@ -85,7 +85,7 @@ MAGNITUDES = {
 
 def calculate_budget_custom(conn, gp_in):
     # A simple reflection
-    price = Price(gp_in)
+    price = item.Price(gp_in)
     return {'budget': str(price), 'as_int': int(price.as_float())}
 
 
@@ -103,7 +103,7 @@ def calculate_budget_encounter(conn, apl, rate, magnitude):
             rate, 'Treasure_Values_Per_Encounter')
     result = conn.execute(sql, (apl,))
     budget = result.fetchone()[0]
-    price = Price(budget)
+    price = item.Price(budget)
     price.multiply(magnitude)
 
     return {'budget': str(price), 'as_int': int(price.as_float())}
@@ -123,7 +123,7 @@ def calculate_budget_npc_gear(conn, npc_level, is_heroic):
             '"Treasure Value"', 'NPC_Gear')
     result = conn.execute(sql, (level,))
     budget = result.fetchone()[0]
-    price = Price(budget)
+    price = item.Price(budget)
 
     return {'budget': str(price), 'as_int': int(price.as_float())}
 
@@ -134,7 +134,7 @@ def lookup_treasure_type(conn, type_code, result):
     sql = 'SELECT * FROM {0}'.format('Type_' + type_code.upper() + '_Treasure')
     i = 0
     for row in conn.execute(sql):
-        cost = Price(row[0])
+        cost = item.Price(row[0])
         result[type_code].append({
             'index': i, 'cost': int(cost.as_float()),
             'item': row[0], 'description': row[1],
@@ -148,6 +148,34 @@ def get_treasure_list(conn, types):
         lookup_treasure_type(conn, t, result)
     return result
 
+
+def generate_treasure_lot(conn, description, roller, listener):
+    results = []
+    exprs = [x.strip().lower() for x in description.split(', ')]
+    for expr in exprs:
+        x = item.generate_treasure_item(conn, expr, roller, listener)
+        if x: results.extend(x)
+    return results
+
+
+def generate_treasure_type(conn, subspec, roller, listener):
+    result = []
+    for item in subspec:
+        for i in range(item['count']):
+            x = generate_treasure_lot(conn, item['description'],
+                    roller, listener)
+            if x: result.extend(x)
+    return result
+
+
+def generate_treasure(conn, specification, roller, listener):
+    types = "abcdefghi"
+    accum = []
+    for tt in types:
+        treas = generate_treasure_type(conn, specification[tt],
+                roller, listener)
+        accum.extend(treas)
+    return accum
 
 #
 # Main Function

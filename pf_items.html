@@ -206,6 +206,8 @@
                     </ul>
                     <input type="button" name="next" value="Calculate"
                     id="btn_hoard_budget_execute"  />
+                    <label> = <output class="budget_out">(no calculation)</output></label>
+                    (also appears next to the treasure allocation total, below)
                 </fieldset>
             </form>
             <form id="form_hoard_types">
@@ -250,7 +252,7 @@
             <form id="form_hoard_alloc">
                 <fieldset>
                     <legend>Item allocation</legend>
-                    <label hidden>Budget:<input type="text" name="budget" id="tb_treasure_budget" readonly /></label>
+                    <label hidden>Budget:<input type="text" name="budget" class="budget_out" readonly /></label>
                     <div id="hoard_tt_0">
                         <h4>No treasure types selected</h4>
                         <p>Select one or more treasure types using the
@@ -293,10 +295,17 @@
                         <h4>Treasure Type I: Treasure hoard</h4>
                         <div id="hoard_tt_i_select"></div>
                     </div>
-                    <input type="button" name="clear" value="Reset quantities"
-                    id="btn_hoard_alloc_reset" />
-                    <input type="button" name="generate" value="Generate items"
-                    id="btn_hoard_alloc_execute" />
+                    <h4>Total</h4>
+                    <ul>
+                        <li><label>Allocated <output id="total_allocated">0</output></label>
+                        gp out of <output class="budget_out">(not calculated)</output></li>
+                        <li>
+                            <input type="button" name="clear" value="Reset quantities"
+                            id="btn_hoard_alloc_reset" />
+                            <input type="button" name="generate" value="Generate items"
+                            id="btn_hoard_alloc_execute" />
+                        </li>
+                    </ul>
                 </fieldset>
             </form>
 

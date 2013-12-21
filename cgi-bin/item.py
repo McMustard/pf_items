@@ -20,6 +20,7 @@ Generator.
 #
 # Library imports
 
+import binascii
 import locale
 import math
 import os
@@ -60,6 +61,8 @@ KEY_SCROLL        = 'Scroll'
 KEY_STAFF         = 'Staff'
 KEY_WAND          = 'Wand'
 KEY_WONDROUS_ITEM = 'Wondrous Item'
+KEY_ART_OBJECT    = 'Art Object'
+KEY_GEM           = 'Gem'
 
 # Roll 'redirections'
 
@@ -100,13 +103,17 @@ ITEM_TYPE_MAP = {
         'staff'            : 'Staff',
         'wand'             : 'Wand',
         'wondrous item'    : 'Wondrous Item',
-        'wondrous'         : 'Wondrous Item' }
+        'wondrous'         : 'Wondrous Item',
+        'art object'       : 'Art Object',
+        'gem'              : 'Gem'
+        }
 
 # As above, but includes subtypes
 ITEM_SUBTYPE_MAP = {
         'armor/shield'     : ('Armor/Shield', ''),
         'armor and shield' : ('Armor/Shield', ''),
         'armor or shield'  : ('Armor/Shield', ''),
+        'armor'            : ('Armor/Shield', ''), # hoards
         'weapon'           : ('Weapon', ''),
         'potion'           : ('Potion', ''),
         'ring'             : ('Ring', ''),
@@ -131,29 +138,14 @@ ITEM_SUBTYPE_MAP = {
         'shoulders'        : ('Wondrous Item', 'Shoulders'),
         'slotless'         : ('Wondrous Item', 'Slotless'),
         'wrist'            : ('Wondrous Item', 'Wrists'),
-        'wrists'           : ('Wondrous Item', 'Wrists')
+        'wrists'           : ('Wondrous Item', 'Wrists'),
+        'art object'       : ('Art Object', ''),
+        'gem'              : ('Gem', ''),
+        'gemstone'         : ('Gem', ''),
         }
 
 # Treasure expression
 
-# Sub-expressions that can be found in multiple treasure expressions.
-RE_SUB_NUMBER = '((one|two|three|four|five|six|seven|eight|nine|ten) )?'
-RE_SUB_GRADE = 'grade (\d+) '
-RE_SUB_PRETTY = '(gemstone|art object)s?'
-RE_SUB_DEGREE = '(least|lesser|greater) '
-RE_SUB_STRENGTH = '(minor|medium|major) '
-RE_SUB_ITEM = '(armor|weapon|potion|ring|scroll|staff|staves|wand|wondrous item)s?'
-RE_SUB_MUNDANE = '(light armor|medium armor|heavy armor|shield|weapon)'
-
-RE_TREASURE_COINS = re.compile('\d+d\d+ (\xd7 \d+)? (cp|sp|gp)')
-RE_TREASURE_PRETTIES = re.compile(RE_SUB_NUMBER + RE_SUB_GRADE + RE_SUB_PRETTY)
-RE_TREASURE_MAGIC = re.compile(RE_SUB_NUMBER + RE_SUB_DEGREE + RE_SUB_STRENGTH + RE_SUB_ITEM)
-RE_TREASURE_MASTERWORK = re.compile('masterwork ' + RE_SUB_MUNDANE + '( or ' + RE_SUB_MUNDANE + ')?')
-
-MAP_NUMBER_WORD_DECIMAL = {
-        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
-        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
-        }
 
 #
 # Variables
@@ -266,27 +258,6 @@ def generate_item(conn, description, roller, listener):
     return generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
 
 
-def generate_item_alt(conn, description, roller, listener):
-    # This function will replace the other generate_item, eventually.
-
-    # These are the types of strings we can expect:
-    match = RE_TREASURE_COINS.match(description)
-    if match:
-        return ['coins']
-    match = RE_TREASURE_PRETTIES.match(description)
-    if match:
-        return ['pretties']
-    match = RE_TREASURE_MAGIC.match(description)
-    if match:
-        return ['magic']
-    match = RE_TREASURE_MASTERWORK.match(description)
-    if match:
-        return ['masterwork']
-
-    # TEMPORARY TODO REMOVE
-    return ['NO MATCH']
-
-
 def generate_specific_item(conn, strength, kind, roller, listener):
     # Create an object.
     item = create_item(kind)
@@ -356,6 +327,89 @@ def fast_generate_full(conn, strength, kind, base_value):
         return "No possible items"
     except:
         return "No possible items"
+
+
+# TODO Move to treasure expressions at the top
+
+# Sub-expressions that can be found in multiple treasure expressions.
+RE_SUB_NUMBER = '(one|two|three|four|five|six|seven|eight|nine|ten)?\s?'
+RE_SUB_GRADE = 'grade (\d+) '
+RE_SUB_PRETTY = '(gemstone|art object)s?'
+RE_SUB_DEGREE = '(least|lesser|greater) '
+RE_SUB_STRENGTH = '(minor|medium|major) '
+RE_SUB_ITEM = '(armor|weapon|potion|ring|rod|scroll|staff|staves|wand|wondrous item)s?'
+RE_SUB_MUNDANE = '(light armor|medium armor|heavy armor|shield|weapon)'
+
+# There are two x characters in use: \xd7 and \x78
+RE_TREASURE_COINS = re.compile('(\d+d\d+)\s*((\xd7|\x78)\s*([0-9\,]+))?\s*(cp|sp|gp|pp)')
+RE_TREASURE_PRETTIES = re.compile(RE_SUB_NUMBER + RE_SUB_GRADE + RE_SUB_PRETTY)
+RE_TREASURE_MAGIC = re.compile(RE_SUB_NUMBER + RE_SUB_DEGREE + RE_SUB_STRENGTH + RE_SUB_ITEM)
+RE_TREASURE_MASTERWORK = re.compile('masterwork ' + RE_SUB_MUNDANE + '( or ' + RE_SUB_MUNDANE + ')?')
+
+MAP_NUMBER_WORD_DECIMAL = {
+        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+        }
+
+def generate_treasure_item(conn, expression, roller, listener):
+    results = []
+    m = RE_TREASURE_COINS.match(expression)
+    if m:
+        # TODO REMOVE WHEN FINISHED
+        return
+        # 1 is the dice expression
+        dice = m.group(1)
+        # 2 is the entire multiplier expression
+        # 3 is the multiplier symbol
+        # 4 is the coin amount
+        # 5 is the coin type
+        coefficient = rollers.rollDice(dice)
+        multiplier = m.group(4)
+        if multiplier == None:
+            multiplier = 1
+        else:
+            multiplier = int(multiplier.replace(",",""))
+        coinage = m.group(5)
+        results.append(str(coefficient * multiplier) + ' ' + coinage)
+        return results
+    m = RE_TREASURE_PRETTIES.match(expression)
+    if m:
+        # TODO REMOVE WHEN FINISHED
+        return
+        # 1 is number as word
+        # 2 is grade number
+        # 3 is object type
+        count = m.group(1)
+        if count == None: count = 'one'
+        count = MAP_NUMBER_WORD_DECIMAL[count]
+        grade = 'grade ' + m.group(2)
+        kind = m.group(3)
+        for i in range(count):
+            x = generate_specific_item(conn, grade, kind, roller, listener)
+            results.append(str(x))
+        return results
+    m = RE_TREASURE_MAGIC.match(expression)
+    if m:
+        count = m.group(1)
+        if count == None: count = 'one'
+        count = MAP_NUMBER_WORD_DECIMAL[count]
+        degree = m.group(2)
+        strength = m.group(3)
+        kind = m.group(4)
+        for i in range(count):
+            x = generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
+            results.append(str(x))
+        return results
+    m = RE_TREASURE_MASTERWORK.match(expression)
+    if m:
+        return results
+    # For debugging:
+    #results.append("unknown: ("+expression+")[" + ':'.join([hex(ord(a)) for a in expression]) + "]")
+    return results
+
+    # REFERENCE
+    # Now we have the parts in a usable form.
+    #return generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
 
 
 def create_item(kind):
@@ -1498,6 +1552,91 @@ class Wand(Item):
         self.price = Price(result['Price'])
         
 
+# TODO MOVE TO CENTRAL LOCATION
+# 2,500 gp +2d4
+# 2,500 gp +2d4 x 500 gp
+RE_GEM_PRICE = re.compile(
+    '([0-9,]+)\s+gp\s+(\+(\s*\d+d\d+)\s*((\xd7|\x78)([0-9,]+)\s*gp)?)?')
+
+class Gem(Item):
+
+    def __init__(self):
+        Item.__init__(self, KEY_GEM)
+        # Load the table.
+        self.t_random = TABLE_RANDOM_GEMS
+        # Gem details.
+        self.gem = ''
+        self.price = ''
+
+
+    def __repr__(self):
+        result = '<Gem'
+        result += '>'
+        return result
+
+
+    def lookup(self, conn, listener):
+        # Roll for the gem.
+        purpose = 'gem type'
+        roll = self.roll('1d100', purpose)
+        gem_type = self.t_random.find_roll(conn, roll, self.strength, purpose, listener)
+        self.gem = gem_type['Result']
+        self.price = 'unknown'
+        # Compute the price
+        price_expr = gem_type['Price']
+        
+        m = RE_GEM_PRICE.match(price_expr)
+        if m:
+            base = int(m.group(1).replace(",",""))
+            addl = 0
+            factor = 1
+            if m.group(3):
+                addl = rollers.rollDice(m.group(3))
+                if m.group(6):
+                    factor = int(m.group(6).replace(",",""))
+            price = base + (addl * factor)
+        self.price = Price(price)
+        #self.price = str(m.group(1)) + '+' + str(m.group(3)) + '*' + str(m.group(6))
+
+        # Subtype
+        self.subtype = 'Gem'
+
+        # Item specifics
+        self.label = self.gem
+
+
+class ArtObject(Item):
+
+    def __init__(self):
+        Item.__init__(self, KEY_ART_OBJECT)
+        # Load the table.
+        self.t_random = TABLE_RANDOM_ART_OBJECTS
+        # Art object details.
+        self.obj = ''
+        self.price = ''
+
+
+    def __repr__(self):
+        result = '<ArtObject'
+        result += '>'
+        return result
+
+
+    def lookup(self, conn, listener):
+        # Roll for the art object.
+        purpose = 'art object type'
+        roll = self.roll('1d100', purpose)
+        art_type = self.t_random.find_roll(conn, roll, self.strength, purpose, listener)
+        self.obj = art_type['Result']
+        self.price = Price(art_type['Price'])
+        
+        # Subtype
+        self.subtype = 'Art object'
+
+        # Item specifics
+        self.label = self.obj
+        
+
 class WondrousItem(Item):
 
     def __init__(self):
@@ -1598,10 +1737,14 @@ ITEM_SUBCLASSES = {
         KEY_SCROLL        : Scroll,
         KEY_STAFF         : Staff,
         KEY_WAND          : Wand,
-        KEY_WONDROUS_ITEM : WondrousItem
+        KEY_WONDROUS_ITEM : WondrousItem,
+        KEY_ART_OBJECT    : ArtObject,
+        KEY_GEM           : Gem
     }
 
-# Tester
+#
+# Main Function
+
 if __name__ == '__main__':
 
     def test(price, expected_str):

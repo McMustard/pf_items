@@ -211,7 +211,7 @@ DATA = [
         ]
 
 OVERRIDE_DATA = [
-        #'{"mode": "faiiiil"}',
+        '{"mode": "faiiiil"}',
         #'{"mode": "hoard_budget", "type": "custom", "custom_gp":"3000"}',
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "slow", "magnitude": "standard"}',
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "standard"}',
@@ -220,8 +220,8 @@ OVERRIDE_DATA = [
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "double"}',
         #'{"mode": "hoard_budget", "type": "encounter", "apl": 1, "rate": "medium", "magnitude": "triple"}',
         #'{"mode": "hoard_budget", "type": "npc_gear", "npc_level": 1, "heroic": "false"}',
-        '{"mode": "hoard_types", "type_a": "true"}',
-        '{"mode": "hoard_types", "type_a": "true", "type_b": "true"}',
+        #'{"mode": "hoard_types", "type_a": "true"}',
+        #'{"mode": "hoard_types", "type_a": "true", "type_b": "true"}',
         ]
 
 
@@ -232,4 +232,14 @@ else:
     for test_item in OVERRIDE_DATA:
         webgen.run_webgen(json.loads(test_item))
 
+# And finally, a huuuuge test!
+# Obtain a list of all possible treasure items.
+basis = webgen.run_webgen_internal(json.loads('{"mode": "hoard_types", "type_a": "true", "type_b": "true", "type_c": "true", "type_d": "true", "type_e": "true", "type_f": "true", "type_g": "true", "type_h": "true", "type_i": "true"}'));
+# Update the counts of all of them by 1.
+for tt in basis:
+    for item in basis[tt]:
+        item['count'] += 1;
+# And feed that into the generator input.
+basis['mode'] = "hoard_generate"
 
+webgen.run_webgen(basis)
