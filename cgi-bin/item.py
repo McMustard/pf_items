@@ -146,6 +146,26 @@ ITEM_SUBTYPE_MAP = {
 
 # Treasure expression
 
+# Sub-expressions that can be found in multiple treasure expressions.
+RE_SUB_NUMBER = '(one|two|three|four|five|six|seven|eight|nine|ten)?\s?'
+RE_SUB_GRADE = 'grade (\d+) '
+RE_SUB_PRETTY = '(gemstone|art object)s?'
+RE_SUB_DEGREE = '(least|lesser|greater) '
+RE_SUB_STRENGTH = '(minor|medium|major) '
+RE_SUB_ITEM = '(armor|weapon|potion|ring|rod|scroll|staff|staves|wand|wondrous item)s?'
+RE_SUB_MUNDANE = '(light armor or shield|medium armor|heavy armor|weapon)'
+
+# There are two x characters in use: \xd7 and \x78
+RE_TREASURE_COINS = re.compile('(\d+d\d+)\s*((\xd7|\x78)\s*([0-9\,]+))?\s*(cp|sp|gp|pp)')
+RE_TREASURE_PRETTIES = re.compile(RE_SUB_NUMBER + RE_SUB_GRADE + RE_SUB_PRETTY)
+RE_TREASURE_MAGIC = re.compile(RE_SUB_NUMBER + RE_SUB_DEGREE + RE_SUB_STRENGTH + RE_SUB_ITEM)
+RE_TREASURE_MASTERWORK = re.compile('masterwork ' + RE_SUB_MUNDANE)
+
+MAP_NUMBER_WORD_DECIMAL = {
+        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+        }
+
 
 #
 # Variables
@@ -329,34 +349,10 @@ def fast_generate_full(conn, strength, kind, base_value):
         return "No possible items"
 
 
-# TODO Move to treasure expressions at the top
-
-# Sub-expressions that can be found in multiple treasure expressions.
-RE_SUB_NUMBER = '(one|two|three|four|five|six|seven|eight|nine|ten)?\s?'
-RE_SUB_GRADE = 'grade (\d+) '
-RE_SUB_PRETTY = '(gemstone|art object)s?'
-RE_SUB_DEGREE = '(least|lesser|greater) '
-RE_SUB_STRENGTH = '(minor|medium|major) '
-RE_SUB_ITEM = '(armor|weapon|potion|ring|rod|scroll|staff|staves|wand|wondrous item)s?'
-RE_SUB_MUNDANE = '(light armor|medium armor|heavy armor|shield|weapon)'
-
-# There are two x characters in use: \xd7 and \x78
-RE_TREASURE_COINS = re.compile('(\d+d\d+)\s*((\xd7|\x78)\s*([0-9\,]+))?\s*(cp|sp|gp|pp)')
-RE_TREASURE_PRETTIES = re.compile(RE_SUB_NUMBER + RE_SUB_GRADE + RE_SUB_PRETTY)
-RE_TREASURE_MAGIC = re.compile(RE_SUB_NUMBER + RE_SUB_DEGREE + RE_SUB_STRENGTH + RE_SUB_ITEM)
-RE_TREASURE_MASTERWORK = re.compile('masterwork ' + RE_SUB_MUNDANE + '( or ' + RE_SUB_MUNDANE + ')?')
-
-MAP_NUMBER_WORD_DECIMAL = {
-        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
-        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
-        }
-
 def generate_treasure_item(conn, expression, roller, listener):
     results = []
     m = RE_TREASURE_COINS.match(expression)
     if m:
-        # TODO REMOVE WHEN FINISHED
-        return
         # 1 is the dice expression
         dice = m.group(1)
         # 2 is the entire multiplier expression
@@ -374,8 +370,6 @@ def generate_treasure_item(conn, expression, roller, listener):
         return results
     m = RE_TREASURE_PRETTIES.match(expression)
     if m:
-        # TODO REMOVE WHEN FINISHED
-        return
         # 1 is number as word
         # 2 is grade number
         # 3 is object type
@@ -402,6 +396,42 @@ def generate_treasure_item(conn, expression, roller, listener):
         return results
     m = RE_TREASURE_MASTERWORK.match(expression)
     if m:
+        kind = m.group(1).lower()
+        table = None
+        where = ''
+        where_vars = None
+        masterwork_fee = 0
+        if kind in 'light armor or shield':
+            table = TABLE_RANDOM_ARMOR_OR_SHIELD
+            where = 'WHERE (? == ?) OR (? == ?)'
+            where_vars = ('Subtype', 'light armor', 'Subtype', 'shield')
+            masterwork_fee = 150
+        elif kind == 'medium armor':
+            table = TABLE_RANDOM_ARMOR_OR_SHIELD
+            where = 'WHERE (? == ?)'
+            where_vars = ('Subtype', kind)
+            masterwork_fee = 150
+        elif kind == 'heavy armor':
+            table = TABLE_RANDOM_ARMOR_OR_SHIELD
+            where = 'WHERE (? == ?)'
+            where_vars = ('Subtype', kind)
+            masterwork_fee = 150
+        elif kind == 'weapon':
+            table = TABLE_RANDOM_WEAPON
+            where = ''
+            where_vars = None
+            masterwork_fee = 300
+        else:
+            #results.append('*** ' + kind + ' ***')
+            return
+
+        result = table.find_flat_custom(conn, where, where_vars)
+        if result:
+            item = result['Result']
+            price = Price(result['Price'])
+            price.add(masterwork_fee)
+            results.append('Masterwork ' + item + '; ' + str(price))
+
         return results
     # For debugging:
     #results.append("unknown: ("+expression+")[" + ':'.join([hex(ord(a)) for a in expression]) + "]")
@@ -660,6 +690,32 @@ class Table(object):
                 for i in range(int(result['Roll_low']), int(result['Roll_high']) + 1):
                     self.cache[strength][i] = result
         return result
+
+    def find_flat_custom(self, conn, where, where_vars):
+        sql = 'SELECT * FROM {0} '.format(self.table) + where
+        cursor = conn.cursor()
+        if where_vars != None:
+            cursor.execute(sql, where_vars)
+        else:
+            cursor.execute(sql)
+        rows = cursor.fetchall()
+        collected = []
+        total_rollspace = 0
+        for row in rows:
+            roll_low = row['Roll_low']
+            roll_high = row['Roll_high']
+            rollspace = (roll_high - roll_low) + 1
+            collected.append( (total_rollspace + rollspace, row) )
+            total_rollspace += rollspace
+
+        fake_roll = random.randint(0, total_rollspace)
+        for row in collected:
+            if fake_roll < row[0]:
+                return row[1]
+        return None
+
+
+
 
 
 # Ultimate Equipment Tables
