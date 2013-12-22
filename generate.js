@@ -483,11 +483,9 @@ function submit_hoard_alloc() {
     // Convert it into a nicer transmission format.
 
     var copy = {};
-    //var copy = g_TreasureTables;
     copy.mode = "hoard_generate";
 
     for (var tt in g_TreasureTables) {
-        console.log("Type %s (%d)", tt, arr.length);
         arr = g_TreasureTables[tt];
         for (var i = 0; i < arr.length; i++) {
             item = arr[i];
@@ -495,22 +493,20 @@ function submit_hoard_alloc() {
                 if (!(tt in copy)) {
                     copy[tt] = [];
                 }
-                console.log("Adding %s", item.description);
                 copy[tt].push({"index": item.index, "count": item.count});
             }
         }
     }
     
-    //#g_TreasureTables.mode = "hoard_generate";
     var submission = JSON.stringify(copy)
-    console.log("send: %s", submission);
+    //console.log("send: %s", submission);
     send_request(submission, process_hoard_alloc_response);
 }
 
 // Accept the data back from webgen.py and populate the hoard alloc result
 // area with it.
 function process_hoard_alloc_response(response, textStatus, jqXHR) {
-    console.log("Hoard Alloc Results: %o", response);
+    //console.log("Hoard Alloc Results: %o", response);
     var results = $("#hoard_alloc_results");
     if (response == "") {
         results.html("An error has occurred.");
