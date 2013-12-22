@@ -168,12 +168,26 @@ def generate_treasure_type(conn, subspec, roller, listener):
     return result
 
 
-def generate_treasure(conn, specification, roller, listener):
+def generate_treasure(conn, requests, roller, listener):
     types = "abcdefghi"
     accum = []
     for tt in types:
-        treas = generate_treasure_type(conn, specification[tt],
-                roller, listener)
+        if tt not in requests: continue
+        # Get proper descriptions from the database.
+        table = {}
+        lookup_treasure_type(conn, tt, table)
+        descriptions = table[tt]
+        # Stop at 100 items
+        remaining = 100
+        # Get the submitted counts.
+        for item in requests[tt]:
+            i = item['index']
+            c = item['count']
+            c = min(remaining, c)
+            remaining -= c
+            descriptions[i]['count'] = c
+            if c <= 0: break
+        treas = generate_treasure_type(conn, descriptions, roller, listener)
         accum.extend(treas)
     return accum
 

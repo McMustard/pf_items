@@ -62,7 +62,8 @@ $(document).ready(function(){
     // The Hoard generator has sub-forms.
     setup_generator("hoard_budget", process_hoard_budget_response, true);
     //setup_generator("hoard_types",  process_hoard_types_response,  true);
-    setup_generator("hoard_alloc",  process_hoard_alloc_response,  true);
+    //setup_generator("hoard_alloc",  process_hoard_alloc_response,  true);
+    $("#btn_hoard_alloc_execute").click(submit_hoard_alloc);
 
     // Additional handlers
     $("ul#p_hoard_custom :input").focus(function(){
@@ -150,6 +151,7 @@ function send_request(json_string, handler) {
     $.ajax({
         type: "POST",
         url: "cgi-bin/webgen.py",
+        content_type: "application/json; charset=UTF-8",
         datatype: "json",
         data: json_string,
         success: handler
@@ -475,16 +477,53 @@ function handle_adjustment(id) {
     $("#"+outid).val(entry.count);
 }
 
+//
+function submit_hoard_alloc() {
+    // All of the "form" data is in g_TreasureTables.
+    // Convert it into a nicer transmission format.
+
+    var copy = {};
+    //var copy = g_TreasureTables;
+    copy.mode = "hoard_generate";
+
+    for (var tt in g_TreasureTables) {
+        console.log("Type %s (%d)", tt, arr.length);
+        arr = g_TreasureTables[tt];
+        for (var i = 0; i < arr.length; i++) {
+            item = arr[i];
+            if (item.count > 0) {
+                if (!(tt in copy)) {
+                    copy[tt] = [];
+                }
+                console.log("Adding %s", item.description);
+                copy[tt].push({"index": item.index, "count": item.count});
+            }
+        }
+    }
+    
+    //#g_TreasureTables.mode = "hoard_generate";
+    var submission = JSON.stringify(copy)
+    console.log("send: %s", submission);
+    send_request(submission, process_hoard_alloc_response);
+}
+
 // Accept the data back from webgen.py and populate the hoard alloc result
 // area with it.
 function process_hoard_alloc_response(response, textStatus, jqXHR) {
-    //console.log("Hoard Alloc Results: %o", response);
+    console.log("Hoard Alloc Results: %o", response);
     var results = $("#hoard_alloc_results");
-    results.html("");
     if (response == "") {
-        results.append("An error has occurred.");
+        results.html("An error has occurred.");
         return;
     }
-    results.append("<ul><li>" + response + "</li></ul>");
+    html = "<ol>";
+    //results.append("<ul><li>" + response + "</li></ul>");
+    for (var i = 0; i < response.length; i++) {
+        html += "<li>";
+        html += response[i];
+        html += "</li>";
+    }
+    html += "</ol>";
+    results.html(html);
 }
 

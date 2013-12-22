@@ -153,10 +153,11 @@ RE_SUB_PRETTY = '(gemstone|art object)s?'
 RE_SUB_DEGREE = '(least|lesser|greater) '
 RE_SUB_STRENGTH = '(minor|medium|major) '
 RE_SUB_ITEM = '(armor|weapon|potion|ring|rod|scroll|staff|staves|wand|wondrous item)s?'
-RE_SUB_MUNDANE = '(light armor or shield|medium armor|heavy armor|weapon)'
+RE_SUB_MUNDANE = '(light armor or shield|medium armor|heavy armor|shield|weapon)'
 
 # There are two x characters in use: \xd7 and \x78
-RE_TREASURE_COINS = re.compile('(\d+d\d+)\s*((\xd7|\x78)\s*([0-9\,]+))?\s*(cp|sp|gp|pp)')
+# RE_TREASURE_COINS = re.compile('(\d+d\d+)\s*((\xd7|\x78)\s*([0-9,]+))?\s*(cp|sp|gp|pp)')
+RE_TREASURE_COINS = re.compile('(\d+d\d+)\s*((\xd7|\x78)\s*([0-9,]+))?\s*(cp|sp|gp|pp)')
 RE_TREASURE_PRETTIES = re.compile(RE_SUB_NUMBER + RE_SUB_GRADE + RE_SUB_PRETTY)
 RE_TREASURE_MAGIC = re.compile(RE_SUB_NUMBER + RE_SUB_DEGREE + RE_SUB_STRENGTH + RE_SUB_ITEM)
 RE_TREASURE_MASTERWORK = re.compile('masterwork ' + RE_SUB_MUNDANE)
@@ -165,6 +166,12 @@ MAP_NUMBER_WORD_DECIMAL = {
         'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
         'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
         }
+
+# TODO MOVE TO CENTRAL LOCATION
+# 2,500 gp +2d4
+# 2,500 gp +2d4 x 500 gp
+RE_GEM_PRICE = re.compile(
+    '([0-9,]+)\s+gp\s+(\+(\s*\d+d\d+)\s*((\xd7|\x78)([0-9,]+)\s*gp)?)?')
 
 
 #
@@ -306,7 +313,7 @@ def fast_generate(conn, strength, base_value):
             return x
 
     # We did not find a single thing.
-    return None
+    return 'No ' + strength + ' items possible under ' + str(base_value) + ' gp'
 
 
 def fast_generate_full(conn, strength, kind, base_value):
@@ -344,9 +351,9 @@ def fast_generate_full(conn, strength, kind, base_value):
             if roll < accum:
                 return '{0}: {1}; {2}'.format(c['Subtype'], c['Item'],
                         str(Price(c['Price'])) )
-        return "No possible items"
+        return 'No possible items'
     except:
-        return "No possible items"
+        return 'No possible items'
 
 
 def generate_treasure_item(conn, expression, roller, listener):
@@ -366,8 +373,9 @@ def generate_treasure_item(conn, expression, roller, listener):
         else:
             multiplier = int(multiplier.replace(",",""))
         coinage = m.group(5)
-        results.append(str(coefficient * multiplier) + ' ' + coinage)
+        results.append(expression + ': ' + str(coefficient * multiplier) + ' ' + coinage)
         return results
+
     m = RE_TREASURE_PRETTIES.match(expression)
     if m:
         # 1 is number as word
@@ -382,6 +390,7 @@ def generate_treasure_item(conn, expression, roller, listener):
             x = generate_specific_item(conn, grade, kind, roller, listener)
             results.append(str(x))
         return results
+
     m = RE_TREASURE_MAGIC.match(expression)
     if m:
         count = m.group(1)
@@ -394,6 +403,7 @@ def generate_treasure_item(conn, expression, roller, listener):
             x = generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
             results.append(str(x))
         return results
+
     m = RE_TREASURE_MASTERWORK.match(expression)
     if m:
         kind = m.group(1).lower()
@@ -401,10 +411,16 @@ def generate_treasure_item(conn, expression, roller, listener):
         where = ''
         where_vars = None
         masterwork_fee = 0
+        # TODO fix 'masterwork shield'
         if kind in 'light armor or shield':
             table = TABLE_RANDOM_ARMOR_OR_SHIELD
             where = 'WHERE (? == ?) OR (? == ?)'
             where_vars = ('Subtype', 'light armor', 'Subtype', 'shield')
+            masterwork_fee = 150
+        elif kind == 'shield':
+            table = TABLE_RANDOM_ARMOR_OR_SHIELD
+            where = 'WHERE (? == ?)'
+            where_vars = ('Subtype', kind)
             masterwork_fee = 150
         elif kind == 'medium armor':
             table = TABLE_RANDOM_ARMOR_OR_SHIELD
@@ -433,13 +449,14 @@ def generate_treasure_item(conn, expression, roller, listener):
             results.append('Masterwork ' + item + '; ' + str(price))
 
         return results
-    # For debugging:
-    #results.append("unknown: ("+expression+")[" + ':'.join([hex(ord(a)) for a in expression]) + "]")
-    return results
 
-    # REFERENCE
-    # Now we have the parts in a usable form.
-    #return generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
+    if len(results) == 0:
+        # For regular usage.
+        results.append('Failed to generate for: ' + expression)
+        # For debugging:
+        #results.append("unknown: ("+expression+")[" + ':'.join([hex(ord(a)) for a in expression]) + "]")
+
+    return results
 
 
 def create_item(kind):
@@ -1608,11 +1625,6 @@ class Wand(Item):
         self.price = Price(result['Price'])
         
 
-# TODO MOVE TO CENTRAL LOCATION
-# 2,500 gp +2d4
-# 2,500 gp +2d4 x 500 gp
-RE_GEM_PRICE = re.compile(
-    '([0-9,]+)\s+gp\s+(\+(\s*\d+d\d+)\s*((\xd7|\x78)([0-9,]+)\s*gp)?)?')
 
 class Gem(Item):
 

@@ -167,6 +167,22 @@
         <!-- Form for generating treasure hoard items. -->
         <!-- Well, there will be multiple sub-forms. -->
         <div class="page" id="page_hoard">
+            <p>This feature is currently under development. There are a couple
+            issues to be aware of:
+                <ul>
+                    <li>Unchecking a treasure type does not clear the quantities
+                    selected for each lot in that type.</li>
+                    <li>The user interface is a little unwieldy, and rough
+                    around the edges. A future update will improve things.</li>
+                </ul>
+            </p>
+            <p>Treasure generation, as opposed to the other loot randomizers
+            on this page, involves several steps: calculate (or set) your
+            budget, select treasure types, perhaps based on a creature, and
+            select lots from each treasure type until you meet the budget.
+            There will be a feature to randomize selections within your budget
+            for those "I don't care, just pick whatever" situations, in a
+            future revision.</p>
             <form id="form_hoard_budget" action="">
                 <fieldset>
                     <legend>Budget</legend>
@@ -253,6 +269,11 @@
                 <fieldset>
                     <legend>Item allocation</legend>
                     <label hidden>Budget:<input type="text" name="budget" class="budget_out" readonly /></label>
+                    <p>Select a number of "lots" to be added to the hoard that
+                    make sense for the creature involved. Although there is no
+                    built-in limit to the selections that can be made on this
+                    page, a maximum of 100 total lots will be processed, to
+                    limit server load.</p>
                     <div id="hoard_tt_0">
                         <h4>No treasure types selected</h4>
                         <p>Select one or more treasure types using the
@@ -312,7 +333,7 @@
             <!-- The final results will go here -->
             <fieldset>
                 <legend>Results</legend>
-                <div id="hoard_results"><br/></div>
+                <div id="hoard_alloc_results"><br/></div>
             </fieldSet>
         </div>
 

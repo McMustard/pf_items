@@ -66,7 +66,7 @@ def default_get(d, k, val):
 
 
 def output_json(result, f):
-    print('Content-Type: application/json\n', file=f)
+    print('Content-Type: application/json; charset=UTF-8\n', file=f)
     print(json.dumps(result), file=f)
 
 def run_webgen(params):
@@ -222,8 +222,10 @@ if __name__ == '__main__':
 
     # Access the CGI form.
     params = json.load(sys.stdin)
-    #log = open('log.txt', 'w+')
-    #print(params, file=log)
-    #log.close()
+
+    log = open('log.txt', 'w+')
+    print(params, file=log)
+    log.close()
+
     run_webgen(params)
 
