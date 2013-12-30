@@ -373,7 +373,7 @@ def generate_treasure_item(conn, expression, roller, listener):
         else:
             multiplier = int(multiplier.replace(",",""))
         coinage = m.group(5)
-        results.append(expression + ': ' + str(coefficient * multiplier) + ' ' + coinage)
+        results.append(str(coefficient * multiplier) + ' ' + coinage)
         return results
 
     m = RE_TREASURE_PRETTIES.match(expression)
