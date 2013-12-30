@@ -1,6 +1,6 @@
 PFRPG Item Generator
-Version 0.3
-19 December 2013
+Version 0.4
+29 December 2013
 -------------------------------------------------------------------------------
 
 1. Identification
