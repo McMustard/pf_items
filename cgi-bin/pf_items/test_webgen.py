@@ -1,4 +1,21 @@
 #!/usr/bin/env python3.3
+# vim: set fileencoding=utf-8
+
+# Pathfinder Item Generator
+#
+# Copyright 2012-2014, Steven Clark.
+#
+# This program is free software, and is provided "as is", without warranty of
+# any kind, express or implied, to the extent permitted by applicable law.
+# See the full license in the file 'LICENSE'.
+#
+# This software includes Open Game Content.  See the file 'OGL' for more
+# information.
+#
+'''
+This module tests webgen.py by simulating JSON input, though with direct
+function calls, not using standard input as CGI does.
+'''
 
 import os
 

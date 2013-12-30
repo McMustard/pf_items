@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.3
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
 #
-# Copyright 2012-2013, Steven Clark.
+# Copyright 2012-2014, Steven Clark.
 #
 # This program is free software, and is provided "as is", without warranty of
 # any kind, express or implied, to the extent permitted by applicable law.
