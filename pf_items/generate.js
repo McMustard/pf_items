@@ -150,8 +150,7 @@ function send_request(json_string, handler) {
     //console.log("send: %s", json_string);
     $.ajax({
         type: "POST",
-        url: "cgi-bin/webgen.py",
-        content_type: "application/json; charset=UTF-8",
+        url: "../cgi-bin/pf_items/webgen.py",
         datatype: "json",
         data: json_string,
         success: handler

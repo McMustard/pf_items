@@ -50,6 +50,8 @@ import settlements
 
 # Options.
 # This *must* be set when running local.
+LOCAL = True
+
 DEBUG = True
 
 
@@ -211,14 +213,12 @@ if __name__ == '__main__':
     #    sys.exit(1)
 
     # If we're not in the CGI-BIN directory, change to it.
-    if DEBUG:
+    if LOCAL:
         # This is necessary because the simple web server I use for testing
         # runs from the HTML file's directory, and that's the context for
         # scripts it tries to run, whereas on a real deployment, scripts are
         # already run from the cgi-bin directory.
-        cwd = os.getcwd()
-        if os.path.basename(cwd).lower() != 'cgi-bin':
-            os.chdir(cwd + os.sep + 'cgi-bin')
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # Access the CGI form.
     params = json.load(sys.stdin)
