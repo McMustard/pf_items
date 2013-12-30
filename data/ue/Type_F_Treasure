@@ -1,0 +1,30 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Type F Treasure: Combatant Gear	Ultimate Equipment
+Price	Result
+text	text
+50 gp	2d4 × 10 sp, 2d4 gp, lesser minor potion
+250 gp	2d4 × 10 sp, 2d4 gp, masterwork light armor or shield, lesser minor potion
+350 gp	2d4 × 10 sp, 2d4 gp, masterwork medium armor, lesser minor potion
+400 gp	2d4 × 10 sp, 2d4 gp, masterwork weapon, lesser minor potion
+500 gp	Masterwork weapon, greater minor potion
+750 gp	6d6 gp, masterwork medium armor, masterwork weapon, two lesser minor potions
+1,000 gp	Masterwork heavy armor
+1,500 gp	Masterwork heavy armor, masterwork weapon, greater minor potion
+2,000 gp	Lesser minor armor, masterwork weapon, two greater minor potions
+3.000 gp	Masterwork medium armor, lesser minor weapon, greater minor potion
+4,000 gp	Lesser minor armor, masterwork weapon, lesser minor wondrous item, greater minor potion
+5,000 gp	Masterwork medium armor, lesser minor weapon, lesser minor wondrous item, greater minor potion
+6,000 gp	Lesser minor armor, lesser minor weapon, lesser minor wondrous item
+7,500 gp	Greater minor armor, lesser minor weapon, lesser minor ring
+10,000 gp	Greater minor armor, lesser minor weapon, lesser minor ring, lesser minor wondrous item, three greater minor potions
+10,000 gp	Greater minor armor, greater minor weapon, two greater medium potions
+12,500 gp	Greater minor armor, lesser minor weapon, greater minor wondrous item, two greater medium potions
+15,000 gp	Greater minor armor, greater minor weapon, greater minor ring
+20,000 gp	Lesser medium armor, greater minor weapon, greater minor wondrous item, two greater medium potions
+25,000 gp	Lesser medium armor, lesser medium weapon, lesser minor ring, lesser minor wondrous item, two greater medium potions
+30,000 gp	Lesser medium armor, lesser medium weapon, two lesser minor rings, greater minor wondrous items
+40,000 gp	Lesser medium armor, lesser medium weapon, lesser medium ring, greater minor wondrous item, two greater medium potions
+50,000 gp	Greater medium armor, greater medium weapon, lesser medium wondrous item, two lesser major potions
+60,000 gp	Greater medium armor, greater medium weapon, two greater minor rings, two greater minor wondrous items
+75,000 gp	Lesser major armor, greater medium weapon, greater minor ring, greater medium wondrous item, three greater major potions
+100,000 gp	Lesser major armor, lesser major weapon, lesser medium ring, greater minor ring, two lesser medium wondrous items

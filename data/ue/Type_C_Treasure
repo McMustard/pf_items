@@ -1,0 +1,26 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Type C Treasure: Art Objects	Ultimate Equipment
+Price	Result
+text	text
+50 gp	Grade 1 art object
+100 gp	Grade 2 art object
+100 gp	Two grade 1 art objects
+150 gp	Grade 1 art object, grade 2 art object
+200 gp	Two grade 2 art objects
+250 gp	Three grade 1 art objects, grade 2 art object
+500 gp	Grade 3 art object
+500 gp	Four grade 1 art objects, three grade 2 art objects
+750 gp	Three grade 1 art objects, two grade 2 art objects, grade 3 art object
+1,000 gp	Grade 4 art object
+1,000 gp	Two grade 3 art objects
+1,500 gp	Grade 3 art object, grade 4 art object
+2,000 gp	Two grade 4 art objects
+2,500 gp	Five grade 2 art objects, two grade 3 art objects, grade 4 art object
+5,000 gp	Grade 5 art object
+5,000 gp	Four grade 3 art objects, three grade 4 art objects
+7,500 gp	Grade 3 art object, two grade 4 art objects, grade 5 art object
+10,000 gp	Grade 6 art object
+10,000 gp	Five grade 4 art objects, grade 5 art object
+15,000 gp	Grade 5 art object, grade 6 art object
+20,000 gp	Two grade 5 art objects, grade 6 art object
+50,000 gp	Ten grade 3 art objects, five grade 4 art objects, four grade 5 art objects, two grade 6 art objects

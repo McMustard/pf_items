@@ -1,0 +1,18 @@
+# Contains Open Game Content.  See file 'OGC' for more information.
+Type H Treasure: Lair Treasure	Ultimate Equipment
+Price	Result
+text	text
+500 gp	4d4 × 100 cp, 3d6 × 10 sp, 2d4 × 10 gp, masterwork weapon, lesser minor potion, lesser minor scroll, grade 2 gemstone
+1,000 gp	2d4 × 100 cp, 2d6 × 100 sp, 6d6 gp, greater minor potion, greater minor scroll, lesser minor wand, three grade 1 gemstones
+2,500 gp	3d6 × 10 sp, 2d4 gp, masterwork heavy armor, masterwork weapon, two lesser medium potions, two greater minor scrolls, grade 2 gemstone
+5,000 gp	2d4 × 10 gp, 4d6 pp, masterwork weapon, lesser minor ring, greater medium potion, lesser medium scroll, greater minor wand
+7,500 gp	4d4 × 10 gp, 6d6 pp, lesser minor weapon, lesser minor wondrous item, two greater medium potions, greater minor wand, two grade 3 gemstones
+10,000 gp	4d8 × 10 gp, 6d10 pp, greater minor armor, lesser minor ring, lesser minor wondrous item, lesser medium scroll, greater minor wand, grade 4 gemstone
+15,000 gp	4d4 × 10 gp, 4d4 × 10 pp, greater minor armor, lesser minor wondrous item, two greater medium potions, two greater medium scrolls, lesser medium wand, one grade 3 gemstone
+20,000 gp	2d4 × 10 pp, greater minor ring, two lesser minor wondrous items, two greater medium potions, two lesser major scrolls, lesser medium wand
+25,000 gp	6d10 × 10 gp, 6d6 pp, lesser medium armor, lesser minor weapon, greater minor wondrous item, two lesser major scrolls, lesser medium wand, grade 4 gemstone
+30,000 gp	6d6 × 10 gp, 2d4 × 10 pp, greater minor weapon, lesser medium wondrous item, greater medium wand, three grade 3 gemstones
+40,000 gp	4d4 × 10 gp, 4d4 × 10 pp, lesser medium ring, lesser medium rod, two greater major potions, two lesser major scrolls, lesser major wand
+50,000 gp	4d4 × 10 pp, greater medium armor, lesser medium staff, lesser medium wondrous item, greater major scroll, lesser medium wand, grade 5 gemstone
+75,000 gp	2d8 × 100 gp, 4d4 × 10 pp, greater minor weapon, greater medium ring, greater medium staff, three greater major potions, greater major scroll, lesser major wand, grade 5 gemstone
+100,000 gp	8d6 × 100 gp, 4d4 × 10 pp, lesser major ring, lesser major wondrous item, three greater major potions, greater major scroll, lesser medium wand, two grade 5 gemstones, grade 6 gemstone

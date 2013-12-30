@@ -1,5 +1,5 @@
 # Contains Open Game Content.  See file 'OGC' for more information.
-Random Weapon	7-13	p370	Ultimate Equipment
+Random Weapon	Ultimate Equipment
 Roll	Type	Result	Damage Type	Wield Type	Price
 range	text	text	text	text	text
 01	melee	Bastard sword	S	one-hand	35 gp
