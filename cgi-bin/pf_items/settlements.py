@@ -73,9 +73,12 @@ def get_keys():
     return sorted(SETTLEMENT_MAP.keys())
 
 
-def generate_settlement_items(conn, settlement, roller):
+def generate_settlement_items(conn, settlement, roller, **kwargs):
+
     # Create a result in a type that can be serialized into JSON.
     result = {}
+
+    list_rolls = kwargs.get('list_rolls', '')
 
     # Convert the command-line parameter to a dict key string.
     try:

@@ -94,6 +94,9 @@ def run_webgen_internal(params):
         # Mode of operation:
         mode = params['mode']
 
+        # List rolls?
+        list_rolls = params.get('list_rolls', '')
+
         if mode == 'echo_test':
             # Echo back the input.
             result = params
@@ -103,9 +106,12 @@ def run_webgen_internal(params):
             conn = sqlite.connect('data/data.db')
             conn.row_factory = sqlite.Row
 
-            settlement_size = params['size']
+            settlement_size = params.get('size','Thorp')
+            options = {
+                    'list_rolls' : list_rolls
+                    }
             result = settlements.generate_settlement_items(conn,
-                    settlement_size, rollers.PseudorandomRoller())
+                    settlement_size, rollers.PseudorandomRoller(), **options)
 
         elif mode == 'custom':
             # Open the database.
