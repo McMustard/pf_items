@@ -200,6 +200,60 @@ function send_request(json_string, handler) {
     });
 }
 
+// Generate a string from an item description block.
+function item_str(item) {
+    return String(item.item + "; " + item.value_str);
+}
+
+// Standard handling of minor/medium/major items.
+function post_grouped_items(response, results) {
+    if (response.minor_items.length > 0 ||
+            response.minor_heading.length > 0) {
+        results.append("<p>");
+       results.append("<strong>Minor Items:</strong>");
+        if (response.minor_heading.length > 0) {
+            results.append("<br>" + response.minor_heading);
+        }
+        results.append("<ul>");
+        for (i in response.minor_items) {
+            results.append("<li>" +
+                item_str(response.minor_items[i]) + "</li>");
+        }
+        results.append("</ul>");
+        results.append("</p>");
+    }
+    if (response.medium_items.length > 0 ||
+            response.medium_heading.length > 0) {
+        results.append("<p>");
+        results.append("<strong>Medium Items:</strong>");
+        if (response.medium_heading.length > 0) {
+            results.append("<br>" + response.medium_heading);
+        }
+        results.append("<ul>");
+        for (i in response.medium_items) {
+            results.append("<li>" +
+                item_str(response.medium_items[i]) + "</li>");
+        }
+        results.append("</ul>");
+        results.append("</p>");
+    }
+    if (response.major_items.length > 0 ||
+            response.major_heading.length > 0) {
+        results.append("<p>");
+        results.append("<strong>Major Items:</strong>");
+        if (response.major_heading.length > 0) {
+            results.append("<br>" + response.major_heading);
+        }
+        results.append("<ul>");
+        for (i in response.major_items) {
+            results.append("<li>" +
+                item_str(response.major_items[i]) + "</li>");
+        }
+        results.append("</ul>");
+        results.append("</p>");
+    }
+}
+
 // Accept the data back from webgen.py and populate the settlement result
 // area with it.
 function process_settlement_response(response, textStatus, jqXHR) {
@@ -218,39 +272,7 @@ function process_settlement_response(response, textStatus, jqXHR) {
     else {
         results.append("unknown");
     }
-    if (response.minor_items.length > 0) {
-        results.append("<p>");
-        results.append("<strong>Minor Items:</strong>");
-        results.append("<ul>");
-        for (i in response.minor_items) {
-            results.append("<li>" +
-                response.minor_items[i] + "</li>");
-        }
-        results.append("</ul>");
-        results.append("</p>");
-    }
-    if (response.medium_items.length > 0) {
-        results.append("<p>");
-        results.append("<strong>Medium Items:</strong>");
-        results.append("<ul>");
-        for (i in response.medium_items) {
-            results.append("<li>" +
-                    response.medium_items[i] + "</li>");
-        }
-        results.append("</ul>");
-        results.append("</p>");
-    }
-    if (response.major_items.length > 0) {
-        results.append("<p>");
-        results.append("<strong>Major Items:</strong>");
-        results.append("<ul>");
-        for (i in response.major_items) {
-            results.append("<li>" +
-                    response.major_items[i] + "</li>");
-        }
-        results.append("</ul>");
-        results.append("</p>");
-    }
+    post_grouped_items(response, results);
 }
 
 // Accept the data back from webgen.py and populate the custom settlement
@@ -264,39 +286,7 @@ function process_custom_response(response, textStatus, jqXHR) {
         results.append("An error has occurred.");
         return;
     }
-    if (response.minor_items.length > 0) {
-        results.append("<p>");
-        results.append("<strong>Minor Items:</strong>");
-        results.append("<ul>");
-        for (i in response.minor_items) {
-            results.append("<li>" +
-                response.minor_items[i] + "</li>");
-        }
-        results.append("</ul>");
-        results.append("</p>");
-    }
-    if (response.medium_items.length > 0) {
-        results.append("<p>");
-        results.append("<strong>Medium Items:</strong>");
-        results.append("<ul>");
-        for (i in response.medium_items) {
-            results.append("<li>" +
-                    response.medium_items[i] + "</li>");
-        }
-        results.append("</ul>");
-        results.append("</p>");
-    }
-    if (response.major_items.length > 0) {
-        results.append("<p>");
-        results.append("<strong>Major Items:</strong>");
-        results.append("<ul>");
-        for (i in response.major_items) {
-            results.append("<li>" +
-                    response.major_items[i] + "</li>");
-        }
-        results.append("</ul>");
-        results.append("</p>");
-    }
+    post_grouped_items(response, results);
 }
 
 // Accept the data back from webgen.py and populate the individual item result

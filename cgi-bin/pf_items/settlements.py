@@ -98,10 +98,11 @@ def generate_settlement_items(conn, settlement, roller):
     expr_medium = row['Medium']
     expr_major = row['Major']
 
-    # Note the base value.
+    # Set up the result
     result['base_value'] = settlement_base
-
-    # Set up the remaining values.
+    result['minor_heading'] = ""
+    result['medium_heading'] = ""
+    result['major_heading'] = ""
     result['minor_items'] = []
     result['medium_items'] = []
     result['major_items'] = []
@@ -118,24 +119,24 @@ def generate_settlement_items(conn, settlement, roller):
     # metropolis.
     if count_minor > 0 or expr_minor == '*':
         if expr_minor == '*':
-            result['minor_items'].append('This ' + key.lower() +
-                    ' has virtually every minor magic item.')
+            result['minor_heading'] = 'This ' + key.lower() + \
+                    ' has virtually every minor magic item.'
         else:
             for i in range(count_minor):
                 x = get_random_item(conn, 'minor', roller, settlement_base)
-                result['minor_items'].append(str(x))
+                result['minor_items'].append(x.get_dict())
 
     # Generate the medium magic items.
     if count_medium > 0:
         for i in range(count_medium):
             x = get_random_item(conn, 'medium', roller, settlement_base)
-            result['medium_items'].append(str(x))
+            result['medium_items'].append(x.get_dict())
 
     # Generate the major magic items.
     if count_major > 0:
         for i in range(count_major):
             x = get_random_item(conn, 'major', roller, settlement_base)
-            result['major_items'].append(str(x))
+            result['major_items'].append(x.get_dict())
 
     # Return the resulting collection.
     return result
@@ -144,6 +145,9 @@ def generate_settlement_items(conn, settlement, roller):
 def generate_custom(conn, base_value, q_ls_min, q_gt_min, q_ls_med, q_gt_med, q_ls_maj, q_gt_maj):
     # Easy peasy.
     result = {}
+    result['minor_heading'] = ''
+    result['medium_heading'] = ''
+    result['major_heading'] = ''
     result['minor_items'] = []
     result['medium_items'] = []
     result['major_items'] = []
@@ -151,22 +155,22 @@ def generate_custom(conn, base_value, q_ls_min, q_gt_min, q_ls_med, q_gt_med, q_
     # Note: 'x' is not an Item, but a string.
     for i in range(rollers.roll_form(q_ls_min)):
         x = item.fast_generate(conn, 'lesser minor', base_value)
-        result['minor_items'].append(x)
+        result['minor_items'].append(x.get_dict())
     for i in range(rollers.roll_form(q_gt_min)):
         x = item.fast_generate(conn, 'greater minor', base_value)
-        result['minor_items'].append(x)
+        result['minor_items'].append(x.get_dict())
     for i in range(rollers.roll_form(q_ls_med)):
         x = item.fast_generate(conn, 'lesser medium', base_value)
-        result['medium_items'].append(x)
+        result['medium_items'].append(x.get_dict())
     for i in range(rollers.roll_form(q_gt_med)):
         x = item.fast_generate(conn, 'greater medium', base_value)
-        result['medium_items'].append(x)
+        result['medium_items'].append(x.get_dict())
     for i in range(rollers.roll_form(q_ls_maj)):
         x = item.fast_generate(conn, 'lesser major', base_value)
-        result['major_items'].append(x)
+        result['major_items'].append(x.get_dict())
     for i in range(rollers.roll_form(q_gt_maj)):
         x = item.fast_generate(conn, 'greater major', base_value)
-        result['major_items'].append(x)
+        result['major_items'].append(x.get_dict())
 
     # Return the resulting collection.
     return result

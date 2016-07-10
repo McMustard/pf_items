@@ -52,6 +52,8 @@ else:
 # Keys into the subclass map, also usable for displaying categories, if
 # desired.
 
+KEY_INVALID       = 'Invalid'
+KEY_DATABASE      = 'Database'
 KEY_ARMOR         = 'Armor/Shield'
 KEY_WEAPON        = 'Weapon'
 KEY_POTION        = 'Potion'
@@ -246,7 +248,7 @@ def generate_generic(conn, strength, roller, base_value, **kwargs):
             value = 0
         count += 1
         if count > 1000:
-            return 'Error: gave up after 1000 tries; <error> gp'
+            return InvalidItem('Error: gave up after 1000 tries; <error> gp')
     return x
 
 
@@ -313,7 +315,8 @@ def fast_generate(conn, strength, base_value):
             return x
 
     # We did not find a single thing.
-    return 'No ' + strength + ' items possible under ' + str(base_value) + ' gp'
+    return InvalidItem('No ' + strength + ' items possible under ' + 
+                    str(base_value) + ' gp')
 
 
 def fast_generate_full(conn, strength, kind, base_value):
@@ -349,11 +352,12 @@ def fast_generate_full(conn, strength, kind, base_value):
             count = c['Count']
             accum += count
             if roll < accum:
-                return '{0}: {1}; {2}'.format(c['Subtype'], c['Item'],
-                        str(Price(c['Price'])) )
-        return 'No possible items'
+                return DatabaseItem(c['Subtype'], c['Item'], c['Price'])
+                #return '{0}: {1}; {2}'.format(c['Subtype'], c['Item'],
+                #        str(Price(c['Price'])) )
+        return None
     except:
-        return 'No possible items'
+        return None
 
 
 def generate_treasure_item(conn, expression, roller, listener):
@@ -855,13 +859,18 @@ class Item(object):
             s = self.label
         else:
             s = self.subtype + ': ' + self.label
-        try:
-            s += '; ' + str(self.price)
-        except BadPrice as ex:
-            s += '; pricing error'
         if self.bad_item:
             s += " [invalid]"
         return s
+
+
+    # Return a dictionary describing the item.
+    def get_dict(self):
+        return {
+                'item' : str(self),
+                'value_num' : self.price.as_float() if self.price is not None else 0,
+                'value_str' : str(self.price if self.price is not None else '')
+                }
 
 
     #
@@ -900,6 +909,23 @@ class Item(object):
         result += 'label:{}'.format(self.label)
         result += '>'
         return result
+
+
+class InvalidItem(Item):
+
+    def __init__(self, reason):
+        Item.__init__(self, KEY_INVALID)
+        self.label = reason
+        self.subtype = ''
+
+
+class DatabaseItem(Item):
+
+    def __init__(self, subtype, item, price):
+        Item.__init__(self, KEY_DATABASE)
+        self.subtype = subtype
+        self.label = item
+        self.price = Price(price)
 
 
 class Armor(Item):
@@ -1797,6 +1823,8 @@ class WondrousItem(Item):
 # A dictionary that maps from an item type string to an Item subclass
 # We won't do any fancy registration stuff, just use a fixed table.
 ITEM_SUBCLASSES = {
+        KEY_INVALID       : InvalidItem,
+        KEY_DATABASE      : DatabaseItem,
         KEY_ARMOR         : Armor,
         KEY_WEAPON        : Weapon,
         KEY_POTION        : Potion,
