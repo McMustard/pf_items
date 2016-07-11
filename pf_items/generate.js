@@ -24,6 +24,28 @@
 // JavaScript, or if I should start using classes, or what. Fine for now.
 var g_TreasureTablesLoaded = false;
 var g_TreasureTables = {};
+var g_Budget = 0.00;
+var g_AllTreasureTypes = "abcdefghi";
+var g_TreasureTypePresets = {
+    "none"                : "",
+    "all"                 : "abcdefghi",
+    "aberration"          : "abde",
+    "aberration_cunning"  : "abdefgh",
+    "animal"              : "abde",
+    "construct"           : "ef",
+    "construct_guardian"  : "efbch",
+    "dragon"              : "abchi",
+    "fey"                 : "bcdg",
+    "humanoid"            : "abdefg",
+    "humanoid_community"  : "abdefgh",
+    "magicalbeast"        : "abde",
+    "monstroushumanoid"   : "abcdeh",
+    "ooze"                : "abd",
+    "outsider"            : "abdefg",
+    "plant"               : "abde",
+    "undead"              : "abde",
+    "undead_intelligent"  : "abdefg",
+    "vermin"              : "abd" };
 
 // Initializer
 $(document).ready(function(){
@@ -62,8 +84,10 @@ $(document).ready(function(){
     // The Hoard generator has sub-forms.
     setup_generator("hoard_budget", process_hoard_budget_response, true);
     //setup_generator("hoard_types",  process_hoard_types_response,  true);
-    //setup_generator("hoard_alloc",  process_hoard_alloc_response,  true);
-    $("#btn_hoard_alloc_execute").click(submit_hoard_alloc);
+    //setup_generator("hoard_alloc",  process_hoard_results,  true);
+    $("#btn_hoard_execute").click(submit_hoard_generate);
+    $("#btn_hoard_alloc_reset").click(clear_hoard_alloc);
+    $("#btn_hoard_alloc_randomize").click(random_hoard_alloc);
 
     // Additional handlers
     $("ul#p_hoard_custom :input").focus(function(){
@@ -79,15 +103,34 @@ $(document).ready(function(){
     });
 
     $(".ttcb").change(function(){
-        // This invariably means custom creature, reset the list.
-        $("#list_creatures").val('');
+        // See what's selected.
+        var types = get_selected_treasure_types();
+        var selector = $("#list_creatures");
+        var selection = selector.val();
+        // If no types are selected.
+        if (types == "") {
+            // Select the "none" option.
+            selector.val("none");
+            // And clear the note.
+            $("#l_creatures_note").text("");
+        }
+        // If the type is not outsider, this is a custom selection.
+        else if (selection != "outsider") {
+            selector.val("custom");
+        }
+        else if (selection == "outsider") {
+            // keep outsider
+        }
+        // If all types are selected, pick "all".
+        else if (types == g_AllTreasureTypes) {
+            selector.val("all");
+        }
         // Also show/hide treasure lists based on this setting.
         update_treasure_list_visibilities();
     });
 
     // list_creatures, cb_tt_<a..i>
     $("#list_creatures").change(on_click_creatures);
-
 });
 
 // Sets up a button to "submit" a form.
@@ -276,62 +319,22 @@ function on_click_creatures() {
     val = selector.val();
     types = "";
 
+    // Clear the note.
     $("#l_creatures_note").text("");
-    if (val == "none") {
-        types = ""
+
+    // If "custom" was selected, do nothing.
+    if (val == "custom") {
+        return;
     }
-    else if (val == "aberration") {
-        types = "abde";
-    }
-    else if (val == "aberration_cunning") {
-        types = "abdefgh";
-    }
-    else if (val == "animal") {
-        types = "abde";
-    }
-    else if (val == "construct") {
-        types = "ef";
-    }
-    else if (val == "construct_guardian") {
-        types = "efbch";
-    }
-    else if (val == "dragon") {
-        types = "abchi";
-    }
-    else if (val == "fey") {
-        types = "bcdg";
-    }
-    else if (val == "humanoid") {
-        types = "abdefg";
-    }
-    else if (val == "humanoid_community") {
-        types = "abdefgh";
-    }
-    else if (val == "magicalbeast") {
-        types = "abde";
-    }
-    else if (val == "monstroushumanoid") {
-        types = "abcdeh";
-    }
-    else if (val == "ooze") {
-        types = "abd";
-    }
-    else if (val == "outsider") {
-        types = "abdefg";
+
+    // Handle generically.
+    types = g_TreasureTypePresets[val];
+
+    // Handle special cases.
+    if (val == "outsider") {
         $("#l_creatures_note").text("Outsiders can carry any kind of gear. The treasure types for \"Humanoid\" have been selected for you as a starting point. Customize the selections as you see fit.");
     }
-    else if (val == "plant") {
-        types = "abde";
-    }
-    else if (val == "undead") {
-        types = "abde";
-    }
-    else if (val == "undead_intelligent") {
-        types = "abdefg";
-    }
-    else if (val == "vermin") {
-        types = "abd";
-    }
+
     // Select checkboxes
     $("#cb_tt_a").prop("checked", jQuery.inArray("a", types) >= 0);
     $("#cb_tt_b").prop("checked", jQuery.inArray("b", types) >= 0);
@@ -343,7 +346,22 @@ function on_click_creatures() {
     $("#cb_tt_h").prop("checked", jQuery.inArray("h", types) >= 0);
     $("#cb_tt_i").prop("checked", jQuery.inArray("i", types) >= 0);
 
+    // Update the visibilities of the treasure type selectors.
     update_treasure_list_visibilities();
+
+    //selector.val("idle");
+}
+
+function get_selected_treasure_types() {
+    var types = "";
+    var allTypes = g_AllTreasureTypes;
+    for (var i = 0; i < allTypes.length; ++i) {
+        var id = "#cb_tt_" + allTypes[i];
+        if ($(id).prop("checked")) {
+            types += allTypes[i];
+        }
+    }
+    return types;
 }
 
 function check_visibility(type) {
@@ -390,6 +408,7 @@ function process_hoard_budget_response(response, textStatus, jqXHR) {
     }
     //console.log("Budget: %o", response.budget);
     $(".budget_out").val(response.budget);
+    g_Budget = parseFloat(response.budget.replace(/,/g, ''));
 }
 
 // Accept the data back from webgen.py and populate the hoard types result
@@ -477,7 +496,7 @@ function handle_adjustment(id) {
 }
 
 //
-function submit_hoard_alloc() {
+function submit_hoard_generate() {
     // All of the "form" data is in g_TreasureTables.
     // Convert it into a nicer transmission format.
 
@@ -499,14 +518,231 @@ function submit_hoard_alloc() {
     
     var submission = JSON.stringify(copy)
     //console.log("send: %s", submission);
-    send_request(submission, process_hoard_alloc_response);
+    send_request(submission, process_hoard_results);
+}
+
+function clear_hoard_alloc() {
+    for (var tt in g_TreasureTables) { arr = g_TreasureTables[tt];
+        for (var i = 0; i < arr.length; i++) {
+            handle_adjustment("tt"+tt+"_0_"+i);
+        }
+    }
+}
+
+//
+function compare_random_treasure_lines(lhs, rhs) {
+    if (lhs.cost < rhs.cost) { return -1; }
+    if (rhs.cost < lhs.cost) { return 1; }
+    return 0;
+}
+
+//
+function get_random_weight(index, cost) {
+    var this_fn = get_random_weight;
+    var method = 0;
+    if (method == 0) {
+        // Method 0: 2^n
+        return Math.pow(2, index);
+    }
+    else if (method == 1) {
+        // Method 1: Fibonacci
+        if (typeof this_fn.fibonacci == 'undefined') {
+            this_fn.fibonacci = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144,
+                233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657,
+                46368, 75025, 121393, 196418, 317811, 514229];
+        }
+        if (this_fn.fibonacci.length <= index) {
+            // Need more numbers.
+            for (var i = this_fn.fibonacci.length - 2; i < index; ++i) {
+               this_fn.fibonacci.push(this_fn.fibonacci[i] +
+                      this_fn.fibonacci[i+1]);
+            }
+            return this_fn.fibonacci[index];
+        }
+    }
+    else if (method == 2) {
+        // Method 2: straight cost
+        return cost | 0;
+    }
+    else if (method == 3) {
+        // Method 3: cost doubled
+        return (cost * 2) | 0;
+    }
+    else if (method == 4) {
+        // Method 4: cost squared
+        return Math.pow(cost, 2);
+    }
+
+    // Default in case of error.
+    return cost | 0;
+}
+
+//
+function random_hoard_alloc() {
+
+    // Clear the selections first.
+    clear_hoard_alloc();
+
+    // Create a single list of all eligible treasure lots.
+    var lots = [];
+    var typesSelectCount = 0;
+    for (var tt in g_TreasureTables) {
+
+        // Skip this lot if it is not a selected type.
+        if ($('#cb_tt_'+tt).prop('checked')) {
+            typesSelectCount += 1;
+            // Push on elements with cost <= g_Budget.
+            var typeLots = g_TreasureTables[tt];
+            for (var i = 0; i < typeLots.length; ++i) {
+                // Duplicate the treasure table entry.
+                var entry = JSON.parse(JSON.stringify(typeLots[i]));
+                if (entry.cost <= g_Budget) {
+                    // Supply the treasure type and index.
+                    entry['treasureType'] = tt;
+                    entry['treasureIndex'] = i;
+                    // Add to the lots list.
+                    lots.push(entry);
+                }
+            }
+        }
+    }
+
+    if (lots.length == 0) {
+        var error = $('#randomize_error');
+        // No types are selected, or the selected types are over budget.
+        if (typesSelectCount) {
+            error.text('The selected treasure types do not have any lots that can fit in the budget.');
+        }
+        else {
+            error.text('Select a creature type, or one or more treasure types');
+        }
+        error.show();
+
+        // Nothing to do.
+        return;
+    }
+    else {
+        var error = $('#randomize_error');
+        error.text('');
+        error.hide();
+    }
+
+    // Now, sort the lots.
+    lots.sort(compare_random_treasure_lines);
+
+    // DEBUG
+    //console.log('Lots, sorted: %o', lots);
+ 
+    // Assign random weights.
+    // The weight index (used by some weighting methods) should only increase
+    // when an item is more expensive than its predecessor.
+    var prevCost = -1;
+    var weightIndex = -1;
+    for (var i = 0; i < lots.length; ++i) {
+        var entry = lots[i];
+
+        // Does this increase the weight index?
+        if (entry.cost > prevCost) { weightIndex += 1; }
+
+        // Assign a weight.
+        entry['random_weight'] = get_random_weight(weightIndex, entry.cost); 
+
+        // This is the new previous cost.
+        prevCost = entry.cost;
+    }
+
+    // Start allocating items!
+    var budgetLeft = g_Budget;
+
+    // Limit the number of attempts to avoid lockup.
+    var attemptsLeft = 1000;
+
+    // Select a random treasure type from the list.
+    while (budgetLeft > 0 && attemptsLeft-- > 0) {
+
+        // Delete any entries which are unaffordable.
+        for (var i = 0; i < lots.length; ++i) {
+            if (lots[i].cost > budgetLeft) {
+
+                // Lob off the rest, they will also be too expensive.
+                var eliminated = lots.splice(i, lots.length);
+
+                // DEBUG
+                //console.log('Dropped %o as too expensive', eliminated);
+                break;
+            }
+        }
+
+        // If there are no more treasures, we are done.
+        if (lots.length == 0) {
+            // DEBUG
+            //console.log('No more lots!');
+            break;
+        }
+
+        // DEBUG
+        //console.log('There are %s lots', lots.length);
+
+        // Total up the random weights.
+        var weightsTotal = 0;
+        for (var i = 0; i < lots.length; ++i) {
+            weightsTotal += lots[i].random_weight;
+        }
+
+        // Select a value from that range.
+        var ran_x = ((Math.random() * weightsTotal) | 0);
+
+        // DEBUG
+        //console.log('Random pick %s of %s', ran_x, weightsTotal);
+
+        // Count up elements until we reach the bucket.
+        var bucket = lots.length;
+        var accum = 0;
+        for (var i = 0; i < lots.length; ++i) {
+            accum += lots[i].random_weight;
+
+            // DEBUG
+            //console.log('testing ran_x=%s < accum=%d', ran_x, accum);
+
+            if (ran_x < accum) {
+                bucket = i;
+                break;
+            }
+        }
+        // Select the bucket.
+        if (bucket < lots.length) {
+
+            // DEBUG
+            //console.log('ran_x=%s --> bucket=%s w random_weight=%s', ran_x, bucket, lots[i].random_weight);
+ 
+            var treasureType = lots[bucket].treasureType;
+            var treasureIndex = lots[bucket].treasureIndex;
+            var cost = lots[bucket].cost;
+
+            // DEBUG
+            //console.log('selected item with cost %s', cost);
+
+            // Increment.
+            handle_adjustment('tt'+treasureType+'_p_'+treasureIndex);
+
+            // Account for the cost.
+            budgetLeft -= cost;
+        }
+        else {
+            // DEBUG
+            //console.log('Could not find bucket for ran_x=%s', ran_x);
+        }
+
+        // DEBUG
+        //console.log('Budget left %s', budgetLeft);
+    }
 }
 
 // Accept the data back from webgen.py and populate the hoard alloc result
 // area with it.
-function process_hoard_alloc_response(response, textStatus, jqXHR) {
-    //console.log("Hoard Alloc Results: %o", response);
-    var results = $("#hoard_alloc_results");
+function process_hoard_results(response, textStatus, jqXHR) {
+    //console.log("Hoard Results: %o", response);
+    var results = $("#hoard_results");
     if (response == "") {
         results.html("An error has occurred.");
         return;
