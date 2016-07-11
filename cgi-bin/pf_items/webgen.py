@@ -110,8 +110,11 @@ def run_webgen_internal(params):
             options = {
                     'list_rolls' : list_rolls
                     }
+            roller = rollers.PseudorandomRoller()
             result = settlements.generate_settlement_items(conn,
-                    settlement_size, rollers.PseudorandomRoller(), **options)
+                    settlement_size, roller, **options)
+            if list_rolls == 'true':
+                    result['rolls'] = roller.get_log()
 
         elif mode == 'custom':
             # Open the database.
@@ -126,6 +129,7 @@ def run_webgen_internal(params):
             q_ls_maj = default_get(params, 'q_ls_maj', '1')
             q_gt_maj = default_get(params, 'q_gt_maj', '1')
             result = settlements.generate_custom(conn,
+                    rollers.PseudorandomRoller(),
                     base_value, q_ls_min, q_gt_min, q_ls_med, q_gt_med,
                     q_ls_maj, q_gt_maj)
 

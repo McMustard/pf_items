@@ -224,6 +224,10 @@ def generate_generic(conn, strength, roller, base_value, **kwargs):
     x = None
     count = 0
     while value < min_value:
+
+        # This is a potential new item
+        roller.start_item('Rolling an item')
+
         # We may decide to change this later, but at least for now, the choice
         # between them will be 50/50.  Because slotless wondrous item can also
         # be 'least minor', use least if the roll is less than 25.  Item types
@@ -238,6 +242,7 @@ def generate_generic(conn, strength, roller, base_value, **kwargs):
 
         # Now, select an item type.
         roll = roller.roll('1d100', 'item type')
+
         # This lookup only needs minor/medium/major.
         kind = get_item_type(conn, strength, roll)
 
@@ -246,6 +251,10 @@ def generate_generic(conn, strength, roller, base_value, **kwargs):
             value = x.price.as_float()
         except BadPrice as ex:
             value = 0
+        if value < min_value:
+            roller.cancel_item()
+        else:
+            roller.finish_item()
         count += 1
         if count > 1000:
             return InvalidItem('Error: gave up after 1000 tries; <error> gp')
@@ -491,7 +500,10 @@ def get_item_type(conn, strength, roll):
     # Search the database.
     cursor.execute('''SELECT Item from Item_Types WHERE (? >= {0}) AND
             (? <= {1});'''.format(*columns), (roll, roll) )
-    return cursor.fetchone()["Item"]
+    one = cursor.fetchone()
+    if one is not None:
+        return one['Item']
+    return None
 
 
 def item_str(x):

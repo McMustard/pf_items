@@ -257,7 +257,7 @@ function post_grouped_items(response, results) {
 // Accept the data back from webgen.py and populate the settlement result
 // area with it.
 function process_settlement_response(response, textStatus, jqXHR) {
-    //console.log("Settlement Results: %o", response);
+    console.log("Settlement Results: %o", response);
     // Fill out the results receptacle with the result data.
     var results = $("#settlement_results");
     results.html("");
@@ -273,6 +273,18 @@ function process_settlement_response(response, textStatus, jqXHR) {
         results.append("unknown");
     }
     post_grouped_items(response, results);
+
+    var rolls = $("#settlement_rolls");
+    rolls.html("");
+    if ('rolls' in response) {
+        rolls.show();
+        for (i in response.rolls) {
+            rolls.append(response.rolls[i] + "<br>");
+        }
+    }
+    else {
+        rolls.hide();
+    }
 }
 
 // Accept the data back from webgen.py and populate the custom settlement

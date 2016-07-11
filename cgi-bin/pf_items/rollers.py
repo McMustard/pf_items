@@ -47,7 +47,7 @@ def parseDiceExpression(dice_expression):
 # Roll virtual dice
 def roll_dice_impl(number, sides):
     rolls = [random.randrange(1, sides + 1) for x in range(number)]
-    return sum(rolls)
+    return (sum(rolls), rolls)
 
 # Roll virtual dice
 def rollDice(dice_expression):
@@ -80,27 +80,123 @@ def roll_form(expression):
 
 # Base class for dice rollers
 class Roller(object):
+
+    def __init__(self):
+        self.loglines = []
+        self.pending = None
+
     # Roll a random number according to the specified dice expression.
     # Return integers only.
     def roll(self, dice_expression, purpose):
         # 0 is an invalid value.
         return 0
 
+    def log_roll(self, dice_expression, purpose, result):
+        line = 'Rolling ' + dice_expression + ' for ' + purpose + \
+                ',  got ' + str(result[1]) + ' = ' + str(result[0])
+        self.log(line)
+
+    def log(self, line):
+        # If an item is pending, use that list.
+        # Otherwise use the main log.
+        if (self.pending is not None):
+            self.pending.append(line)
+        else:
+            self.loglines.append(line)
+
+    def start_session(self, description):
+        # Log the session type.
+        self.loglines.append(description)
+        # End any pending items.
+        self.pending = None
+
+    def start_item(self, description):
+        # Make the pending list valid.
+        self.pending = []
+        self.pending.append(description)
+
+    def cancel_item(self):
+        # Make the pending list invalid.
+        self.pending = None
+
+        # This is an alternate approach, preserving bad items.
+        #self.pending.append('The item is invalid')
+        #self.finish_item()
+
+    def finish_item(self):
+        # If we were working on an item list, log it.
+        if (self.pending is not None):
+            self.loglines.extend(self.pending)
+        self.pending = None
+
+    def get_log(self):
+        return self.loglines
+
+
 class PseudorandomRoller(Roller):
+
+    def __init__(self):
+        Roller.__init__(self)
+
     # Roll a random number using the handy-dandy function we have here.
     def roll(self, dice_expression, purpose):
-        # Simply return flat numbers.
+
+        # Try it as a straight integer.
         try:
-            return int(dice_expression)
-        except:
+            as_int = int(dice_expression)
+            self.log('Using constant ' + str(as_int) + ' for ' + purpose)
+            return min(as_int, MAX_FORM_COUNT)
+        except ValueError:
             pass
-        # Generate a pseudomrandom number.
-        return rollDice(dice_expression)
+        # Try it as a dice expression.
+        try:
+            number, sides = parseDiceExpression(dice_expression)
+            newexpr = str(number) + "d" + str(sides)
+            result = rollDice(newexpr)
+            Roller.log_roll(self, newexpr, purpose, result)
+            return result[0]
+        except ValueError:
+            pass
+
+        # Invalid
+        return 0
+
+    # Roll a random number using the handy-dandy function we have here.
+    def roll_form(self, dice_expression, purpose):
+
+        # Try it as a straight integer.
+        try:
+            as_int = int(dice_expression)
+            self.log('Using constant ' + str(as_int) + ' for ' + purpose)
+            return min(as_int, MAX_FORM_COUNT)
+        except ValueError:
+            pass
+        # Try it as a dice expression.
+        try:
+            number, sides = parseDiceExpression(dice_expression)
+            if number < 1: number = 1
+            if number > MAX_FORM_DICE: number = MAX_FORM_DICE
+            if sides < 1: sides = 1
+            if sides > MAX_FORM_SIDES: sides = MAX_FORM_SIDES
+            newexpr = str(number) + "d" + str(sides)
+            result = rollDice(newexpr)
+            Roller.log_roll(self, dice_expression + ' --> ' + newexpr, purpose, result)
+            return result
+        except ValueError:
+            pass
+        # Invalid
+        return 0
+
 
 # Instructs the user via the command line to roll dice and input the results
 # to return.
 class ManualDiceRoller(Roller):
+
+    def __init__(self):
+        Roller.__init__(self)
+
     def roll(self, dice_expression, purpose):
+        Roller.roll(self, dice_expression, purpose)
         # Simply return flat numbers.
         try:
             return int(dice_expression)

@@ -110,6 +110,8 @@ def generate_settlement_items(conn, settlement, roller, **kwargs):
     result['medium_items'] = []
     result['major_items'] = []
 
+    roller.start_session('Start of settlement rolls')
+
     # It's easier on the user (if the user is rolling) to roll like-dice
     # first.  Go through the gauntlet.
     count_minor = 0
@@ -145,7 +147,8 @@ def generate_settlement_items(conn, settlement, roller, **kwargs):
     return result
 
 
-def generate_custom(conn, base_value, q_ls_min, q_gt_min, q_ls_med, q_gt_med, q_ls_maj, q_gt_maj):
+def generate_custom(conn, roller, base_value, q_ls_min, q_gt_min, q_ls_med,
+        q_gt_med, q_ls_maj, q_gt_maj):
     # Easy peasy.
     result = {}
     result['minor_heading'] = ''
@@ -156,22 +159,28 @@ def generate_custom(conn, base_value, q_ls_min, q_gt_min, q_ls_med, q_gt_med, q_
     result['major_items'] = []
 
     # Note: 'x' is not an Item, but a string.
-    for i in range(rollers.roll_form(q_ls_min)):
+    count = roller.roll_form(q_ls_min, 'number of lesser minor items')
+    for i in range(count):
         x = item.fast_generate(conn, 'lesser minor', base_value)
         result['minor_items'].append(x.get_dict())
-    for i in range(rollers.roll_form(q_gt_min)):
+    count = roller.roll_form(q_gt_min, 'number of greater minor items')
+    for i in range(count):
         x = item.fast_generate(conn, 'greater minor', base_value)
         result['minor_items'].append(x.get_dict())
-    for i in range(rollers.roll_form(q_ls_med)):
+    count = roller.roll_form(q_ls_med, 'number of lesser medium items')
+    for i in range(count):
         x = item.fast_generate(conn, 'lesser medium', base_value)
         result['medium_items'].append(x.get_dict())
-    for i in range(rollers.roll_form(q_gt_med)):
+    count = roller.roll_form(q_gt_med, 'number of greater medium items')
+    for i in range(count):
         x = item.fast_generate(conn, 'greater medium', base_value)
         result['medium_items'].append(x.get_dict())
-    for i in range(rollers.roll_form(q_ls_maj)):
+    count = roller.roll_form(q_ls_maj, 'number of lesser major items')
+    for i in range(count):
         x = item.fast_generate(conn, 'lesser major', base_value)
         result['major_items'].append(x.get_dict())
-    for i in range(rollers.roll_form(q_gt_maj)):
+    count = roller.roll_form(q_gt_maj, 'number of greater major items')
+    for i in range(count):
         x = item.fast_generate(conn, 'greater major', base_value)
         result['major_items'].append(x.get_dict())
 
