@@ -278,6 +278,7 @@ function process_settlement_response(response, textStatus, jqXHR) {
     rolls.html("");
     if ('rolls' in response) {
         rolls.show();
+        rolls.append("Total number of rolls: " + response.roll_count + "<br>")
         for (i in response.rolls) {
             rolls.append(response.rolls[i] + "<br>");
         }

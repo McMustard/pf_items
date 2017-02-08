@@ -115,6 +115,7 @@ def run_webgen_internal(params):
                     settlement_size, roller, **options)
             if list_rolls == 'true':
                     result['rolls'] = roller.get_log()
+                    result['roll_count'] = roller.get_rollcount()
 
         elif mode == 'custom':
             # Open the database.

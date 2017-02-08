@@ -84,6 +84,7 @@ class Roller(object):
     def __init__(self):
         self.loglines = []
         self.pending = None
+        self.rollcount = 0
 
     # Roll a random number according to the specified dice expression.
     # Return integers only.
@@ -97,6 +98,7 @@ class Roller(object):
         self.log(line)
 
     def log(self, line):
+        self.rollcount += 1
         # If an item is pending, use that list.
         # Otherwise use the main log.
         if (self.pending is not None):
@@ -131,6 +133,9 @@ class Roller(object):
 
     def get_log(self):
         return self.loglines
+
+    def get_rollcount(self):
+        return self.rollcount
 
 
 class PseudorandomRoller(Roller):
