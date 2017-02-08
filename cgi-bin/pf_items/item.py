@@ -1700,7 +1700,7 @@ class Gem(Item):
                 addl = rollers.rollDice(m.group(3))
                 if m.group(6):
                     factor = int(m.group(6).replace(",",""))
-            price = base + (addl * factor)
+            price = base + (addl[0] * factor)
         self.price = Price(price)
         #self.price = str(m.group(1)) + '+' + str(m.group(3)) + '*' + str(m.group(6))
 
