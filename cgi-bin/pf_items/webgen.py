@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python2
 # vim: set fileencoding=utf-8
 
 # Note: The shebang is set specifically for _my_ server deployment.
@@ -23,6 +23,8 @@ This module is the web interface for item generation.
 
 #
 # Standard Imports
+
+from __future__ import print_function
 
 import json
 import os
@@ -144,7 +146,7 @@ def run_webgen_internal(params):
             result = item.generate_item(conn, strength + ' ' + kind,
                     rollers.PseudorandomRoller(), None)
             # In this case, item is an Item object.
-            result = str(result)
+            result = unicode(result)
 
         elif mode == 'hoard_budget':
             # Open the database.

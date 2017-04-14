@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python2
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -16,6 +16,8 @@
 This module tests webgen.py by simulating JSON input, though with direct
 function calls, not using standard input as CGI does.
 '''
+
+from __future__ import print_function
 
 import os
 
@@ -242,12 +244,12 @@ OVERRIDE_DATA = [
 '{"mode": "hoard_generate", "b": [{"count": 1, "item": }] }'
         ]
 
+test_data = DATA
 if len(OVERRIDE_DATA) == 0:
-    for test_item in DATA:
-        webgen.run_webgen(json.loads(test_item))
-else:
-    for test_item in OVERRIDE_DATA:
-        webgen.run_webgen(json.loads(test_item))
+    test_data = OVERRIDE_DATA
+
+for test_item in DATA:
+    webgen.run_webgen(json.loads(test_item))
 
 # And finally, a huuuuge test!
 # Obtain a list of all possible treasure items.

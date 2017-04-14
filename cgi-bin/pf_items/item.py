@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python2
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -19,6 +19,8 @@ Generator.
 
 #
 # Library imports
+
+from __future__ import print_function
 
 import binascii
 import locale
@@ -401,7 +403,7 @@ def generate_treasure_item(conn, expression, roller, listener):
         kind = m.group(3)
         for i in range(count):
             x = generate_specific_item(conn, grade, kind, roller, listener)
-            results.append(str(x))
+            results.append(unicode(x))
         return results
 
     m = RE_TREASURE_MAGIC.match(expression)
@@ -414,7 +416,7 @@ def generate_treasure_item(conn, expression, roller, listener):
         kind = m.group(4)
         for i in range(count):
             x = generate_specific_item(conn, degree + ' ' + strength, kind, roller, listener)
-            results.append(str(x))
+            results.append(unicode(x))
         return results
 
     m = RE_TREASURE_MASTERWORK.match(expression)
@@ -879,7 +881,7 @@ class Item(object):
     # Return a dictionary describing the item.
     def get_dict(self):
         return {
-                'item' : str(self),
+                'item' : unicode(self),
                 'value_num' : self.price.as_float() if self.price is not None else 0,
                 'value_str' : str(self.price if self.price is not None else '')
                 }

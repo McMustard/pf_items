@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python2
 # vim: set fileencoding=utf-8
 
 # Pathfinder Item Generator
@@ -19,6 +19,8 @@ generation.
 
 #
 # Library imports
+
+from __future__ import print_function
 
 import locale
 import math
